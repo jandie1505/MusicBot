@@ -13,7 +13,6 @@ import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.sharding.ShardManager;
 import net.jandie1505.musicbot.MusicBot;
@@ -145,11 +144,17 @@ public class GMS {
                         e.printStackTrace();
                     }
 
+                    CommandData nowplayingCommand = new CommandData("nowplaying", "Shows information about the song which is currently playing");
+                    CommandData queueCommand = new CommandData("queue", "Shows the current queue");
+                    CommandData removeCommand = new CommandData("remove", "Remove a specific song from the queue")
+                            .addOptions(new OptionData(OptionType.INTEGER, "index", "The index of the song you want to remove").setRequired(true));
+                    CommandData searchCommand = new CommandData("search", "Search youtube")
+                            .addOptions(new OptionData(OptionType.STRING, "query", "The text you want to search for"));
+                    CommandData shuffleCommand = new CommandData("shuffle", "Shuffle the queue");
+                    CommandData skipCommand = new CommandData("skip", "Skip a song")
+                            .addOptions(new OptionData(OptionType.INTEGER, "position", "Skip to a specific position"));
                     CommandData playCommand = new CommandData("play", "Play a song")
-                            .addOptions(
-                                    new OptionData(OptionType.STRING, "song", "The song link / song name / playlist link you want to play")
-                                            .setRequired(true)
-                            );
+                            .addOptions(new OptionData(OptionType.STRING, "song", "The song link / song name / playlist link you want to play").setRequired(true));
                     CommandData stopCommand = new CommandData("stop", "Stop playing music");
                     CommandData leaveCommand = new CommandData("leave", "Leave the voice channel");
 
