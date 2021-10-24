@@ -93,6 +93,14 @@ public class MusicManager {
         getMusicPlayer(g.getId()).nextTrack(listener);
     }
 
+    public static void next(Guild g, int position) {
+        getMusicPlayer(g.getId()).nextTrack(position);
+    }
+
+    public static void next(Guild g, int position, AudioEventListener listener) {
+        getMusicPlayer(g.getId()).nextTrack(position, listener);
+    }
+
     public static void reloadPlayers() {
         for(String guildId : musicPlayers.keySet()) {
             Guild g = MusicBot.getShardManager().getGuildById(guildId);

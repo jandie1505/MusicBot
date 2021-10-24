@@ -137,6 +137,49 @@ public class EventsCommands extends ListenerAdapter {
                         event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                     }
                 }
+            } else if(event.getName().equalsIgnoreCase("forceskip")) {
+                if(GMS.memberHasDJPermissions(event.getMember())) {
+                    event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                    if(MusicManager.isConnected(event.getGuild())) {
+                        if(event.getOption("position") != null) {
+                            if(MusicManager.getPlayingTrack(event.getGuild()) != null) {
+                                String previousSong = "";
+                                previousSong = MusicManager.getPlayingTrack(event.getGuild()).getInfo().title;
+                                int position = (int) event.getOption("position").getAsLong();
+                                MusicManager.next(event.getGuild(), position);
+                                EmbedBuilder embedBuilder = new EmbedBuilder()
+                                        .setDescription(":track_next:  Skipped " + previousSong)
+                                        .setColor(Color.GREEN);
+                                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                            } else {
+                                EmbedBuilder embedBuilder = new EmbedBuilder()
+                                        .setDescription(":warning:  Nothing to skip")
+                                        .setColor(Color.RED);
+                                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                            }
+                        } else {
+                            if(MusicManager.getPlayingTrack(event.getGuild()) != null) {
+                                String previousSong = "";
+                                previousSong = MusicManager.getPlayingTrack(event.getGuild()).getInfo().title;
+                                MusicManager.next(event.getGuild());
+                                EmbedBuilder embedBuilder = new EmbedBuilder()
+                                        .setDescription(":track_next:  Skipped " + previousSong)
+                                        .setColor(Color.GREEN);
+                                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                            } else {
+                                EmbedBuilder embedBuilder = new EmbedBuilder()
+                                        .setDescription(":warning:  Nothing to skip")
+                                        .setColor(Color.RED);
+                                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                            }
+                        }
+                    } else {
+                        EmbedBuilder embedBuilder = new EmbedBuilder()
+                                .setDescription(":warning:  Not connected")
+                                .setColor(Color.RED);
+                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                    }
+                }
             }
         }
     }

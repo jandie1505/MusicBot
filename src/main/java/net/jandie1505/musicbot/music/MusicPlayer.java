@@ -105,6 +105,8 @@ public class MusicPlayer {
         if(!queue.isEmpty()) {
             this.play(queue.get(0));
             queue.remove(0);
+        } else {
+            this.stop();
         }
     }
     public void nextTrack(AudioEventListener listener) {
@@ -112,6 +114,8 @@ public class MusicPlayer {
         if(!queue.isEmpty()) {
             this.play(queue.get(0));
             queue.remove(0);
+        } else {
+            this.stop();
         }
         player.removeListener(listener);
     }
@@ -119,14 +123,18 @@ public class MusicPlayer {
     public void nextTrack(int index) {
         if(queue.size() >= index) {
             this.play(queue.get(index));
-            queue.remove(index);
+            queue.subList(0, index + 1).clear();
+        } else {
+            this.stop();
         }
     }
     public void nextTrack(int index, AudioEventListener listener) {
         player.addListener(listener);
         if(queue.size() >= index) {
             this.play(queue.get(index));
-            queue.remove(index);
+            queue.subList(0, index + 1).clear();
+        } else {
+            this.stop();
         }
         player.removeListener(listener);
     }
