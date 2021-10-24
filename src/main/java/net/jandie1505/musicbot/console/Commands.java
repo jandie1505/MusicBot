@@ -2,6 +2,7 @@ package net.jandie1505.musicbot.console;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.jandie1505.musicbot.MusicBot;
 import net.jandie1505.musicbot.system.DatabaseManager;
 import net.jandie1505.musicbot.system.GMS;

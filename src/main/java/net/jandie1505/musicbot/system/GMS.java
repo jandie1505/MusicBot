@@ -128,6 +128,7 @@ public class GMS {
     }
 
     public static void setupCommands(Guild g) {
+        /*
         if(g != null) {
             String guildId = g.getId();
             g.retrieveCommands().queue(commands -> {
@@ -148,7 +149,7 @@ public class GMS {
                     CommandData nowplayingCommand = new CommandData("nowplaying", "Shows information about the song which is currently playing");
                     CommandData queueCommand = new CommandData("queue", "Shows the current queue");
                     CommandData playCommand = new CommandData("play", "Play a song")
-                            .addOptions(new OptionData(OptionType.STRING, "song", "The song link / song name / playlist link you want to play").setRequired(true));
+                            .addOptions(new OptionData(OptionType.STRING, "song", "The song link / song name / playlist link you want to play"));
                     CommandData removeCommand = new CommandData("remove", "Remove a specific song from the queue")
                             .addOptions(new OptionData(OptionType.INTEGER, "index", "The index of the song you want to remove").setRequired(true));
                     CommandData searchCommand = new CommandData("search", "Search youtube")
@@ -246,6 +247,8 @@ public class GMS {
                 Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
             }));
         }
+
+         */
     }
 
     public static Invite createGuildInvite(Guild g) {

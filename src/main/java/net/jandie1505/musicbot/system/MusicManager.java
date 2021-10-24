@@ -1,8 +1,10 @@
 package net.jandie1505.musicbot.system;
 
+import com.sedmelluq.discord.lavaplayer.player.event.AudioEventListener;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.VoiceChannel;
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.jandie1505.musicbot.MusicBot;
 import net.jandie1505.musicbot.music.MusicPlayer;
 
@@ -45,6 +47,10 @@ public class MusicManager {
         getMusicPlayer(g.getId()).queue(source);
     }
 
+    public static void add(Guild g, String source, SlashCommandEvent event) {
+        getMusicPlayer(g.getId()).queue(source, event);
+    }
+
     public static void remove(Guild g, int index) {
         getMusicPlayer(g.getId()).removeTrack(index);
     }
@@ -59,6 +65,10 @@ public class MusicManager {
 
     public static void setPause(Guild g, boolean pause) {
         getMusicPlayer(g.getId()).setPause(pause);
+    }
+
+    public static void setPause(Guild g, boolean pause, AudioEventListener listener) {
+        getMusicPlayer(g.getId()).setPause(pause, listener);
     }
 
     public static boolean isPaused(Guild g) {
@@ -77,6 +87,10 @@ public class MusicManager {
 
     public static void next(Guild g) {
         getMusicPlayer(g.getId()).nextTrack();
+    }
+
+    public static void next(Guild g, AudioEventListener listener) {
+        getMusicPlayer(g.getId()).nextTrack(listener);
     }
 
     public static void reloadPlayers() {
