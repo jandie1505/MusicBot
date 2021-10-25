@@ -29,11 +29,11 @@ public class MusicManager {
         }
     }
 
+    // CONNECTION
     public static void joinVoiceChannel(VoiceChannel voiceChannel) {
         voiceChannel.getGuild().getAudioManager().setSendingHandler(getMusicPlayer(voiceChannel.getGuild().getId()).getAudioSendHandler());
         voiceChannel.getGuild().getAudioManager().openAudioConnection(voiceChannel);
     }
-
     public static void leaveVoiceChannel(Guild g) {
         if(isConnected(g)) {
             g.getAudioManager().closeAudioConnection();
@@ -43,34 +43,33 @@ public class MusicManager {
         return g.getSelfMember().getVoiceState().inVoiceChannel();
     }
 
+    // QUEUE
     public static void add(Guild g, String source) {
         getMusicPlayer(g.getId()).queue(source);
     }
-
     public static void add(Guild g, String source, SlashCommandEvent event) {
         getMusicPlayer(g.getId()).queue(source, event);
     }
-
     public static void remove(Guild g, int index) {
         getMusicPlayer(g.getId()).removeTrack(index);
     }
-
+    public static void move(Guild g, int from, int to) {
+        getMusicPlayer(g.getId()).moveTrack(from, to);
+    }
     public static void clear(Guild g) {
         getMusicPlayer(g.getId()).clearQueue();
     }
-
     public static List<AudioTrack> getQueue(Guild g) {
         return getMusicPlayer(g.getId()).getQueue();
     }
 
+    // PLAYER
     public static void setPause(Guild g, boolean pause) {
         getMusicPlayer(g.getId()).setPause(pause);
     }
-
     public static void setPause(Guild g, boolean pause, AudioEventListener listener) {
         getMusicPlayer(g.getId()).setPause(pause, listener);
     }
-
     public static boolean isPaused(Guild g) {
         return getMusicPlayer(g.getId()).isPaused();
     }
@@ -79,8 +78,6 @@ public class MusicManager {
         return getMusicPlayer(g.getId()).getPlayingTrack();
     }
 
-
-
     public static void stop(Guild g) {
         getMusicPlayer(g.getId()).stop();
     }
@@ -88,19 +85,17 @@ public class MusicManager {
     public static void next(Guild g) {
         getMusicPlayer(g.getId()).nextTrack();
     }
-
     public static void next(Guild g, AudioEventListener listener) {
         getMusicPlayer(g.getId()).nextTrack(listener);
     }
-
     public static void next(Guild g, int position) {
         getMusicPlayer(g.getId()).nextTrack(position);
     }
-
     public static void next(Guild g, int position, AudioEventListener listener) {
         getMusicPlayer(g.getId()).nextTrack(position, listener);
     }
 
+    // PLAYER MANAGEMENT
     public static void reloadPlayers() {
         for(String guildId : musicPlayers.keySet()) {
             Guild g = MusicBot.getShardManager().getGuildById(guildId);
@@ -109,5 +104,12 @@ public class MusicManager {
                 musicPlayers.remove(guildId);
             }
         }
+    }
+
+    public static void removePlayer(String guildId) {
+        if(musicPlayers.containsKey(guildId)) {
+            musicPlayers.get(guildId).destroy();
+        }
+        musicPlayers.remove(guildId);
     }
 }

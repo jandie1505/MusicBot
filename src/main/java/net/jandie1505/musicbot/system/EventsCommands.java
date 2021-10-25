@@ -180,6 +180,69 @@ public class EventsCommands extends ListenerAdapter {
                         event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                     }
                 }
+            } else if(event.getName().equalsIgnoreCase("remove")) {
+                if(GMS.memberHasDJPermissions(event.getMember())) {
+                    event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                    if(MusicManager.isConnected(event.getGuild())) {
+                        if(event.getOption("index") != null) {
+                            int index = (int) event.getOption("index").getAsLong();
+                            if(index < MusicManager.getQueue(event.getGuild()).size()) {
+                                MusicManager.remove(event.getGuild(), index);
+                                EmbedBuilder embedBuilder = new EmbedBuilder()
+                                        .setDescription(":white_check_mark:  Successfully removed")
+                                        .setColor(Color.GREEN);
+                                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                            } else {
+                                EmbedBuilder embedBuilder = new EmbedBuilder()
+                                        .setDescription(":warning:  Index does not exist")
+                                        .setColor(Color.RED);
+                                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                            }
+                        } else {
+                            EmbedBuilder embedBuilder = new EmbedBuilder()
+                                    .setDescription(":warning:  Index required")
+                                    .setColor(Color.RED);
+                            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                        }
+                    } else {
+                        EmbedBuilder embedBuilder = new EmbedBuilder()
+                                .setDescription(":warning:  Not connected")
+                                .setColor(Color.RED);
+                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                    }
+                }
+            } else if(event.getName().equalsIgnoreCase("movetrack")) {
+                if(GMS.memberHasDJPermissions(event.getMember())) {
+                    event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                    if(MusicManager.isConnected(event.getGuild())) {
+                        if(event.getOption("from") != null && event.getOption("to") != null) {
+                            int from = (int) event.getOption("from").getAsLong();
+                            int to = (int) event.getOption("to").getAsLong();
+                            if(from < MusicManager.getQueue(event.getGuild()).size()) {
+                                MusicManager.move(event.getGuild(), from, to);
+                                EmbedBuilder embedBuilder = new EmbedBuilder()
+                                        .setDescription(":white_check_mark:  Successfully moved")
+                                        .setColor(Color.GREEN);
+                                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                            } else {
+                                EmbedBuilder embedBuilder = new EmbedBuilder()
+                                        .setDescription(":warning:  From index does not exist")
+                                        .setColor(Color.RED);
+                                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                            }
+                        } else {
+                            EmbedBuilder embedBuilder = new EmbedBuilder()
+                                    .setDescription(":warning:  Indexes does not exist")
+                                    .setColor(Color.RED);
+                            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                        }
+                    } else {
+                        EmbedBuilder embedBuilder = new EmbedBuilder()
+                                .setDescription(":warning:  Not connected")
+                                .setColor(Color.RED);
+                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                    }
+                }
             }
         }
     }

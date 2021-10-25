@@ -145,6 +145,18 @@ public class MusicPlayer {
         }
     }
 
+    public void moveTrack(int from, int to) {
+        if(from < queue.size()) {
+            if(to < queue.size()) {
+                queue.add(to, queue.remove(from));
+            } else {
+                if(queue.size()-1 >= 0) {
+                    queue.add(queue.size()-1, queue.remove(from));
+                }
+            }
+        }
+    }
+
     // PLAYER
     public void play(AudioTrack audioTrack) {
         player.playTrack(audioTrack);
