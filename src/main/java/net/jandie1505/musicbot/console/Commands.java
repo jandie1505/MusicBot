@@ -1,6 +1,7 @@
 package net.jandie1505.musicbot.console;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
 import net.jandie1505.musicbot.MusicBot;
 import net.jandie1505.musicbot.system.DatabaseManager;
@@ -237,6 +238,96 @@ public class Commands {
                                 "player pause <guildId>\n" +
                                 "player ispaused <guildId>\n" +
                                 "player nowplaying <guildId>\n";
+                    }
+                } else if(cmd[0].equalsIgnoreCase("cmdreload")) {
+                    if(cmd.length == 2) {
+                        if(cmd[1].equalsIgnoreCase("true")) {
+                            MusicBot.upsertCommands(true);
+                            returnString = "SENT COMPLETE COMMANDS RELOAD COMMAND";
+                        } else {
+                            MusicBot.upsertCommands(false);
+                            returnString = "SENT COMMANDS RELOAD COMMAND";
+                        }
+                    } else {
+                        MusicBot.upsertCommands(false);
+                        returnString = "SENT COMMANDS RELOAD COMMAND";
+                    }
+                } else if(cmd[0].equalsIgnoreCase("shard") || cmd[0].equalsIgnoreCase("shards")) {
+                    if(cmd.length == 2) {
+                        if(cmd[1].equalsIgnoreCase("list")) {
+                            returnString = "* SHARD ID | SHARD STRING | GUILDS *\n";
+                            for(JDA jda : MusicBot.getShardManager().getShards()) {
+                                returnString = returnString + "* " + jda.getShardInfo().getShardId() + " | " + jda.getShardInfo().getShardString() + " | " + jda.getGuilds().size() + " *\n";
+                            }
+                            returnString = returnString + "* SHARDS ONLINE: " + MusicBot.getShardManager().getShardsRunning() + "\n" +
+                                    "* SHARDS QUEUED: " + MusicBot.getShardManager().getShardsQueued() + "\n" +
+                                    "* SHARDS TOTAL: " + MusicBot.getShardManager().getShardsTotal() + "\n";
+                        } else if(cmd[1].equalsIgnoreCase("listraw")) {
+                            returnString = MusicBot.getShardManager().getShards().toString();
+                        } else if(cmd[1].equalsIgnoreCase("restartall")) {
+                            MusicBot.restartShards();
+                        } else if(cmd[1].equalsIgnoreCase("startall")) {
+                            MusicBot.startShards();
+                        } else if(cmd[1].equalsIgnoreCase("stopall")) {
+                            MusicBot.stopShards();
+                        }
+                    } else if(cmd.length == 3) {
+                        if(cmd[1].equalsIgnoreCase("info")) {
+                            JDA jda = MusicBot.getShardManager().getShardById(Integer.parseInt(cmd[2]));
+                            returnString = "SHARD INFO: " + jda.getShardInfo().getShardId() + "\n" +
+                                    "SHARD STRING: " + jda.getShardInfo().getShardString() + "\n" +
+                                    "GUILD COUNT: " + jda.getGuilds().size() + "\n" +
+                                    "STATUS: " + jda.getStatus().toString() + "\n" +
+                                    "GUILD LIST: " + jda.getGuilds().toString() + "\n";
+                        } else if(cmd[1].equalsIgnoreCase("restart")) {
+                            MusicBot.restartShard(Integer.parseInt(cmd[2]));
+                        } else if(cmd[1].equalsIgnoreCase("start")) {
+                            MusicBot.startShard(Integer.parseInt(cmd[2]));
+                        } else if(cmd[1].equalsIgnoreCase("stop")) {
+                            MusicBot.stopShard(Integer.parseInt(cmd[2]));
+                        } else if(cmd[1].equalsIgnoreCase("setautomode <true/false>")) {
+                            if(cmd[2].equalsIgnoreCase("true")) {
+                                MusicBot.setShardAutoMode(true);
+                                returnString = "SENT ENABLE SHARD AUTO MODE COMMAND";
+                            } else {
+                                MusicBot.setShardAutoMode(true);
+                                returnString = "SENT DISABLE SHARD AUTO MODE COMMAND";
+                            }
+                        }
+                    } else {
+                        returnString = "shards list\n" +
+                                "shards info <shardId>\n" +
+                                "shards restart <shardId>\n" +
+                                "shards start <shardId>\n" +
+                                "shards stop <shardId>\n";
+                    }
+                } else if(cmd[0].equalsIgnoreCase("verbose")) {
+                    if(cmd.length >= 2) {
+                        if(cmd[1].equalsIgnoreCase("enable")) {
+                            if(cmd.length >= 3) {
+                                if(cmd[2].equalsIgnoreCase("GMS")) {
+                                    Console.setGMSLogging(true);
+                                    returnString = "ENABLED GMS VERBOSE OUTPUT";
+                                } else if(cmd[2].equalsIgnoreCase("DB") || cmd[2].equalsIgnoreCase("DBM")) {
+                                    Console.setDBMLogging(true);
+                                    returnString = "ENABLED DB/DBM VERBOSE OUTPUT";
+                                }
+                            }
+                        } else if(cmd[1].equalsIgnoreCase("disable")) {
+                            if(cmd.length >= 3) {
+                                if(cmd[2].equalsIgnoreCase("GMS")) {
+                                    Console.setGMSLogging(false);
+                                    returnString = "DISABLED GMS VERBOSE OUTPUT";
+                                } else if(cmd[2].equalsIgnoreCase("DB") || cmd[2].equalsIgnoreCase("DBM")) {
+                                    Console.setDBMLogging(false);
+                                    returnString = "DISABLED DB/DBM VERBOSE OUTPUT";
+                                }
+                            }
+                        } else if(cmd[1].equalsIgnoreCase("info")) {
+                            returnString = "VERBOSE STATE:\n" +
+                                    "Guild Manager (GMS): " + Console.isGMSLogging() + "\n" +
+                                    "Database Manager (DB/DBM): " + Console.isDBMLogging() + "\n";
+                        }
                     }
                 }
                 else {

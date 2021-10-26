@@ -56,18 +56,48 @@ public class EventsCommands extends ListenerAdapter {
                 if(GMS.memberHasUserPermissions(event.getMember())) {
                     event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
                     if(!MusicManager.getQueue(event.getGuild()).isEmpty()) {
-                        String queue = "";
-                        int index = 0;
-                        for(AudioTrack track : MusicManager.getQueue(event.getGuild())) {
-                            long millis = track.getDuration();
-                            queue = queue + "`" + index + ".` " +
-                                    "`" + String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(millis), TimeUnit.MILLISECONDS.toMinutes(millis) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis)), TimeUnit.MILLISECONDS.toSeconds(millis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis))) + "` " +
-                                    track.getInfo().title + " [" + track.getInfo().author + "]\n";
-                            index++;
+                        if(event.getOption("index") != null) {
+                            int queueIndex = (int) event.getOption("index").getAsLong();
+                            String queue = "";
+                            int index = 0;
+                            for(AudioTrack track : MusicManager.getQueue(event.getGuild())) {
+                                String current = "`" + index + ".` " +
+                                        "`" + formatTime(track.getDuration()) + "` " +
+                                        track.getInfo().title + " [" + track.getInfo().author + "]\n";
+                                String nextString = queue + current;
+                                if(nextString.length() <= 950) {
+                                    if(index >= queueIndex) {
+                                        queue = queue + current;
+                                    }
+                                } else {
+                                    queue = queue + "`+ " + (MusicManager.getQueue(event.getGuild()).size()-index) + " entries. Use /queue <index> to search for indexes.`";
+                                    break;
+                                }
+                                index++;
+                            }
+                            EmbedBuilder queueFull = new EmbedBuilder()
+                                    .addField("Queue:", queue, false);
+                            event.getHook().sendMessage("").addEmbeds(queueFull.build()).queue();
+                        } else {
+                            String queue = "";
+                            int index = 0;
+                            for(AudioTrack track : MusicManager.getQueue(event.getGuild())) {
+                                String current = "`" + index + ".` " +
+                                        "`" + formatTime(track.getDuration()) + "` " +
+                                        track.getInfo().title + " [" + track.getInfo().author + "]\n";
+                                String nextString = queue + current;
+                                if(nextString.length() <= 950) {
+                                    queue = queue + current;
+                                } else {
+                                    queue = queue + "`+ " + (MusicManager.getQueue(event.getGuild()).size()-index) + " entries. Use /queue <index> to search for indexes.`";
+                                    break;
+                                }
+                                index++;
+                            }
+                            EmbedBuilder queueFull = new EmbedBuilder()
+                                    .addField("Queue:", queue, false);
+                            event.getHook().sendMessage("").addEmbeds(queueFull.build()).queue();
                         }
-                        EmbedBuilder queueFull = new EmbedBuilder()
-                                .addField("Queue:", queue, false);
-                        event.getHook().sendMessage("").addEmbeds(queueFull.build()).queue();
                     } else {
                         EmbedBuilder queueEmpty = new EmbedBuilder()
                                 .setDescription("The queue is empty")
@@ -97,6 +127,35 @@ public class EventsCommands extends ListenerAdapter {
                     }
                 }
             } else if(event.getName().equalsIgnoreCase("stop")) {
+                if(GMS.memberHasDJPermissions(event.getMember())) {
+                    event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                    if(MusicManager.isConnected(event.getGuild())) {
+                        if(!MusicManager.isPaused(event.getGuild())) {
+                            MusicManager.setPause(event.getGuild(), true, new AudioEventListener() {
+                                @Override
+                                public void onEvent(AudioEvent audioEvent) {
+                                    if(audioEvent instanceof PlayerPauseEvent) {
+                                        EmbedBuilder embedBuilder = new EmbedBuilder()
+                                                .setDescription(":pause_button:  Player paused")
+                                                .setColor(Color.GREEN);
+                                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                    }
+                                }
+                            });
+                        } else {
+                            EmbedBuilder embedBuilder = new EmbedBuilder()
+                                    .setDescription("Player is already paused")
+                                    .setColor(Color.RED);
+                            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                        }
+                    } else {
+                        EmbedBuilder embedBuilder = new EmbedBuilder()
+                                .setDescription("Bot is not playing")
+                                .setColor(Color.RED);
+                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                    }
+                }
+            } else if(event.getName().equalsIgnoreCase("pause")) {
                 if(GMS.memberHasDJPermissions(event.getMember())) {
                     event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
                     if(MusicManager.isConnected(event.getGuild())) {

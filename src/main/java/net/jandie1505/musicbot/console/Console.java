@@ -5,6 +5,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
 public class Console implements Runnable {
+    // STATIC
+    private static boolean GMSLogging;
+    private static boolean DBMLogging;
+
+    // NOT STATIC
     private Thread thread;
 
     public Console() {
@@ -35,38 +40,51 @@ public class Console implements Runnable {
 
 
 
-    // MESSAGES
+    // STATIC
     public static void messageShardManager(String msg) {
         timestampMessage("[SHARDS] " + msg);
     }
 
     public static void messageGMS(String msg) {
-        timestampMessage("[GMS] " + msg);
+        if(GMSLogging) {
+            timestampMessage("[GMS] " + msg);
+        }
     }
 
     public static void messageDB(String msg) {
-        timestampMessage("[DB] " + msg);
-    }
-
-    public static void messageCHM(String msg) {
-        timestampMessage("[CHM] " + msg);
+        if(DBMLogging) {
+            timestampMessage("[DB] " + msg);
+        }
     }
 
     public static void messageGMS(String msg, boolean important) {
-        timestampMessage("[GMS] " + msg);
+        if(GMSLogging || important) {
+            timestampMessage("[GMS] " + msg);
+        }
     }
 
     public static void messageDB(String msg, boolean important) {
-        timestampMessage("[DB] " + msg);
-    }
-
-    public static void messageCHM(String msg, boolean important) {
-        timestampMessage("[CHM] " + msg);
+        if(DBMLogging || important) {
+            timestampMessage("[DB] " + msg);
+        }
     }
 
     public static void timestampMessage(String msg) {
         LocalDateTime localDateTime = LocalDateTime.now();
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss");
         System.out.println("[" + dateTimeFormatter.format(localDateTime) + "] " + msg);
+    }
+
+    public static void setGMSLogging(boolean state) {
+        GMSLogging = state;
+    }
+    public static void setDBMLogging(boolean state) {
+        DBMLogging = state;
+    }
+    public static boolean isGMSLogging() {
+        return GMSLogging;
+    }
+    public static boolean isDBMLogging() {
+        return DBMLogging;
     }
 }
