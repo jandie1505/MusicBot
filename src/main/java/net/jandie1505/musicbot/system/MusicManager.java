@@ -62,6 +62,9 @@ public class MusicManager {
     public static List<AudioTrack> getQueue(Guild g) {
         return getMusicPlayer(g.getId()).getQueue();
     }
+    public static void shuffle(Guild g) {
+        getMusicPlayer(g.getId()).shuffle();
+    }
 
     // PLAYER
     public static void setPause(Guild g, boolean pause) {
@@ -94,6 +97,21 @@ public class MusicManager {
     public static void next(Guild g, int position, AudioEventListener listener) {
         getMusicPlayer(g.getId()).nextTrack(position, listener);
     }
+
+    public static void playnow(Guild g, String source) {
+        getMusicPlayer(g.getId()).playnow(source);
+    }
+    public static void playnow(Guild g, String source, SlashCommandEvent event) {
+        getMusicPlayer(g.getId()).playnow(source, event);
+    }
+
+    public static void setVolume(Guild g, int volume) {
+        getMusicPlayer(g.getId()).setVolume(volume);
+    }
+    public static int getVolume(Guild g) {
+        return getMusicPlayer(g.getId()).getVolume();
+    }
+
 
     // PLAYER MANAGEMENT
     public static void reloadPlayers() {

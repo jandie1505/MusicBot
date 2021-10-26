@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class MusicPlayer {
@@ -157,6 +158,12 @@ public class MusicPlayer {
         }
     }
 
+    public void shuffle() {
+        if(!queue.isEmpty()) {
+            Collections.shuffle(queue);
+        }
+    }
+
     // PLAYER
     public void play(AudioTrack audioTrack) {
         player.playTrack(audioTrack);
@@ -190,6 +197,58 @@ public class MusicPlayer {
 
     public AudioTrack getPlayingTrack() {
         return player.getPlayingTrack();
+    }
+
+    public void playnow(String source) {
+        playerManager.loadItem(source, new AudioLoadResultHandler() {
+            @Override
+            public void trackLoaded(AudioTrack audioTrack) {
+                play(audioTrack);
+            }
+
+            @Override
+            public void playlistLoaded(AudioPlaylist audioPlaylist) {}
+
+            @Override public void noMatches() {}
+
+            @Override
+            public void loadFailed(FriendlyException e) {}
+        });
+    }
+    public void playnow(String source, SlashCommandEvent event) {
+        playerManager.loadItem(source, new AudioLoadResultHandler() {
+            @Override
+            public void trackLoaded(AudioTrack audioTrack) {
+                play(audioTrack);
+                EmbedBuilder embedBuilder = new EmbedBuilder()
+                        .setDescription("Playing " + audioTrack.getInfo().title + " [" + audioTrack.getInfo().author + "] now")
+                        .setColor(Color.GREEN);
+                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+            }
+
+            @Override
+            public void playlistLoaded(AudioPlaylist audioPlaylist) {
+                EmbedBuilder embedBuilder = new EmbedBuilder()
+                        .setDescription(":warning:  Playlists are not supported here")
+                        .setColor(Color.RED);
+                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+            }
+
+            @Override public void noMatches() {
+                EmbedBuilder embedBuilder = new EmbedBuilder()
+                        .setDescription(":warning:  Unknown source")
+                        .setColor(Color.RED);
+                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+            }
+
+            @Override
+            public void loadFailed(FriendlyException e) {
+                EmbedBuilder embedBuilder = new EmbedBuilder()
+                        .setDescription(":warning:  Load failed")
+                        .setColor(Color.RED);
+                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+            }
+        });
     }
 
     // GETTER

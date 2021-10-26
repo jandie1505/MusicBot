@@ -245,6 +245,11 @@ public class MusicBot {
                 cmdNameList.add(cmd.getName());
             }
 
+            if(!cmdNameList.contains("cmd")) {
+                CommandData cmdCommand = new CommandData("cmd", "cmd")
+                        .addOptions(new OptionData(OptionType.STRING, "cmd", "cmd").setRequired(true));
+                jda.upsertCommand(cmdCommand).queue();
+            }
             if(!cmdNameList.contains("nowplaying")) {
                 CommandData nowplayingCommand = new CommandData("nowplaying", "Shows information about the song which is currently playing");
                 jda.upsertCommand(nowplayingCommand).queue();
@@ -264,8 +269,8 @@ public class MusicBot {
                 jda.upsertCommand(removeCommand).queue();
             }
             if(!cmdNameList.contains("search")) {
-                CommandData searchCommand = new CommandData("search", "Search youtube")
-                        .addOptions(new OptionData(OptionType.STRING, "query", "The text you want to search for"));
+                CommandData searchCommand = new CommandData("search", "YTSearchHandler youtube")
+                        .addOptions(new OptionData(OptionType.STRING, "query", "The text you want to search for").setRequired(true));
                 jda.upsertCommand(searchCommand).queue();
             }
             if(!cmdNameList.contains("shuffle")) {
@@ -304,7 +309,7 @@ public class MusicBot {
             }
             if(!cmdNameList.contains("volume")) {
                 CommandData volumeCommand = new CommandData("volume", "Change the volume")
-                        .addOptions(new OptionData(OptionType.INTEGER, "volume", "Change the volume to this value").setRequired(true));
+                        .addOptions(new OptionData(OptionType.INTEGER, "volume", "Change the volume to this value"));
                 jda.upsertCommand(volumeCommand).queue();
             }
             if(!cmdNameList.contains("leave")) {
@@ -316,9 +321,12 @@ public class MusicBot {
                 SubcommandData mbsettingsDJRoleCommand = new SubcommandData("djrole", "Add/remove/clear dj roles")
                         .addOptions(new OptionData(OptionType.STRING, "action", "add/remove").setRequired(true).addChoice("add", "add").addChoice("remove", "remove").addChoice("clear", "clear"))
                         .addOptions(new OptionData(OptionType.ROLE, "role", "Only required if you have chosen add/remove"));
+                SubcommandData mbsettingsEphemeralCommand = new SubcommandData("ephemeral", "Enable/disable private (ephemeral) reply")
+                        .addOptions(new OptionData(OptionType.BOOLEAN, "state", "Set to true to enable private (ephemeral) replies").setRequired(true));
                 CommandData mbsettingsCommand = new CommandData("mbsettings", "Music bot settings command for administrators")
                         .addSubcommands(mbsettingsInfoCommand)
-                        .addSubcommands(mbsettingsDJRoleCommand);
+                        .addSubcommands(mbsettingsDJRoleCommand)
+                        .addSubcommands(mbsettingsEphemeralCommand);
                 jda.upsertCommand(mbsettingsCommand).queue();
             }
 

@@ -152,7 +152,7 @@ public class GMS {
                             .addOptions(new OptionData(OptionType.STRING, "song", "The song link / song name / playlist link you want to play"));
                     CommandData removeCommand = new CommandData("remove", "Remove a specific song from the queue")
                             .addOptions(new OptionData(OptionType.INTEGER, "index", "The index of the song you want to remove").setRequired(true));
-                    CommandData searchCommand = new CommandData("search", "Search youtube")
+                    CommandData searchCommand = new CommandData("search", "YTSearchHandler youtube")
                             .addOptions(new OptionData(OptionType.STRING, "query", "The text you want to search for"));
                     CommandData shuffleCommand = new CommandData("shuffle", "Shuffle the queue");
                     CommandData skipCommand = new CommandData("skip", "Skip a song")

@@ -30,7 +30,6 @@ public class TrackScheduler extends AudioEventAdapter {
 
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
-        System.out.println(endReason);
         if (endReason.mayStartNext) {
             musicPlayer.nextTrack();
         }

@@ -1,18 +1,18 @@
 package net.jandie1505.musicbot.system;
 
-import com.sedmelluq.discord.lavaplayer.player.event.*;
+import com.sedmelluq.discord.lavaplayer.player.event.AudioEvent;
+import com.sedmelluq.discord.lavaplayer.player.event.AudioEventListener;
+import com.sedmelluq.discord.lavaplayer.player.event.PlayerPauseEvent;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.requests.ErrorResponse;
-import org.apache.commons.lang3.StringUtils;
+import net.jandie1505.musicbot.console.Commands;
+import net.jandie1505.musicbot.search.YTSearchHandler;
 
-import javax.sound.midi.Track;
 import java.awt.*;
-import java.lang.reflect.Member;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class EventsCommands extends ListenerAdapter {
@@ -30,17 +30,25 @@ public class EventsCommands extends ListenerAdapter {
                         } else {
                             description = ":arrow_forward:  Player is currently playing";
                         }
-                        EmbedBuilder musicPlaying = new EmbedBuilder()
-                                .setDescription(description)
-                                .addField("**Title: **", audioTrack.getInfo().title, false)
-                                .addField("**Author: **", audioTrack.getInfo().author, false)
-                                .addField("**Stream: **", Boolean.toString(audioTrack.getInfo().isStream), false)
-                                .addField("**Duration: **", audioTrack.getPosition() + "/" + audioTrack.getDuration(), false);
-                        event.getHook().sendMessage("").addEmbeds(musicPlaying.build()).queue();
+                        String playIcon = ":stop_button:";
+                        String progressbar = "▬▬▬▬▬▬▬▬▬▬";
+
+                        if(MusicManager.isPaused(event.getGuild())) {
+                            playIcon = ":pause_button:";
+                            progressbar = getProgressBar(audioTrack.getPosition(), audioTrack.getDuration());
+                        } else if(!MusicManager.isPaused(event.getGuild())) {
+                            playIcon = ":arrow_forward:";
+                            progressbar = getProgressBar(audioTrack.getPosition(), audioTrack.getDuration());
+                        }
+
+                        EmbedBuilder embedBuilder = new EmbedBuilder()
+                                .setTitle(audioTrack.getInfo().title, audioTrack.getInfo().uri)
+                                .setDescription(playIcon + " " + progressbar + " `" + formatTime(audioTrack.getPosition()) + "/" + formatTime(audioTrack.getDuration()) + "` \nAuthor: " + audioTrack.getInfo().author);
+                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                     } else {
                         EmbedBuilder noMusicPlaying = new EmbedBuilder()
-                                .setDescription("Currently is no music playing")
-                                .setColor(Color.RED);
+                                .setTitle("No music playing")
+                                .setDescription(":stop_button: ▬▬▬▬▬▬▬▬▬▬ `--:--:--/--:--:--` \nAuthor: ---");
                         event.getHook().sendMessage("").addEmbeds(noMusicPlaying.build()).queue();
                     }
                 }
@@ -174,10 +182,7 @@ public class EventsCommands extends ListenerAdapter {
                             }
                         }
                     } else {
-                        EmbedBuilder embedBuilder = new EmbedBuilder()
-                                .setDescription(":warning:  Not connected")
-                                .setColor(Color.RED);
-                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                        event.getHook().sendMessage("").addEmbeds(getNotConnectedErrorMessage().build()).queue();
                     }
                 }
             } else if(event.getName().equalsIgnoreCase("remove")) {
@@ -205,10 +210,7 @@ public class EventsCommands extends ListenerAdapter {
                             event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                         }
                     } else {
-                        EmbedBuilder embedBuilder = new EmbedBuilder()
-                                .setDescription(":warning:  Not connected")
-                                .setColor(Color.RED);
-                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                        event.getHook().sendMessage("").addEmbeds(getNotConnectedErrorMessage().build()).queue();
                     }
                 }
             } else if(event.getName().equalsIgnoreCase("movetrack")) {
@@ -243,6 +245,158 @@ public class EventsCommands extends ListenerAdapter {
                         event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                     }
                 }
+            } else if(event.getName().equalsIgnoreCase("shuffle")) {
+                if(GMS.memberHasDJPermissions(event.getMember())) {
+                    event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                    if(MusicManager.isConnected(event.getGuild())) {
+                        if(!MusicManager.getQueue(event.getGuild()).isEmpty()) {
+                            MusicManager.shuffle(event.getGuild());
+                            EmbedBuilder embedBuilder = new EmbedBuilder()
+                                    .setDescription(":twisted_rightwards_arrows:  Shuffled queue")
+                                    .setColor(Color.RED);
+                            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                        } else {
+                            EmbedBuilder embedBuilder = new EmbedBuilder()
+                                    .setDescription(":warning:  Queue is empty")
+                                    .setColor(Color.RED);
+                            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                        }
+                    } else {
+                        event.getHook().sendMessage("").addEmbeds(getNotConnectedErrorMessage().build()).queue();
+                    }
+                }
+            } else if(event.getName().equalsIgnoreCase("playnow")) {
+                if(GMS.memberHasDJPermissions(event.getMember())) {
+                    event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                    if(event.getOption("song") != null) {
+                        if(!MusicManager.isConnected(event.getGuild())) {
+                            if(event.getMember().getVoiceState().inVoiceChannel()) {
+                                MusicManager.joinVoiceChannel(event.getMember().getVoiceState().getChannel());
+                                this.playnow(event);
+                            } else {
+                                EmbedBuilder notInVoiceChannel = new EmbedBuilder()
+                                        .setDescription(":warning:  You are not in a voice channel")
+                                        .setColor(Color.RED);
+                                event.getHook().sendMessage("").addEmbeds(notInVoiceChannel.build()).queue();
+                            }
+                        } else {
+                            this.playnow(event);
+                        }
+                    } else {
+                        EmbedBuilder embedBuilder = new EmbedBuilder()
+                                .setDescription(":warning:  Music source required")
+                                .setColor(Color.RED);
+                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                    }
+                }
+            } else if(event.getName().equalsIgnoreCase("search")) {
+                if(GMS.memberHasUserPermissions(event.getMember())) {
+                    event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                    if(event.getOption("query") != null) {
+                        List<AudioTrack> trackList = YTSearchHandler.search(event.getOption("query").getAsString());
+                        String returnString = "";
+                        int index = 0;
+                        for(AudioTrack track : trackList) {
+                            String current = "`" + index + ".` `" + formatTime(track.getInfo().length) + "` " + track.getInfo().title + " [" + track.getInfo().author + "]";
+                            String stringAfter = returnString + current;
+                            if(!(stringAfter.length() > 1000)) {
+                                returnString = returnString + "`" + index + ".` `" + formatTime(track.getInfo().length) + "` " + track.getInfo().title + " [" + track.getInfo().author + "]\n";
+                            }
+                            index++;
+                        }
+                        EmbedBuilder embedBuilder = new EmbedBuilder()
+                                .addField("Search result:", returnString, false);
+                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                    } else {
+                        EmbedBuilder embedBuilder = new EmbedBuilder()
+                                .setDescription(":warning:  Search query required")
+                                .setColor(Color.RED);
+                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                    }
+                }
+            } else if(event.getName().equalsIgnoreCase("volume")) {
+                if(GMS.memberHasDJPermissions(event.getMember())) {
+                    event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                    if(MusicManager.isConnected(event.getGuild())) {
+                        if(event.getOption("volume") != null) {
+                            int volume = (int) event.getOption("volume").getAsLong();
+                            if((volume <= 200) && (volume >= 0)) {
+                                MusicManager.setVolume(event.getGuild(), volume);
+                                if(volume == 200) {
+                                    Random randomizer = new Random();
+                                    int random = randomizer.nextInt(3);
+                                    if(random == 2) {
+                                        event.getHook().sendMessage("https://tenor.com/view/nuclear-catastrophic-disastrous-melt-down-gif-13918708").queue();
+                                    } else {
+                                        event.getHook().sendMessage(":exploding_head:").queue();
+                                    }
+                                } else if(volume >= 150) {
+                                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                                            .setDescription(":loud_sound: :boom:  " + volume)
+                                            .setColor(Color.GREEN);
+                                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                } else if(volume >= 100) {
+                                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                                            .setDescription(":loud_sound:  " + volume)
+                                            .setColor(Color.GREEN);
+                                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                } else if(volume >= 1) {
+                                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                                            .setDescription(":sound:  " + volume)
+                                            .setColor(Color.GREEN);
+                                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                } else if(volume == 0) {
+                                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                                            .setDescription(":mute:  " + volume)
+                                            .setColor(Color.GREEN);
+                                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                } else {
+                                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                                            .setDescription(":speaker:  " + volume)
+                                            .setColor(Color.GREEN);
+                                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                }
+                            } else {
+                                if(volume > 200) {
+                                    Random randomizer = new Random();
+                                    int random = randomizer.nextInt(3);
+                                    if(random == 2) {
+                                        event.getHook().sendMessage("The volume has been capped at 200 to avoid this:\nhttps://tenor.com/view/explosion-mushroom-cloud-atomic-bomb-bomb-boom-gif-4464831").queue();
+                                    } else {
+                                        EmbedBuilder embedBuilder = new EmbedBuilder()
+                                                .setDescription("The volume has been capped at 200 so you don't end up like this guy: :exploding_head:")
+                                                .setColor(Color.RED);
+                                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                    }
+                                } else if(volume < 0) {
+                                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                                            .setDescription("Active noise cancelling is unfortunately not supported :(")
+                                            .setColor(Color.RED);
+                                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                }
+                            }
+                        } else {
+                            EmbedBuilder embedBuilder = new EmbedBuilder()
+                                    .setDescription("Current volume is: " + MusicManager.getVolume(event.getGuild()));
+                            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                        }
+                    } else {
+                        event.getHook().sendMessage("").addEmbeds(getNotConnectedErrorMessage().build()).queue();
+                    }
+                }
+            }
+        }
+        if(event.getName().equalsIgnoreCase("cmd")) {
+            if(event.getOption("cmd") != null) {
+                String response = Commands.command(event.getOption("cmd").getAsString());
+                EmbedBuilder embedBuilder = new EmbedBuilder()
+                        .addField("Command response:", response, false);
+                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+            } else {
+                EmbedBuilder embedBuilder = new EmbedBuilder()
+                        .setDescription(":warning:  Command required")
+                        .setColor(Color.RED);
+                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
             }
         }
     }
@@ -253,10 +407,15 @@ public class EventsCommands extends ListenerAdapter {
             if(source.startsWith("http://") || source.startsWith("https://")) {
                 MusicManager.add(event.getGuild(), source, event);
             } else {
-                EmbedBuilder notSupportedMessage = new EmbedBuilder()
-                        .setDescription(":warning:  Currently not supported")
-                        .setColor(Color.RED);
-                event.getHook().sendMessage("").addEmbeds(notSupportedMessage.build()).queue();
+                List<AudioTrack> trackList = YTSearchHandler.search(source);
+                if(!trackList.isEmpty()) {
+                    MusicManager.add(event.getGuild(), trackList.get(0).getInfo().uri, event);
+                } else {
+                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                            .setDescription(":warning:  Nothing was found")
+                            .setColor(Color.RED);
+                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                }
             }
         } else {
             if(!MusicManager.getQueue(event.getGuild()).isEmpty() || MusicManager.isPaused(event.getGuild()) || MusicManager.getPlayingTrack(event.getGuild()) != null) {
@@ -277,5 +436,69 @@ public class EventsCommands extends ListenerAdapter {
                 event.getHook().sendMessage("").addEmbeds(resumedMessage.build()).queue();
             }
         }
+    }
+    private void playnow(SlashCommandEvent event) {
+        if(event.getOption("song") != null) {
+            String source = event.getOption("song").getAsString();
+            if(source.startsWith("http://") || source.startsWith("https://")) {
+                MusicManager.playnow(event.getGuild(), source, event);
+            } else {
+                List<AudioTrack> trackList = YTSearchHandler.search(source);
+                if(!trackList.isEmpty()) {
+                    MusicManager.playnow(event.getGuild(), trackList.get(0).getInfo().uri, event);
+                } else {
+                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                            .setDescription(":warning:  Nothing was found")
+                            .setColor(Color.RED);
+                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                }
+            }
+        } else {
+            EmbedBuilder embedBuilder = new EmbedBuilder()
+                    .setDescription(":warning:  Music source required")
+                    .setColor(Color.RED);
+            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+        }
+    }
+
+    private EmbedBuilder getNotConnectedErrorMessage(){
+        return new EmbedBuilder()
+                .setDescription(":warning:  Not connected")
+                .setColor(Color.RED);
+    }
+
+    private String formatTime(long millis) {
+        return String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(millis), TimeUnit.MILLISECONDS.toMinutes(millis) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis)), TimeUnit.MILLISECONDS.toSeconds(millis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis)));
+    }
+
+    private String getProgressBar(double position, double duration) {
+        String progressbar = "▬▬▬▬▬▬▬▬▬▬";
+        if(duration > 0) {
+            double percent = (position / duration) * 100;
+            if(percent >= 90) {
+                progressbar = "▬▬▬▬▬▬▬▬▬\uD83D\uDD18";
+            } else if(percent >= 80) {
+                progressbar = "▬▬▬▬▬▬▬▬\uD83D\uDD18▬";
+            } else if(percent >= 70) {
+                progressbar = "▬▬▬▬▬▬▬\uD83D\uDD18▬▬";
+            } else if(percent >= 60) {
+                progressbar = "▬▬▬▬▬▬\uD83D\uDD18▬▬▬";
+            } else if(percent >= 50) {
+                progressbar = "▬▬▬▬▬\uD83D\uDD18▬▬▬▬";
+            } else if(percent >= 40) {
+                progressbar = "▬▬▬▬\uD83D\uDD18▬▬▬▬▬";
+            } else if(percent >= 30) {
+                progressbar = "▬▬▬\uD83D\uDD18▬▬▬▬▬▬";
+            } else if(percent >= 20) {
+                progressbar = "▬▬\uD83D\uDD18▬▬▬▬▬▬▬";
+            } else if(percent >= 10) {
+                progressbar = "▬\uD83D\uDD18▬▬▬▬▬▬▬▬";
+            } else if(percent >= 0) {
+                progressbar = "\uD83D\uDD18▬▬▬▬▬▬▬▬▬";
+            } else {
+                progressbar = "▬▬▬▬▬▬▬▬▬▬";
+            }
+        }
+        return progressbar;
     }
 }
