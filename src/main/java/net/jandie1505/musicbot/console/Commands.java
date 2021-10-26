@@ -115,7 +115,7 @@ public class Commands {
                         if(cmd[1].equalsIgnoreCase("disconnect")) {
                             Guild g = MusicBot.getShardManager().getGuildById(cmd[2]);
                             if(g != null) {
-                                MusicManager.leaveVoiceChannel(g);
+                                MusicManager.disconnect(g);
                                 MusicManager.stop(g);
                                 returnString = "SENT DISCONNECT COMMAND";
                             } else {
@@ -202,7 +202,7 @@ public class Commands {
                             if(g != null) {
                                 VoiceChannel voiceChannel = g.getVoiceChannelById(cmd[3]);
                                 if(voiceChannel != null) {
-                                    MusicManager.joinVoiceChannel(voiceChannel);
+                                    MusicManager.connect(voiceChannel);
                                 } else {
                                     returnString = "VOICE CHANNEL IS NULL";
                                 }

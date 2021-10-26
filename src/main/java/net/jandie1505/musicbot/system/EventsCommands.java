@@ -7,7 +7,6 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.jandie1505.musicbot.console.Commands;
 import net.jandie1505.musicbot.search.YTSearchHandler;
 
 import java.awt.*;
@@ -110,7 +109,7 @@ public class EventsCommands extends ListenerAdapter {
                     event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
                     if(!MusicManager.isConnected(event.getGuild())) {
                         if(event.getMember().getVoiceState().inVoiceChannel()) {
-                            MusicManager.joinVoiceChannel(event.getMember().getVoiceState().getChannel());
+                            MusicManager.connect(event.getMember().getVoiceState().getChannel());
                             this.play(event);
                             try {
                                 TimeUnit.SECONDS.sleep(1);
@@ -190,7 +189,7 @@ public class EventsCommands extends ListenerAdapter {
                     if(MusicManager.isConnected(event.getGuild())) {
                         MusicManager.clear(event.getGuild());
                         MusicManager.stop(event.getGuild());
-                        MusicManager.leaveVoiceChannel(event.getGuild());
+                        MusicManager.disconnect(event.getGuild());
                         EmbedBuilder embedBuilder = new EmbedBuilder()
                                 .setDescription(":white_check_mark:  Left voice channel")
                                 .setColor(Color.RED);
@@ -330,7 +329,7 @@ public class EventsCommands extends ListenerAdapter {
                     if(event.getOption("song") != null) {
                         if(!MusicManager.isConnected(event.getGuild())) {
                             if(event.getMember().getVoiceState().inVoiceChannel()) {
-                                MusicManager.joinVoiceChannel(event.getMember().getVoiceState().getChannel());
+                                MusicManager.connect(event.getMember().getVoiceState().getChannel());
                                 this.playnow(event);
                             } else {
                                 EmbedBuilder notInVoiceChannel = new EmbedBuilder()
@@ -356,7 +355,7 @@ public class EventsCommands extends ListenerAdapter {
                         String returnString = "";
                         int index = 0;
                         for(AudioTrack track : trackList) {
-                            String current = "`" + index + ".` `" + formatTime(track.getInfo().length) + "` " + track.getInfo().title + " [" + track.getInfo().author + "]";
+                            String current = "`" + index + ".` `" + formatTime(track.getInfo().length) + "` " + track.getInfo().title + " [" + track.getInfo().author + "]\n";
                             String stringAfter = returnString + current;
                             if(!(stringAfter.length() > 1000)) {
                                 returnString = returnString + "`" + index + ".` `" + formatTime(track.getInfo().length) + "` " + track.getInfo().title + " [" + track.getInfo().author + "]\n";
@@ -446,8 +445,9 @@ public class EventsCommands extends ListenerAdapter {
             }
         }
         if(event.getName().equalsIgnoreCase("cmd")) {
+            event.deferReply(true).queue();
             if(event.getOption("cmd") != null) {
-                String response = Commands.command(event.getOption("cmd").getAsString());
+                String response = ""; /*Commands.command(event.getOption("cmd").getAsString());*/
                 EmbedBuilder embedBuilder = new EmbedBuilder()
                         .addField("Command response:", response, false);
                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();

@@ -29,7 +29,29 @@ public class MusicManager {
         }
     }
 
+    public static String getGuildIdFromMusicPlayer(MusicPlayer musicPlayer) {
+        for(String guildId : musicPlayers.keySet()) {
+            if(musicPlayers.get(guildId) == musicPlayer) {
+                return guildId;
+            }
+        }
+        return "";
+    }
+
     // CONNECTION
+    public static void connect(VoiceChannel voiceChannel) {
+        voiceChannel.getGuild().getAudioManager().setSendingHandler(getMusicPlayer(voiceChannel.getGuild().getId()).getAudioSendHandler());
+        voiceChannel.getGuild().getAudioManager().openAudioConnection(voiceChannel);
+    }
+    public static void disconnect(Guild g) {
+        if(isConnected(g)) {
+            g.getAudioManager().closeAudioConnection();
+        }
+    }
+    public static boolean isConnected(Guild g) {
+        return g.getSelfMember().getVoiceState().inVoiceChannel();
+    }
+
     public static void joinVoiceChannel(VoiceChannel voiceChannel) {
         voiceChannel.getGuild().getAudioManager().setSendingHandler(getMusicPlayer(voiceChannel.getGuild().getId()).getAudioSendHandler());
         voiceChannel.getGuild().getAudioManager().openAudioConnection(voiceChannel);
@@ -39,9 +61,7 @@ public class MusicManager {
             g.getAudioManager().closeAudioConnection();
         }
     }
-    public static boolean isConnected(Guild g) {
-        return g.getSelfMember().getVoiceState().inVoiceChannel();
-    }
+
 
     // QUEUE
     public static void add(Guild g, String source) {
