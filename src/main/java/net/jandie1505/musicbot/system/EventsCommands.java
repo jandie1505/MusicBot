@@ -119,7 +119,11 @@ public class EventsCommands extends ListenerAdapter {
                             event.getHook().sendMessage("").addEmbeds(notInVoiceChannel.build()).queue();
                         }
                     } else {
-                        this.play(event, false);
+                        if(!MusicManager.isPaused(event.getGuild()) && MusicManager.getPlayingTrack(event.getGuild()) == null) {
+                            this.play(event, true);
+                        } else {
+                            this.play(event, false);
+                        }
                     }
                 }
             } else if(event.getName().equalsIgnoreCase("add")) {
