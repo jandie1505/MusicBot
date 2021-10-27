@@ -3,11 +3,13 @@ package net.jandie1505.musicbot.system;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventListener;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.jandie1505.musicbot.MusicBot;
 import net.jandie1505.musicbot.music.MusicPlayer;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -130,6 +132,44 @@ public class MusicManager {
     }
     public static int getVolume(Guild g) {
         return getMusicPlayer(g.getId()).getVolume();
+    }
+
+    // SKIPVOTES
+    public static void addSkipvote(Guild g, Member m) {
+        if (!getMusicPlayer(g.getId()).hasSkipvoteManaer()) {
+            getMusicPlayer(g.getId()).createSkipvoteManager();
+        }
+        getMusicPlayer(g.getId()).getSkipvoteManager().addSkipvote(m);
+    }
+
+    public static void removeSkipvote(Guild g, Member m) {
+        if(getMusicPlayer(g.getId()).hasSkipvoteManaer()) {
+            getMusicPlayer(g.getId()).getSkipvoteManager().removeSkipvote(m);
+        }
+    }
+
+    public static List<Member> getSkipvotes(Guild g) {
+        List<Member> returnList = new ArrayList<>();
+
+        if(getMusicPlayer(g.getId()).hasSkipvoteManaer()) {
+            returnList.addAll(getMusicPlayer(g.getId()).getSkipvoteManager().getSkipvotes());
+        }
+
+        return returnList;
+    }
+
+    public static int getVoteCount(Guild g) {
+        if(getMusicPlayer(g.getId()).hasSkipvoteManaer()) {
+            return getMusicPlayer(g.getId()).getSkipvoteManager().getVoteCount();
+        }
+        return 0;
+    }
+
+    public static int getRequiredVotes(Guild g) {
+        if(getMusicPlayer(g.getId()).hasSkipvoteManaer()) {
+            return getMusicPlayer(g.getId()).getSkipvoteManager().getRequiredVotes();
+        }
+        return 0;
     }
 
 

@@ -442,6 +442,34 @@ public class EventsCommands extends ListenerAdapter {
                         event.getHook().sendMessage("").addEmbeds(getNotConnectedErrorMessage().build()).queue();
                     }
                 }
+            } else if(event.getName().equalsIgnoreCase("skip")) {
+                if(GMS.memberHasUserPermissions(event.getMember())) {
+                    event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                    if(MusicManager.isConnected(event.getGuild())) {
+                        if(MusicManager.getSkipvotes(event.getGuild()).contains(event.getMember())) {
+                            MusicManager.removeSkipvote(event.getGuild(), event.getMember());
+                            EmbedBuilder embedBuilder = new EmbedBuilder()
+                                    .setDescription(":negative_squared_cross_mark: Removed skipvote (" + MusicManager.getVoteCount(event.getGuild()) + "/" + MusicManager.getRequiredVotes(event.getGuild()) + ")")
+                                    .setColor(Color.YELLOW);
+                            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                        } else {
+                            MusicManager.addSkipvote(event.getGuild(), event.getMember());
+                            if(MusicManager.getVoteCount(event.getGuild()) >= MusicManager.getRequiredVotes(event.getGuild())) {
+                                EmbedBuilder embedBuilder = new EmbedBuilder()
+                                        .setDescription(":track_next:  Voteskip successful")
+                                        .setColor(Color.GREEN);
+                                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                            } else {
+                                EmbedBuilder embedBuilder = new EmbedBuilder()
+                                        .setDescription(":fast_foward:  You have voted to skip (" + MusicManager.getVoteCount(event.getGuild()) + "/" + MusicManager.getRequiredVotes(event.getGuild()) + ")")
+                                        .setColor(Color.YELLOW);
+                                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                            }
+                        }
+                    } else {
+                        event.getHook().sendMessage("").addEmbeds(getNotConnectedErrorMessage().build()).queue();
+                    }
+                }
             }
         }
         if(event.getName().equalsIgnoreCase("cmd")) {

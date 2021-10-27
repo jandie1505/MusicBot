@@ -23,6 +23,7 @@ public class MusicPlayer {
     private AudioPlayerSendHandler playerSendHandler;
     private TrackScheduler trackScheduler;
     private List<AudioTrack> queue;
+    private SkipvoteManager skipvoteManager;
 
     public MusicPlayer() {
         playerManager = new DefaultAudioPlayerManager();
@@ -249,6 +250,29 @@ public class MusicPlayer {
                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
             }
         });
+    }
+
+    // SKIPVOTES
+    public void createSkipvoteManager() {
+        if(skipvoteManager == null) {
+            this.skipvoteManager = new SkipvoteManager(this, 300);
+        }
+    }
+
+    public void destroySkipvoteManager() {
+        this.skipvoteManager = null;
+    }
+
+    public SkipvoteManager getSkipvoteManager() {
+        return skipvoteManager;
+    }
+
+    public boolean hasSkipvoteManaer() {
+        if(skipvoteManager != null) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     // GETTER
