@@ -5,6 +5,7 @@ import com.sedmelluq.discord.lavaplayer.player.event.AudioEventListener;
 import com.sedmelluq.discord.lavaplayer.player.event.PlayerPauseEvent;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.jandie1505.musicbot.search.YTSearchHandler;
@@ -487,6 +488,77 @@ public class EventsCommands extends ListenerAdapter {
                         }
                     } else {
                         event.getHook().sendMessage("").addEmbeds(getNotConnectedErrorMessage().build()).queue();
+                    }
+                }
+            } else if(event.getName().equalsIgnoreCase("mbsettings")) {
+                if(GMS.memberHasAdminPermissions(event.getMember())) {
+                    if(event.getSubcommandName() != null) {
+                        if(event.getSubcommandName().equalsIgnoreCase("info")) {
+                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                            String djroles = "";
+                            for(String DJRoleId : GMS.getDJRoles(event.getGuild().getId())) {
+                                Role role = event.getGuild().getRoleById(DJRoleId);
+                                if(role != null) {
+                                    djroles = djroles + role.getName() + " (" + role.getId() + ")\n";
+                                }
+                            }
+                            EmbedBuilder embedBuilder = new EmbedBuilder()
+                                    .setTitle("MusicBot Settings")
+                                    .setDescription("MusicBot by jandie1505")
+                                    .addField("DJ Roles:", djroles, false)
+                                    .addField("Ephemeral replies:", String.valueOf(DatabaseManager.getEphemeralState(event.getGuild().getId())), false);
+                            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                        } else if(event.getSubcommandName().equalsIgnoreCase("djrole")) {
+                            if(event.getOption("action") != null) {
+                                if(event.getOption("action").getAsString().equalsIgnoreCase("add")) {
+                                    event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                                    GMS.reloadDJRoles(event.getGuild().getId());
+                                    if(event.getOption("role") != null) {
+                                        GMS.addDJRole(event.getGuild().getId(), event.getOption("role").getAsRole().getId());
+                                        EmbedBuilder embedBuilder = new EmbedBuilder()
+                                                .setDescription(":white_check_mark:  Added DJ Role")
+                                                .setColor(Color.GREEN);
+                                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                    } else {
+                                        EmbedBuilder embedBuilder = new EmbedBuilder()
+                                                .setDescription(":warning:  Role required")
+                                                .setColor(Color.RED);
+                                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                    }
+                                } else if(event.getOption("action").getAsString().equalsIgnoreCase("remove")) {
+                                    event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                                    GMS.reloadDJRoles(event.getGuild().getId());
+                                    if(event.getOption("role") != null) {
+                                        GMS.removeDJRole(event.getGuild().getId(), event.getOption("role").getAsRole().getId());
+                                        EmbedBuilder embedBuilder = new EmbedBuilder()
+                                                .setDescription(":white_check_mark:  Removed DJ Role")
+                                                .setColor(Color.GREEN);
+                                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                    } else {
+                                        EmbedBuilder embedBuilder = new EmbedBuilder()
+                                                .setDescription(":warning:  Role required")
+                                                .setColor(Color.RED);
+                                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                    }
+                                } else if(event.getOption("action").getAsString().equalsIgnoreCase("clear")) {
+                                    event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                                    GMS.clearDJRoles(event.getGuild().getId());
+                                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                                            .setDescription(":white_check_mark:  Cleared DJ Roles")
+                                            .setColor(Color.GREEN);
+                                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                }
+                            }
+                        } else if(event.getSubcommandName().equalsIgnoreCase("ephemeral")) {
+                            if(event.getOption("state") != null) {
+                                event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                                DatabaseManager.setEphemeralState(event.getGuild().getId(), event.getOption("state").getAsBoolean());
+                                EmbedBuilder embedBuilder = new EmbedBuilder()
+                                        .setDescription(":white_check_mark:  Set ephemeral state to " + event.getOption("state").getAsBoolean())
+                                        .setColor(Color.GREEN);
+                                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                            }
+                        }
                     }
                 }
             }
