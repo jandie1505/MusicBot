@@ -55,22 +55,18 @@ public class MusicManager {
     }
 
     public static void joinVoiceChannel(VoiceChannel voiceChannel) {
-        voiceChannel.getGuild().getAudioManager().setSendingHandler(getMusicPlayer(voiceChannel.getGuild().getId()).getAudioSendHandler());
-        voiceChannel.getGuild().getAudioManager().openAudioConnection(voiceChannel);
+        connect(voiceChannel);
     }
     public static void leaveVoiceChannel(Guild g) {
-        if(isConnected(g)) {
-            g.getAudioManager().closeAudioConnection();
-        }
+        disconnect(g);
     }
-
 
     // QUEUE
-    public static void add(Guild g, String source) {
-        getMusicPlayer(g.getId()).queue(source);
+    public static void add(Guild g, String source, boolean startafterload) {
+        getMusicPlayer(g.getId()).queue(source, startafterload);
     }
-    public static void add(Guild g, String source, SlashCommandEvent event) {
-        getMusicPlayer(g.getId()).queue(source, event);
+    public static void add(Guild g, String source, SlashCommandEvent event, boolean startafterload) {
+        getMusicPlayer(g.getId()).queue(source, event, startafterload);
     }
     public static void remove(Guild g, int index) {
         getMusicPlayer(g.getId()).removeTrack(index);
@@ -180,6 +176,11 @@ public class MusicManager {
             if(g == null) {
                 musicPlayers.get(guildId).destroy();
                 musicPlayers.remove(guildId);
+            } else {
+                if(!g.getSelfMember().getVoiceState().inVoiceChannel()) {
+                    musicPlayers.get(guildId).destroy();
+                    musicPlayers.remove(guildId);
+                }
             }
         }
     }

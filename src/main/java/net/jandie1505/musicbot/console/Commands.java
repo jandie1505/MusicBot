@@ -212,7 +212,7 @@ public class Commands {
                         } else if(cmd[1].equalsIgnoreCase("add")) {
                             Guild g = MusicBot.getShardManager().getGuildById(cmd[2]);
                             if(g != null) {
-                                MusicManager.add(g, cmd[3]);
+                                MusicManager.add(g, cmd[3], false);
                                 returnString = "SENT ADD COMMAND";
                             } else {
                                 returnString = "GUILD IS NULL";

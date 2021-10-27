@@ -110,11 +110,7 @@ public class EventsCommands extends ListenerAdapter {
                     if(!MusicManager.isConnected(event.getGuild())) {
                         if(event.getMember().getVoiceState().inVoiceChannel()) {
                             MusicManager.connect(event.getMember().getVoiceState().getChannel());
-                            this.play(event);
-                            try {
-                                TimeUnit.SECONDS.sleep(1);
-                            } catch (InterruptedException e) {}
-                            MusicManager.next(event.getGuild());
+                            this.play(event, true);
                         } else {
                             EmbedBuilder notInVoiceChannel = new EmbedBuilder()
                                     .setDescription(":warning:  You are not in a voice channel")
@@ -122,7 +118,23 @@ public class EventsCommands extends ListenerAdapter {
                             event.getHook().sendMessage("").addEmbeds(notInVoiceChannel.build()).queue();
                         }
                     } else {
-                        this.play(event);
+                        this.play(event, false);
+                    }
+                }
+            } else if(event.getName().equalsIgnoreCase("add")) {
+                if(GMS.memberHasUserPermissions(event.getMember())) {
+                    event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                    if(MusicManager.isConnected(event.getGuild())) {
+                        if(event.getOption("song") != null) {
+                            MusicManager.add(event.getGuild(), event.getOption("song").getAsString(), event, false);
+                        } else {
+                            EmbedBuilder embedBuilder = new EmbedBuilder()
+                                    .setDescription(":warning:  Song required")
+                                    .setColor(Color.RED);
+                            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                        }
+                    } else {
+                        event.getHook().sendMessage("").addEmbeds(getNotConnectedErrorMessage().build()).queue();
                     }
                 }
             } else if(event.getName().equalsIgnoreCase("stop")) {
@@ -271,7 +283,21 @@ public class EventsCommands extends ListenerAdapter {
                         event.getHook().sendMessage("").addEmbeds(getNotConnectedErrorMessage().build()).queue();
                     }
                 }
-            } else if(event.getName().equalsIgnoreCase("movetrack")) {
+            } else if(event.getName().equalsIgnoreCase("clear")) {
+                if(GMS.memberHasDJPermissions(event.getMember())) {
+                    event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                    if(MusicManager.isConnected(event.getGuild())) {
+                        MusicManager.clear(event.getGuild());
+                        EmbedBuilder embedBuilder = new EmbedBuilder()
+                                .setDescription(":asterisk:  Queue cleared")
+                                .setColor(Color.GREEN);
+                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                    } else {
+                        event.getHook().sendMessage("").addEmbeds(getNotConnectedErrorMessage().build()).queue();
+                    }
+                }
+            }
+            else if(event.getName().equalsIgnoreCase("movetrack")) {
                 if(GMS.memberHasDJPermissions(event.getMember())) {
                     event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
                     if(MusicManager.isConnected(event.getGuild())) {
@@ -481,15 +507,15 @@ public class EventsCommands extends ListenerAdapter {
         }
     }
 
-    private void play(SlashCommandEvent event) {
+    private void play(SlashCommandEvent event, boolean startafterload) {
         if(event.getOption("song") != null) {
             String source = event.getOption("song").getAsString();
             if(source.startsWith("http://") || source.startsWith("https://")) {
-                MusicManager.add(event.getGuild(), source, event);
+                MusicManager.add(event.getGuild(), source, event, startafterload);
             } else {
                 List<AudioTrack> trackList = YTSearchHandler.search(source);
                 if(!trackList.isEmpty()) {
-                    MusicManager.add(event.getGuild(), trackList.get(0).getInfo().uri, event);
+                    MusicManager.add(event.getGuild(), trackList.get(0).getInfo().uri, event, startafterload);
                 } else {
                     EmbedBuilder embedBuilder = new EmbedBuilder()
                             .setDescription(":warning:  Nothing was found")
@@ -498,22 +524,29 @@ public class EventsCommands extends ListenerAdapter {
                 }
             }
         } else {
-            if(!MusicManager.getQueue(event.getGuild()).isEmpty() || MusicManager.isPaused(event.getGuild()) || MusicManager.getPlayingTrack(event.getGuild()) != null) {
-                if(MusicManager.isPaused(event.getGuild())) {
-                    MusicManager.setPause(event.getGuild(), false);
+            if(GMS.memberHasDJPermissions(event.getMember())) {
+                if(!MusicManager.getQueue(event.getGuild()).isEmpty() || MusicManager.isPaused(event.getGuild()) || MusicManager.getPlayingTrack(event.getGuild()) != null) {
+                    if(MusicManager.isPaused(event.getGuild())) {
+                        MusicManager.setPause(event.getGuild(), false);
+                    }
+                    if(MusicManager.getPlayingTrack(event.getGuild()) == null) {
+                        MusicManager.next(event.getGuild());
+                    }
+                    EmbedBuilder resumedMessage = new EmbedBuilder()
+                            .setDescription(":arrow_forward:  Resumed playback")
+                            .setColor(Color.GREEN);
+                    event.getHook().sendMessage("").addEmbeds(resumedMessage.build()).queue();
+                } else {
+                    EmbedBuilder resumedMessage = new EmbedBuilder()
+                            .setDescription(":warning:  Nothing playing")
+                            .setColor(Color.RED);
+                    event.getHook().sendMessage("").addEmbeds(resumedMessage.build()).queue();
                 }
-                if(MusicManager.getPlayingTrack(event.getGuild()) == null) {
-                    MusicManager.next(event.getGuild());
-                }
-                EmbedBuilder resumedMessage = new EmbedBuilder()
-                        .setDescription(":arrow_forward:  Resumed playback")
-                        .setColor(Color.GREEN);
-                event.getHook().sendMessage("").addEmbeds(resumedMessage.build()).queue();
             } else {
-                EmbedBuilder resumedMessage = new EmbedBuilder()
-                        .setDescription(":warning:  Nothing playing")
+                EmbedBuilder embedBuilder = new EmbedBuilder()
+                        .setDescription(":x:  No permission")
                         .setColor(Color.RED);
-                event.getHook().sendMessage("").addEmbeds(resumedMessage.build()).queue();
+                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
             }
         }
     }

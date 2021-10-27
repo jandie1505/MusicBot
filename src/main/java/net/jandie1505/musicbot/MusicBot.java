@@ -13,6 +13,7 @@ import net.jandie1505.musicbot.console.Console;
 import net.jandie1505.musicbot.system.*;
 import net.jandie1505.musicbot.tasks.TaskGMSReload;
 import net.jandie1505.musicbot.tasks.TaskGMSReloadComplete;
+import net.jandie1505.musicbot.tasks.TaskMusicManager;
 import net.jandie1505.musicbot.tasks.TaskShardsReload;
 
 import javax.security.auth.login.LoginException;
@@ -29,6 +30,7 @@ public class MusicBot {
     private static TaskShardsReload taskShardsReload;
     private static TaskGMSReload taskGMSReload;
     private static TaskGMSReloadComplete taskGMSReloadComplete;
+    private static TaskMusicManager taskMusicManager;
 
     public static void main(String[] args) throws Exception {
         Console console = new Console();
@@ -113,11 +115,13 @@ public class MusicBot {
     private static void onReady() {
         taskGMSReload = new TaskGMSReload();
         taskGMSReloadComplete = new TaskGMSReloadComplete();
+        taskMusicManager = new TaskMusicManager();
 
         GMS.reloadGuilds(true);
 
         taskGMSReload.start();
         taskGMSReloadComplete.start();
+        taskMusicManager.start();
 
         MusicManager.init();
 
@@ -292,6 +296,12 @@ public class MusicBot {
                 jda.upsertCommand(playCommand).queue();
                 Console.timestampMessage("Registered command play");
             }
+            if(!cmdNameList.contains("add") || reloadall) {
+                CommandData addCommand = new CommandData("add", "Add a song to queue without starting to play")
+                        .addOptions(new OptionData(OptionType.STRING, "song", "The song link / song name / playlist link you want to add").setRequired(true));
+                jda.upsertCommand(addCommand).queue();
+                Console.timestampMessage("Registered command add");
+            }
             if(!cmdNameList.contains("pause") || reloadall) {
                 CommandData pauseCommand = new CommandData("pause", "Stop playing music");
                 jda.upsertCommand(pauseCommand).queue();
@@ -302,6 +312,11 @@ public class MusicBot {
                         .addOptions(new OptionData(OptionType.INTEGER, "index", "The index of the song you want to remove").setRequired(true));
                 jda.upsertCommand(removeCommand).queue();
                 Console.timestampMessage("Registered command remove");
+            }
+            if(!cmdNameList.contains("clear") || reloadall) {
+                CommandData clearCommand = new CommandData("clear", "Clear the queue");
+                jda.upsertCommand(clearCommand).queue();
+                Console.timestampMessage("Registered command clear");
             }
             if(!cmdNameList.contains("search") || reloadall) {
                 CommandData searchCommand = new CommandData("search", "YTSearchHandler youtube")
@@ -376,7 +391,7 @@ public class MusicBot {
                 Console.timestampMessage("Registered command mbsettings");
             }
 
-            Console.messageShardManager("Upserted commands\nMode: " + reloadall);
+            Console.messageShardManager("Command setup (Mode: " + reloadall + ")");
         });
     }
 

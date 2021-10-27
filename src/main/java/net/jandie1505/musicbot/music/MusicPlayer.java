@@ -36,16 +36,22 @@ public class MusicPlayer {
     }
 
     // QUEUE
-    public void queue(String source) {
+    public void queue(String source, boolean startafterload) {
         playerManager.loadItem(source, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack audioTrack) {
                 queue.add(audioTrack);
+                if(startafterload) {
+                    nextTrack();
+                }
             }
 
             @Override
             public void playlistLoaded(AudioPlaylist audioPlaylist) {
                 queue.addAll(audioPlaylist.getTracks());
+                if(startafterload) {
+                    nextTrack();
+                }
             }
             @Override public void noMatches() {
 
@@ -58,7 +64,7 @@ public class MusicPlayer {
         });
     }
 
-    public void queue(String source, SlashCommandEvent event) {
+    public void queue(String source, SlashCommandEvent event, boolean startafterload) {
         playerManager.loadItem(source, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack audioTrack) {
@@ -67,6 +73,9 @@ public class MusicPlayer {
                         .setDescription("Added " + audioTrack.getInfo().title + " [" + audioTrack.getInfo().author + "] to queue")
                         .setColor(Color.GREEN);
                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                if(startafterload) {
+                    nextTrack();
+                }
             }
 
             @Override
@@ -76,6 +85,9 @@ public class MusicPlayer {
                         .setDescription("Added " + audioPlaylist.getName() + " [" + audioPlaylist.getTracks().size() + " tracks] to queue")
                         .setColor(Color.GREEN);
                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                if(startafterload) {
+                    nextTrack();
+                }
             }
 
             @Override public void noMatches() {
