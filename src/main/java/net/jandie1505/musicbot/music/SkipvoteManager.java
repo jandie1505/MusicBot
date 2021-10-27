@@ -63,6 +63,7 @@ public class SkipvoteManager implements Runnable {
                 }
                 TimeUnit.SECONDS.sleep(1);
             } catch(Exception e) {
+                e.printStackTrace();
                 this.destroy();
             }
         }

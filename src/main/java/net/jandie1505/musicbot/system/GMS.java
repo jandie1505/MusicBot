@@ -332,7 +332,8 @@ public class GMS {
     2 = Normal users have DJ permissions
      */
     public static boolean memberHasUserPermissions(Member m) {
-        if(m != null) {
+        return true;
+        /*if(m != null) {
             if(memberHasDJPermissions(m)) {
                 return true;
             } else if(DatabaseManager.getRestrictToRoles(m.getGuild().getId()) >= 1) {
@@ -340,6 +341,8 @@ public class GMS {
             }
         }
         return false;
+
+         */
     }
 
     public static boolean memberHasDJPermissions(Member m) {
