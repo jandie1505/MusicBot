@@ -665,25 +665,25 @@ public class EventsCommands extends ListenerAdapter {
         if(duration > 0) {
             double percent = (position / duration) * 100;
             if(percent >= 90) {
-                progressbar = "▬▬▬▬▬▬▬▬▬\uD83D\uDD18";
+                progressbar = "▬▬▬▬▬▬▬▬▬:radio_button:";
             } else if(percent >= 80) {
-                progressbar = "▬▬▬▬▬▬▬▬\uD83D\uDD18▬";
+                progressbar = "▬▬▬▬▬▬▬▬:radio_button:▬";
             } else if(percent >= 70) {
-                progressbar = "▬▬▬▬▬▬▬\uD83D\uDD18▬▬";
+                progressbar = "▬▬▬▬▬▬▬:radio_button:▬▬";
             } else if(percent >= 60) {
-                progressbar = "▬▬▬▬▬▬\uD83D\uDD18▬▬▬";
+                progressbar = "▬▬▬▬▬▬:radio_button:▬▬▬";
             } else if(percent >= 50) {
-                progressbar = "▬▬▬▬▬\uD83D\uDD18▬▬▬▬";
+                progressbar = "▬▬▬▬▬:radio_button:▬▬▬▬";
             } else if(percent >= 40) {
-                progressbar = "▬▬▬▬\uD83D\uDD18▬▬▬▬▬";
+                progressbar = "▬▬▬▬:radio_button:▬▬▬▬▬";
             } else if(percent >= 30) {
-                progressbar = "▬▬▬\uD83D\uDD18▬▬▬▬▬▬";
+                progressbar = "▬▬▬:radio_button:▬▬▬▬▬▬";
             } else if(percent >= 20) {
-                progressbar = "▬▬\uD83D\uDD18▬▬▬▬▬▬▬";
+                progressbar = "▬▬:radio_button:▬▬▬▬▬▬▬";
             } else if(percent >= 10) {
-                progressbar = "▬\uD83D\uDD18▬▬▬▬▬▬▬▬";
+                progressbar = "▬:radio_button:▬▬▬▬▬▬▬▬";
             } else if(percent >= 0) {
-                progressbar = "\uD83D\uDD18▬▬▬▬▬▬▬▬▬";
+                progressbar = ":radio_button:▬▬▬▬▬▬▬▬▬";
             } else {
                 progressbar = "▬▬▬▬▬▬▬▬▬▬";
             }
