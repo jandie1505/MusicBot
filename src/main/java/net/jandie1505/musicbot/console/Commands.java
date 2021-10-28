@@ -45,9 +45,10 @@ public class Commands {
                     returnString = shardsCommand(cmd);
                 } else if(cmd[0].equalsIgnoreCase("verbose")) {
                     returnString = verboseCommand(cmd);
-                }
+                } else if(cmd[0].equalsIgnoreCase("help"))
+                    returnString = helpCommand(cmd);
                 else {
-                    returnString = "UNKNOWN COMMAND";
+                    returnString = "Unknown command. Use help for a list of available commands.";
                 }
             }
         } catch(Exception e) {
@@ -365,5 +366,16 @@ public class Commands {
             }
         }
         return returnString;
+    }
+
+    private static String helpCommand(String[] cmd) {
+        return "Help commands:\n" +
+                "guild - Guild management\n" +
+                "stop/shutdown - Shutdown the bot\n" +
+                "invite - Get a corrent invite link\n" +
+                "player - Manage guild music players\n" +
+                "cmdreload [true] - Reload all slash commands\n" +
+                "shard - Manage shards\n" +
+                "verbose - Enable/disable verbose logging\n";
     }
 }
