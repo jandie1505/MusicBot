@@ -44,25 +44,21 @@ public class Console implements Runnable {
     public static void messageShardManager(String msg) {
         timestampMessage("[SHARDS] " + msg);
     }
-
     public static void messageGMS(String msg) {
         if(GMSLogging) {
             timestampMessage("[GMS] " + msg);
         }
     }
-
     public static void messageDB(String msg) {
         if(DBMLogging) {
             timestampMessage("[DB] " + msg);
         }
     }
-
     public static void messageGMS(String msg, boolean important) {
         if(GMSLogging || important) {
             timestampMessage("[GMS] " + msg);
         }
     }
-
     public static void messageDB(String msg, boolean important) {
         if(DBMLogging || important) {
             timestampMessage("[DB] " + msg);
