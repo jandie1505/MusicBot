@@ -16,6 +16,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class MusicPlayer {
     private AudioPlayerManager playerManager;
@@ -280,11 +281,7 @@ public class MusicPlayer {
     }
 
     public boolean hasSkipvoteManaer() {
-        if(skipvoteManager != null) {
-            return true;
-        } else {
-            return false;
-        }
+        return Objects.nonNull(skipvoteManager);
     }
 
     // GETTER

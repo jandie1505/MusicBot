@@ -18,7 +18,7 @@ public class TaskGMSReload implements Runnable {
             try {
                 TimeUnit.SECONDS.sleep(900);
                 GMS.reloadGuilds(false);
-            } catch(Exception e) {}
+            } catch(Exception ignored) {}
         }
         System.out.println("TaskGMSReload stopped");
     }

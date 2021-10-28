@@ -277,7 +277,8 @@ public class MusicBot {
             }
             if(!cmdNameList.contains("help") || reloadall) {
                 CommandData commandData = new CommandData("help", "Get help and information about MusicBot");
-                jda.upsertCommand(commandData).queue();Console.timestampMessage("Registered command help");
+                jda.upsertCommand(commandData).queue();
+                Console.timestampMessage("Registered command help");
             }
             if(!cmdNameList.contains("nowplaying") || reloadall) {
                 CommandData nowplayingCommand = new CommandData("nowplaying", "Shows information about the song which is currently playing");
