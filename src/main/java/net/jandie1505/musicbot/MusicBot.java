@@ -250,7 +250,13 @@ public class MusicBot {
     }
 
     public static boolean completeOnline() {
-        return (shardManager.getShardsRunning() == shardManager.getShardsTotal());
+        boolean status = true;
+        for(JDA jda : shardManager.getStatuses().keySet()) {
+            if(jda.getStatus() != JDA.Status.CONNECTED) {
+                status = false;
+            }
+        }
+        return (shardManager.getShardsRunning() == shardManager.getShardsTotal()) && status;
     }
 
     // UPSERT COMMANDS
