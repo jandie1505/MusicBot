@@ -287,9 +287,9 @@ public class Commands {
         String returnString = "";
         if(cmd.length == 2) {
             if(cmd[1].equalsIgnoreCase("list")) {
-                returnString = "* SHARD ID | SHARD STRING | GUILDS *\n";
+                returnString = "* SHARD ID | STATUS | GUILDS *\n";
                 for(JDA jda : MusicBot.getShardManager().getShards()) {
-                    returnString = returnString + "* " + jda.getShardInfo().getShardId() + " | " + jda.getShardInfo().getShardString() + " | " + jda.getGuilds().size() + " *\n";
+                    returnString = returnString + "* " + jda.getShardInfo().getShardId() + " | " + jda.getStatus() + " | " + jda.getGuilds().size() + " *\n";
                 }
                 returnString = returnString + "* SHARDS ONLINE: " + MusicBot.getShardManager().getShardsRunning() + "\n" +
                         "* SHARDS QUEUED: " + MusicBot.getShardManager().getShardsQueued() + "\n" +
