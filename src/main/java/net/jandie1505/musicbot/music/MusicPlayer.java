@@ -11,6 +11,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.jandie1505.musicbot.system.GMS;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -69,24 +70,41 @@ public class MusicPlayer {
         playerManager.loadItem(source, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack audioTrack) {
-                queue.add(audioTrack);
-                EmbedBuilder embedBuilder = new EmbedBuilder()
-                        .setDescription("Added " + audioTrack.getInfo().title + " [" + audioTrack.getInfo().author + "] to queue")
-                        .setColor(Color.GREEN);
-                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                if(startafterload) {
-                    nextTrack();
+                if(!GMS.isBlacklisted(event.getGuild(), event.getMember(), audioTrack.getInfo().uri)) {
+                    queue.add(audioTrack);
+                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                            .setDescription("Added " + audioTrack.getInfo().title + " [" + audioTrack.getInfo().author + "] to queue")
+                            .setColor(Color.GREEN);
+                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                    if(startafterload) {
+                        nextTrack();
+                    }
+                } else {
+                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                            .setDescription(":warning:  This track is blacklisted")
+                            .setColor(Color.RED);
+                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                 }
             }
 
             @Override
             public void playlistLoaded(AudioPlaylist audioPlaylist) {
-                queue.addAll(audioPlaylist.getTracks());
+                boolean blacklisted = false;
+                for(AudioTrack track : audioPlaylist.getTracks()) {
+                    if(!GMS.isBlacklisted(event.getGuild(), event.getMember(), track.getInfo().uri)) {
+                        queue.add(track);
+                    } else {
+                        blacklisted = true;
+                    }
+                }
                 EmbedBuilder embedBuilder = new EmbedBuilder()
                         .setDescription("Added " + audioPlaylist.getName() + " [" + audioPlaylist.getTracks().size() + " tracks] to queue")
                         .setColor(Color.GREEN);
+                if(blacklisted) {
+                    embedBuilder.setDescription("Added " + audioPlaylist.getName() + " [" + audioPlaylist.getTracks().size() + " tracks] to queue (some of the tracks are blacklisted and could not be added)");
+                }
                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                if(startafterload) {
+                if(startafterload && !queue.isEmpty()) {
                     nextTrack();
                 }
             }
@@ -241,11 +259,18 @@ public class MusicPlayer {
         playerManager.loadItem(source, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack audioTrack) {
-                play(audioTrack);
-                EmbedBuilder embedBuilder = new EmbedBuilder()
-                        .setDescription("Playing " + audioTrack.getInfo().title + " [" + audioTrack.getInfo().author + "] now")
-                        .setColor(Color.GREEN);
-                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                if(!GMS.isBlacklisted(event.getGuild(), event.getMember(), audioTrack.getInfo().uri)) {
+                    play(audioTrack);
+                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                            .setDescription("Playing " + audioTrack.getInfo().title + " [" + audioTrack.getInfo().author + "] now")
+                            .setColor(Color.GREEN);
+                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                } else {
+                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                            .setDescription(":warning:  This track is blacklisted")
+                            .setColor(Color.RED);
+                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                }
             }
 
             @Override

@@ -9,11 +9,6 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.exceptions.PermissionException;
-import net.dv8tion.jda.api.interactions.commands.Command;
-import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.build.CommandData;
-import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.sharding.ShardManager;
 import net.jandie1505.musicbot.MusicBot;
@@ -23,7 +18,6 @@ import org.json.JSONArray;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class GMS {
     private static ShardManager shardManager;
@@ -370,5 +364,33 @@ public class GMS {
             return true;
         }
         return false;
+    }
+
+    // BLACKLIST
+    public static boolean isBlacklisted(Guild g, String link) {
+        if(g != null) {
+            return !DatabaseManager.getGlobalBlacklist().contains(link) || !DatabaseManager.getBlacklist(g.getId()).contains(link);
+        } else {
+            return false;
+        }
+    }
+    public static boolean isBlacklisted(Guild g, Member m, String link) {
+        if(g != null) {
+            if(!DatabaseManager.getGlobalBlacklist().contains(link)) {
+                if(!DatabaseManager.getBlacklist(g.getId()).contains(link)) {
+                    return true;
+                } else {
+                    if(!GMS.memberHasDJPermissions(m)) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 }
