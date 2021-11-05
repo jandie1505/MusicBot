@@ -30,6 +30,7 @@ public class MusicBot {
     private static int shardsTotal = 1;
     private static boolean publicMode;
     private static boolean shardAutoMode = true;
+    private static String bowOwner = "";
     private static TaskShardsReload taskShardsReload;
     private static TaskGMSReload taskGMSReload;
     private static TaskGMSReloadComplete taskGMSReloadComplete;
@@ -69,13 +70,21 @@ public class MusicBot {
                 System.out.println("Starting in private mode because the mode was not specified.");
             }
             if(args.length >= 5) {
-                SpotifySearchHandler.setClientId(args[4]);
+                bowOwner = args[4];
+            } else {
+                bowOwner = "";
+                System.out.println("Bot owner is not specified");
+            }
+            if(args.length >= 6) {
+                SpotifySearchHandler.setClientId(args[5]);
+                System.out.println(args[5]);
             } else {
                 SpotifySearchHandler.setClientId("");
                 System.out.println("Starting without spotify client id (no support for spotify playlists)");
             }
-            if(args.length >= 6) {
-                SpotifySearchHandler.setClientSecret(args[5]);
+            if(args.length >= 7) {
+                SpotifySearchHandler.setClientSecret(args[6]);
+                System.out.println(args[6]);
             } else {
                 SpotifySearchHandler.setClientSecret("");
                 System.out.println("Starting without spotify client secret (no support for spotify playlists)");
@@ -103,7 +112,7 @@ public class MusicBot {
             System.exit(-2);
         } catch(ArrayIndexOutOfBoundsException | NumberFormatException e) {
             System.out.println("Check your start arguments\n" +
-                    "Start arguments: <token (String)> [<shardsCount (int)> <publicMode (boolean)> <verbose (boolean)> <spotifyAPIKey (String)>]");
+                    "Start arguments: <token (String)> [<shardsCount (int)> <publicMode (boolean)> <verbose (boolean)> <bowOwnerId (String)> <spotifyClientId (String)> <spotifyClientSecret (String)>]");
             TimeUnit.SECONDS.sleep(3);
             System.exit(-1);
         }
@@ -427,5 +436,9 @@ public class MusicBot {
 
     public static boolean getPublicMode() {
         return publicMode;
+    }
+
+    public static String getBowOwner() {
+        return bowOwner;
     }
 }

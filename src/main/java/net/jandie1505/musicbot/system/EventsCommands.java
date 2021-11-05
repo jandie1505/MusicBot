@@ -10,6 +10,8 @@ import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.ErrorResponse;
+import net.jandie1505.musicbot.MusicBot;
+import net.jandie1505.musicbot.console.Commands;
 import net.jandie1505.musicbot.search.SpotifySearchHandler;
 import net.jandie1505.musicbot.search.YTSearchHandler;
 
@@ -616,17 +618,19 @@ public class EventsCommands extends ListenerAdapter {
     }
 
     private void cmdCommand(SlashCommandEvent event) {
-        event.deferReply(true).queue();
-        if(event.getOption("cmd") != null) {
-            String response = ""; /*Commands.command(event.getOption("cmd").getAsString());*/
-            EmbedBuilder embedBuilder = new EmbedBuilder()
-                    .addField("Command response:", response, false);
-            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-        } else {
-            EmbedBuilder embedBuilder = new EmbedBuilder()
-                    .setDescription(":warning:  Command required")
-                    .setColor(Color.RED);
-            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+        if(event.getMember().getId().equals(MusicBot.getBowOwner())) {
+            event.deferReply(true).queue();
+            if(event.getOption("cmd") != null) {
+                String response = Commands.command(event.getOption("cmd").getAsString());
+                EmbedBuilder embedBuilder = new EmbedBuilder()
+                        .addField("Command response:", response, false);
+                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+            } else {
+                EmbedBuilder embedBuilder = new EmbedBuilder()
+                        .setDescription(":warning:  Command required")
+                        .setColor(Color.RED);
+                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+            }
         }
     }
 

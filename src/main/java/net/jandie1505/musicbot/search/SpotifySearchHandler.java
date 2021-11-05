@@ -4,9 +4,11 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
 import com.wrapper.spotify.model_objects.specification.Paging;
+import com.wrapper.spotify.model_objects.specification.Playlist;
 import com.wrapper.spotify.model_objects.specification.PlaylistTrack;
 import com.wrapper.spotify.model_objects.specification.Track;
 import com.wrapper.spotify.requests.authorization.client_credentials.ClientCredentialsRequest;
+import com.wrapper.spotify.requests.data.playlists.GetPlaylistRequest;
 import com.wrapper.spotify.requests.data.playlists.GetPlaylistsItemsRequest;
 import com.wrapper.spotify.requests.data.tracks.GetTrackRequest;
 
@@ -39,8 +41,8 @@ public class SpotifySearchHandler {
                     ClientCredentials clientCredentials = clientCredentialsRequest.execute();
                     spotifyApi.setAccessToken(clientCredentials.getAccessToken());
 
-                    // GET PLAYLIST
-                    GetPlaylistsItemsRequest playlistsItemsRequest = spotifyApi.getPlaylistsItems(playlistId).limit(1000).build();
+                    // GET PLAYLISTS ITEMS
+                    GetPlaylistsItemsRequest playlistsItemsRequest = spotifyApi.getPlaylistsItems(playlistId).build();
                     Paging<PlaylistTrack> playlistTrackPaging = playlistsItemsRequest.execute();
 
                     // GET TRACKS OF PLAYLIST ENTRIES, SEARCH FOR THEM ON YOUTUBE AND ADD THEM TO A LIST
