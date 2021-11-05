@@ -740,7 +740,9 @@ public class EventsCommands extends ListenerAdapter {
                                 event.getHook().editOriginal(" ").setEmbeds(embedBuilder.build()).queue(null, new ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE));
                                 int index = 0;
                                 for(AudioTrack track : trackList) {
-                                    MusicManager.add(event.getGuild(), track.getInfo().uri, ((index == 0) && startafterload));
+                                    if(!GMS.isBlacklisted(event.getGuild(), event.getMember(), track.getInfo().uri)) {
+                                        MusicManager.add(event.getGuild(), track.getInfo().uri, ((index == 0) && startafterload));
+                                    }
                                     index++;
                                     try {
                                         TimeUnit.SECONDS.sleep(1);

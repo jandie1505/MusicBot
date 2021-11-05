@@ -376,15 +376,15 @@ public class GMS {
     }
     public static boolean isBlacklisted(Guild g, Member m, String link) {
         if(g != null) {
-            if(!DatabaseManager.getGlobalBlacklist().contains(link)) {
-                if(!DatabaseManager.getBlacklist(g.getId()).contains(link)) {
-                    return true;
-                } else {
+            if(DatabaseManager.getGlobalBlacklist().contains(link)) {
+                if(DatabaseManager.getBlacklist(g.getId()).contains(link)) {
                     if(!GMS.memberHasDJPermissions(m)) {
                         return true;
                     } else {
                         return false;
                     }
+                } else {
+                    return false;
                 }
             } else {
                 return false;
