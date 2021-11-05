@@ -647,21 +647,21 @@ public class EventsCommands extends ListenerAdapter {
             String source = event.getOption("song").getAsString();
             if(source.startsWith("http://") || source.startsWith("https://")) {
                 if(source.contains("https://open.spotify.com/playlist/")) {
-                    Random randomizer = new Random();
-                    int random = randomizer.nextInt(9);
-                    if(random == 8) {
-                        event.getHook().sendMessage("Loading spotify playlist. Here is a gif to show you how long this can take:\nhttps://tenor.com/view/loading-forever-12years-later-gif-10516198").queue();
-                    } else {
-                        EmbedBuilder embedBuilder = new EmbedBuilder()
-                                .setDescription(":zzz:  Loading playlist from spotify...")
-                                .setColor(Color.YELLOW);
-                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                    }
-                    List<AudioTrack> trackList = SpotifySearchHandler.search(source);
-                    if(!trackList.isEmpty()) {
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Random randomizer = new Random();
+                            int random = randomizer.nextInt(9);
+                            if(random == 8) {
+                                event.getHook().sendMessage("Loading spotify playlist. Here is a gif to show you how long this can take:\nhttps://tenor.com/view/loading-forever-12years-later-gif-10516198").queue();
+                            } else {
+                                EmbedBuilder embedBuilder = new EmbedBuilder()
+                                        .setDescription(":zzz:  Loading playlist from spotify...")
+                                        .setColor(Color.YELLOW);
+                                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                            }
+                            List<AudioTrack> trackList = SpotifySearchHandler.search(source);
+                            if(!trackList.isEmpty()) {
                                 EmbedBuilder embedBuilder = new EmbedBuilder()
                                         .setDescription(":zzz:  Converting to youtube...")
                                         .setColor(Color.YELLOW);
@@ -680,27 +680,32 @@ public class EventsCommands extends ListenerAdapter {
                                         .setDescription(":white_check_mark:  Successfully added " + trackList.size() + " songs from spotify")
                                         .setColor(Color.GREEN);
                                 event.getHook().editOriginal(" ").setEmbeds(embedBuilder2.build()).queue(null, new ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE));
+                            } else {
+                                EmbedBuilder embedBuilder = new EmbedBuilder()
+                                        .setDescription(":warning:  Nothing was found")
+                                        .setColor(Color.RED);
+                                event.getHook().editOriginal(" ").setEmbeds(embedBuilder.build()).queue(null, new ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE));
                             }
-                        }).start();
-                    } else {
-                        EmbedBuilder embedBuilder = new EmbedBuilder()
-                                .setDescription(":warning:  Nothing was found")
-                                .setColor(Color.RED);
-                        event.getHook().editOriginal(" ").setEmbeds(embedBuilder.build()).queue(null, new ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE));
-                    }
+                        }
+                    }).start();
                 } else {
                     MusicManager.add(event.getGuild(), source, event, startafterload);
                 }
             } else {
-                List<AudioTrack> trackList = YTSearchHandler.search(source);
-                if(!trackList.isEmpty()) {
-                    MusicManager.add(event.getGuild(), trackList.get(0).getInfo().uri, event, startafterload);
-                } else {
-                    EmbedBuilder embedBuilder = new EmbedBuilder()
-                            .setDescription(":warning:  Nothing was found")
-                            .setColor(Color.RED);
-                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                }
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        List<AudioTrack> trackList = YTSearchHandler.search(source);
+                        if(!trackList.isEmpty()) {
+                            MusicManager.add(event.getGuild(), trackList.get(0).getInfo().uri, event, startafterload);
+                        } else {
+                            EmbedBuilder embedBuilder = new EmbedBuilder()
+                                    .setDescription(":warning:  Nothing was found")
+                                    .setColor(Color.RED);
+                            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                        }
+                    }
+                }).start();
             }
         } else {
             if(GMS.memberHasDJPermissions(event.getMember())) {
@@ -735,15 +740,20 @@ public class EventsCommands extends ListenerAdapter {
             if(source.startsWith("http://") || source.startsWith("https://")) {
                 MusicManager.playnow(event.getGuild(), source, event);
             } else {
-                List<AudioTrack> trackList = YTSearchHandler.search(source);
-                if(!trackList.isEmpty()) {
-                    MusicManager.playnow(event.getGuild(), trackList.get(0).getInfo().uri, event);
-                } else {
-                    EmbedBuilder embedBuilder = new EmbedBuilder()
-                            .setDescription(":warning:  Nothing was found")
-                            .setColor(Color.RED);
-                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                }
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        List<AudioTrack> trackList = YTSearchHandler.search(source);
+                        if(!trackList.isEmpty()) {
+                            MusicManager.playnow(event.getGuild(), trackList.get(0).getInfo().uri, event);
+                        } else {
+                            EmbedBuilder embedBuilder = new EmbedBuilder()
+                                    .setDescription(":warning:  Nothing was found")
+                                    .setColor(Color.RED);
+                            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                        }
+                    }
+                }).start();
             }
         } else {
             EmbedBuilder embedBuilder = new EmbedBuilder()
