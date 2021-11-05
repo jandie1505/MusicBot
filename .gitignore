@@ -1,2 +1,4 @@
 /database.sqlite
 *.class
+/out/
+/target/
