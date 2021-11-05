@@ -28,6 +28,8 @@ public class Commands {
                     returnString = "https://discord.com/api/oauth2/authorize?client_id=" + MusicBot.getShardManager().retrieveApplicationInfo().getJDA().getSelfUser().getApplicationId() + "&permissions=2251418689&scope=bot%20applications.commands";
                 } else if(cmd[0].equalsIgnoreCase("player")) {
                     returnString = playerCommand(cmd);
+                } else if(cmd[0].equalsIgnoreCase("blacklist")) {
+                    returnString = blacklistCommand(cmd);
                 } else if(cmd[0].equalsIgnoreCase("cmdreload")) {
                     if(cmd.length == 2) {
                         if(cmd[1].equalsIgnoreCase("true")) {
@@ -45,8 +47,9 @@ public class Commands {
                     returnString = shardsCommand(cmd);
                 } else if(cmd[0].equalsIgnoreCase("verbose")) {
                     returnString = verboseCommand(cmd);
-                } else if(cmd[0].equalsIgnoreCase("help"))
+                } else if(cmd[0].equalsIgnoreCase("help")) {
                     returnString = helpCommand(cmd);
+                }
                 else {
                     returnString = "Unknown command. Use help for a list of available commands.";
                 }
@@ -365,6 +368,59 @@ public class Commands {
                         "Database Manager (DB/DBM): " + Console.isDBMLogging() + "\n";
             }
         }
+        return returnString;
+    }
+
+    private static String blacklistCommand(String[] cmd) {
+        String returnString = "";
+
+        if(cmd.length >= 3) {
+            if(cmd[1].equalsIgnoreCase("global")) {
+                if(cmd.length == 3) {
+                    if(cmd[2].equalsIgnoreCase("list")) {
+                        returnString = "GLOBAL BLACKLIST:\n" + DatabaseManager.getGlobalBlacklist().toString() + "\n";
+                    } else if(cmd[2].equalsIgnoreCase("clear")) {
+                        DatabaseManager.clearGlobalBlacklist();
+                        returnString = "CLEARED GLOBAL BLACKLIST";
+                    }
+                } else if(cmd.length == 4) {
+                    if(cmd[2].equalsIgnoreCase("add")) {
+                        DatabaseManager.addToGlobalBlacklist(cmd[3]);
+                        returnString = "ADDED LINK TO GLOBAL BLACKLIST";
+                    } else if(cmd[2].equalsIgnoreCase("remove")) {
+                        DatabaseManager.deleteFromGlobalBlacklist(cmd[3]);
+                        returnString = "REMOVED LINK FROM GLOBAL BLACKLIST";
+                    }
+                }
+            } else if(cmd[1].equalsIgnoreCase("guild")) {
+                if(cmd.length == 4) {
+                    if(cmd[3].equalsIgnoreCase("list")) {
+                        returnString = "BLACKLIST:\n" + DatabaseManager.getBlacklist(cmd[2]).toString() + "\n";
+                    } else if(cmd[3].equalsIgnoreCase("clear")) {
+                        DatabaseManager.clearBlacklist(cmd[3]);
+                        returnString = "CLEARED BLACKLIST";
+                    }
+                } else if(cmd.length == 5) {
+                    if(cmd[3].equalsIgnoreCase("add")) {
+                        DatabaseManager.addToBlacklist(cmd[2], cmd[4]);
+                        returnString = "ADDED LINK TO BLACKLIST";
+                    } else if(cmd[3].equalsIgnoreCase("remove")) {
+                        DatabaseManager.deleteFromBlacklist(cmd[2], cmd[4]);
+                        returnString = "REMOVED LINK FROM BLACKLIST";
+                    }
+                }
+            }
+        } else {
+            returnString = "blacklist global add <link>\n" +
+                    "blacklist global remove <link>\n" +
+                    "blacklist global list\n" +
+                    "blacklist global clear\n" +
+                    "blacklist guild <guildId> add <link>\n" +
+                    "blacklist guild <guildId> remove <link>\n" +
+                    "blacklist guild <guildId> list\n" +
+                    "blacklist guild <guildId> clear\n";
+        }
+
         return returnString;
     }
 

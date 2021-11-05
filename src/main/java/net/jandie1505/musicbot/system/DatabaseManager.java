@@ -310,7 +310,7 @@ public class DatabaseManager {
             statement.setString(1, link);
             ResultSet rs = statement.executeQuery();
             if(!rs.next()) {
-                String sql2 = "INSERT INTO guild_whitelist (guildId, link)" +
+                String sql2 = "INSERT INTO music_blacklist (guildId, link)" +
                         " values (NULL, ?);";
                 PreparedStatement statement2 = connection.prepareStatement(sql2);
                 statement2.setString(1, link);
@@ -377,10 +377,11 @@ public class DatabaseManager {
             statement.setString(2, link);
             ResultSet rs = statement.executeQuery();
             if(!rs.next()) {
-                String sql2 = "INSERT INTO guild_whitelist (guildId, link)" +
-                        " values (NULL, ?);";
+                String sql2 = "INSERT INTO music_blacklist (guildId, link)" +
+                        " values (?, ?);";
                 PreparedStatement statement2 = connection.prepareStatement(sql2);
-                statement2.setString(1, link);
+                statement2.setString(1, guildId);
+                statement2.setString(2, link);
                 statement2.execute();
                 Console.messageDB("Added link to blacklist of guild " + guildId);
             }
