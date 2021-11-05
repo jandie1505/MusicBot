@@ -415,10 +415,14 @@ public class MusicBot {
                         .addOptions(new OptionData(OptionType.ROLE, "role", "Only required if you have chosen add/remove"));
                 SubcommandData mbsettingsEphemeralCommand = new SubcommandData("ephemeral", "Enable/disable private (ephemeral) reply")
                         .addOptions(new OptionData(OptionType.BOOLEAN, "state", "Set to true to enable private (ephemeral) replies").setRequired(true));
+                SubcommandData mbsettingsBlacklistCommand = new SubcommandData("blacklist", "Manage the blacklist")
+                        .addOptions(new OptionData(OptionType.STRING, "action", "Add/remove/clear/list").setRequired(true).addChoice("add", "add").addChoice("remove", "remove").addChoice("clear", "clear").addChoice("list", "list"))
+                        .addOptions(new OptionData(OptionType.STRING, "link", "The source you want to blacklist"));
                 CommandData mbsettingsCommand = new CommandData("mbsettings", "Music bot settings command for administrators")
                         .addSubcommands(mbsettingsInfoCommand)
                         .addSubcommands(mbsettingsDJRoleCommand)
-                        .addSubcommands(mbsettingsEphemeralCommand);
+                        .addSubcommands(mbsettingsEphemeralCommand)
+                        .addSubcommands(mbsettingsBlacklistCommand);
                 jda.upsertCommand(mbsettingsCommand).queue();
                 Console.timestampMessage("Registered command mbsettings");
             }

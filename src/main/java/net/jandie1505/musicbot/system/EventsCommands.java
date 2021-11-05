@@ -560,7 +560,8 @@ public class EventsCommands extends ListenerAdapter {
                             .setTitle("MusicBot Settings")
                             .setDescription("MusicBot by jandie1505")
                             .addField("DJ Roles:", djroles, false)
-                            .addField("Ephemeral replies:", String.valueOf(DatabaseManager.getEphemeralState(event.getGuild().getId())), false);
+                            .addField("Ephemeral replies:", String.valueOf(DatabaseManager.getEphemeralState(event.getGuild().getId())), false)
+                            .addField("Blacklisted tracks:", String.valueOf(DatabaseManager.getBlacklist(event.getGuild().getId()).size()) + " blacklisted tracks\n" + String.valueOf(DatabaseManager.getGlobalBlacklist().size()) + " global blacklisted tracks", false);
                     event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                 } else if(event.getSubcommandName().equalsIgnoreCase("djrole")) {
                     if(event.getOption("action") != null) {
@@ -611,6 +612,77 @@ public class EventsCommands extends ListenerAdapter {
                                 .setDescription(":white_check_mark:  Set ephemeral state to " + event.getOption("state").getAsBoolean())
                                 .setColor(Color.GREEN);
                         event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                    }
+                } else if(event.getSubcommandName().equalsIgnoreCase("blacklist")) {
+                    if(event.getOption("action") != null) {
+                        if(event.getOption("action").getAsString().equalsIgnoreCase("add")) {
+                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                            if(event.getOption("link") != null) {
+                                if(!DatabaseManager.getBlacklist(event.getGuild().getId()).contains(event.getOption("link").getAsString())) {
+                                    DatabaseManager.addToBlacklist(event.getGuild().getId(), event.getOption("link").getAsString());
+                                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                                            .setDescription(":white_check_mark:  Added link to blacklist")
+                                            .setColor(Color.GREEN);
+                                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                } else {
+                                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                                            .setDescription(":warning:  Already added to blacklist")
+                                            .setColor(Color.RED);
+                                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                }
+                            } else {
+                                EmbedBuilder embedBuilder = new EmbedBuilder()
+                                        .setDescription(":warning:  Link required")
+                                        .setColor(Color.RED);
+                                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                            }
+                        } else if(event.getOption("action").getAsString().equalsIgnoreCase("remove")) {
+                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                            if(event.getOption("link") != null) {
+                                if(DatabaseManager.getBlacklist(event.getGuild().getId()).contains(event.getOption("link").getAsString())) {
+                                    DatabaseManager.deleteFromBlacklist(event.getGuild().getId(), event.getOption("link").getAsString());
+                                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                                            .setDescription(":white_check_mark:  Removed link from blacklist")
+                                            .setColor(Color.GREEN);
+                                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                } else {
+                                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                                            .setDescription(":warning:  Already not in blacklist")
+                                            .setColor(Color.RED);
+                                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                }
+                            } else {
+                                EmbedBuilder embedBuilder = new EmbedBuilder()
+                                        .setDescription(":warning:  Link required")
+                                        .setColor(Color.RED);
+                                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                            }
+                        } else if(event.getOption("action").getAsString().equalsIgnoreCase("clear")) {
+                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                            DatabaseManager.clearBlacklist(event.getGuild().getId());
+                            EmbedBuilder embedBuilder = new EmbedBuilder()
+                                    .setDescription(":white_check_mark:  Cleared blacklist")
+                                    .setColor(Color.GREEN);
+                            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                        } else if(event.getOption("action").getAsString().equalsIgnoreCase("list")) {
+                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                            String blacklist = "";
+                            int index = 0;
+                            for(String string : DatabaseManager.getBlacklist(event.getGuild().getId())) {
+                                String current = string + "\n";
+                                String nextString = blacklist + current;
+                                if(nextString.length() <= 950) {
+                                    blacklist = blacklist + current;
+                                } else {
+                                    blacklist = blacklist + "`+ " + (DatabaseManager.getBlacklist(event.getGuild().getId()).size()-index) + " entries.`";
+                                    break;
+                                }
+                                index++;
+                            }
+                            EmbedBuilder queueFull = new EmbedBuilder()
+                                    .addField("Blacklist:", blacklist, false);
+                            event.getHook().sendMessage("").addEmbeds(queueFull.build()).queue();
+                        }
                     }
                 }
             }
