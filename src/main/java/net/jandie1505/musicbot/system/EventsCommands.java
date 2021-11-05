@@ -452,71 +452,78 @@ public class EventsCommands extends ListenerAdapter {
     private void volumeCommand(SlashCommandEvent event) {
         if(GMS.memberHasDJPermissions(event.getMember())) {
             event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
-            if(MusicManager.isConnected(event.getGuild())) {
-                if(event.getOption("volume") != null) {
-                    int volume = (int) event.getOption("volume").getAsLong();
-                    if((volume <= 200) && (volume >= 0)) {
-                        MusicManager.setVolume(event.getGuild(), volume);
-                        if(volume == 200) {
-                            Random randomizer = new Random();
-                            int random = randomizer.nextInt(9);
-                            if(random == 2) {
-                                event.getHook().sendMessage("https://tenor.com/view/nuclear-catastrophic-disastrous-melt-down-gif-13918708").queue();
-                            } else {
-                                event.getHook().sendMessage(":exploding_head:").queue();
-                            }
-                        } else if(volume >= 150) {
-                            EmbedBuilder embedBuilder = new EmbedBuilder()
-                                    .setDescription(":loud_sound: :boom:  " + volume)
-                                    .setColor(Color.GREEN);
-                            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                        } else if(volume >= 100) {
-                            EmbedBuilder embedBuilder = new EmbedBuilder()
-                                    .setDescription(":loud_sound:  " + volume)
-                                    .setColor(Color.GREEN);
-                            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                        } else if(volume >= 1) {
-                            EmbedBuilder embedBuilder = new EmbedBuilder()
-                                    .setDescription(":sound:  " + volume)
-                                    .setColor(Color.GREEN);
-                            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                        } else if(volume == 0) {
-                            EmbedBuilder embedBuilder = new EmbedBuilder()
-                                    .setDescription(":mute:  " + volume)
-                                    .setColor(Color.GREEN);
-                            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                        } else {
-                            EmbedBuilder embedBuilder = new EmbedBuilder()
-                                    .setDescription(":speaker:  " + volume)
-                                    .setColor(Color.GREEN);
-                            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                        }
-                    } else {
-                        if(volume > 200) {
-                            Random randomizer = new Random();
-                            int random = randomizer.nextInt(9);
-                            if(random == 2) {
-                                event.getHook().sendMessage("The volume has been capped at 200 to avoid this:\nhttps://tenor.com/view/explosion-mushroom-cloud-atomic-bomb-bomb-boom-gif-4464831").queue();
+            if(System.getProperty("os.arch").equalsIgnoreCase("amd64")) {
+                if(MusicManager.isConnected(event.getGuild())) {
+                    if(event.getOption("volume") != null) {
+                        int volume = (int) event.getOption("volume").getAsLong();
+                        if((volume <= 200) && (volume >= 0)) {
+                            MusicManager.setVolume(event.getGuild(), volume);
+                            if(volume == 200) {
+                                Random randomizer = new Random();
+                                int random = randomizer.nextInt(9);
+                                if(random == 2) {
+                                    event.getHook().sendMessage("https://tenor.com/view/nuclear-catastrophic-disastrous-melt-down-gif-13918708").queue();
+                                } else {
+                                    event.getHook().sendMessage(":exploding_head:").queue();
+                                }
+                            } else if(volume >= 150) {
+                                EmbedBuilder embedBuilder = new EmbedBuilder()
+                                        .setDescription(":loud_sound: :boom:  " + volume)
+                                        .setColor(Color.GREEN);
+                                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                            } else if(volume >= 100) {
+                                EmbedBuilder embedBuilder = new EmbedBuilder()
+                                        .setDescription(":loud_sound:  " + volume)
+                                        .setColor(Color.GREEN);
+                                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                            } else if(volume >= 1) {
+                                EmbedBuilder embedBuilder = new EmbedBuilder()
+                                        .setDescription(":sound:  " + volume)
+                                        .setColor(Color.GREEN);
+                                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                            } else if(volume == 0) {
+                                EmbedBuilder embedBuilder = new EmbedBuilder()
+                                        .setDescription(":mute:  " + volume)
+                                        .setColor(Color.GREEN);
+                                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                             } else {
                                 EmbedBuilder embedBuilder = new EmbedBuilder()
-                                        .setDescription("The volume has been capped at 200 so you don't end up like this guy: :exploding_head:")
+                                        .setDescription(":speaker:  " + volume)
+                                        .setColor(Color.GREEN);
+                                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                            }
+                        } else {
+                            if(volume > 200) {
+                                Random randomizer = new Random();
+                                int random = randomizer.nextInt(9);
+                                if(random == 2) {
+                                    event.getHook().sendMessage("The volume has been capped at 200 to avoid this:\nhttps://tenor.com/view/explosion-mushroom-cloud-atomic-bomb-bomb-boom-gif-4464831").queue();
+                                } else {
+                                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                                            .setDescription("The volume has been capped at 200 so you don't end up like this guy: :exploding_head:")
+                                            .setColor(Color.RED);
+                                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                }
+                            } else if(volume < 0) {
+                                EmbedBuilder embedBuilder = new EmbedBuilder()
+                                        .setDescription("Active noise cancelling is unfortunately not supported :(")
                                         .setColor(Color.RED);
                                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                             }
-                        } else if(volume < 0) {
-                            EmbedBuilder embedBuilder = new EmbedBuilder()
-                                    .setDescription("Active noise cancelling is unfortunately not supported :(")
-                                    .setColor(Color.RED);
-                            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                         }
+                    } else {
+                        EmbedBuilder embedBuilder = new EmbedBuilder()
+                                .setDescription("Current volume is: " + MusicManager.getVolume(event.getGuild()));
+                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                     }
                 } else {
-                    EmbedBuilder embedBuilder = new EmbedBuilder()
-                            .setDescription("Current volume is: " + MusicManager.getVolume(event.getGuild()));
-                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                    event.getHook().sendMessage("").addEmbeds(getNotConnectedErrorMessage().build()).queue();
                 }
             } else {
-                event.getHook().sendMessage("").addEmbeds(getNotConnectedErrorMessage().build()).queue();
+                EmbedBuilder embedBuilder = new EmbedBuilder()
+                        .setDescription(":warning:  The bot is hosted on a device that does not support this command")
+                        .setColor(Color.RED);
+                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
             }
         }
     }
