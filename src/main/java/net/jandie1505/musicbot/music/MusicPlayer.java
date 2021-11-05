@@ -108,6 +108,14 @@ public class MusicPlayer {
         });
     }
 
+    public void addAudioTrack(AudioTrack track) {
+        queue.add(track);
+    }
+
+    public void addAudioTrackList(List<AudioTrack> audioTrackList) {
+        queue.addAll(audioTrackList);
+    }
+
     public void clearQueue() {
         queue.clear();
     }

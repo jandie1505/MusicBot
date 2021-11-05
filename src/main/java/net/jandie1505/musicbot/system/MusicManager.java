@@ -48,6 +48,7 @@ public class MusicManager {
     public static void disconnect(Guild g) {
         if(isConnected(g)) {
             g.getAudioManager().closeAudioConnection();
+            removePlayer(g.getId());
         }
     }
     public static boolean isConnected(Guild g) {

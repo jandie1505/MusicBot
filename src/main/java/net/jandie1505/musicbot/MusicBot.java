@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
 import net.dv8tion.jda.api.sharding.ShardManager;
 import net.jandie1505.musicbot.console.Console;
+import net.jandie1505.musicbot.search.SpotifySearchHandler;
 import net.jandie1505.musicbot.system.*;
 import net.jandie1505.musicbot.tasks.TaskGMSReload;
 import net.jandie1505.musicbot.tasks.TaskGMSReloadComplete;
@@ -37,7 +38,7 @@ public class MusicBot {
         console.start();
 
         if(args.length >= 4) {
-            if(args[2].equalsIgnoreCase("true")) {
+            if(args[3].equalsIgnoreCase("true")) {
                 Console.setGMSLogging(true);
                 Console.setDBMLogging(true);
             } else {
@@ -65,6 +66,18 @@ public class MusicBot {
             } else {
                 System.out.println("Starting in private mode because the mode was not specified.");
             }
+            if(args.length >= 5) {
+                SpotifySearchHandler.setClientId(args[4]);
+            } else {
+                SpotifySearchHandler.setClientId("");
+                System.out.println("Starting without spotify client id (no support for spotify playlists)");
+            }
+            if(args.length >= 6) {
+                SpotifySearchHandler.setClientSecret(args[5]);
+            } else {
+                SpotifySearchHandler.setClientSecret("");
+                System.out.println("Starting without spotify client secret (no support for spotify playlists)");
+            }
 
             System.out.println("*****************************\n" +
                     "* Starting bot in 3 seconds *\n" +
@@ -87,7 +100,7 @@ public class MusicBot {
             System.exit(-2);
         } catch(ArrayIndexOutOfBoundsException | NumberFormatException e) {
             System.out.println("Check your start arguments\n" +
-                    "Start arguments: <token (String)> [<shardsCount (int)> <publicMode (boolean)> <verbose (boolean)>]");
+                    "Start arguments: <token (String)> [<shardsCount (int)> <publicMode (boolean)> <verbose (boolean)> <spotifyAPIKey (String)>]");
             TimeUnit.SECONDS.sleep(3);
             System.exit(-1);
         }

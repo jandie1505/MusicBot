@@ -7,7 +7,10 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.requests.ErrorResponse;
+import net.jandie1505.musicbot.search.SpotifySearchHandler;
 import net.jandie1505.musicbot.search.YTSearchHandler;
 
 import java.awt.*;
@@ -454,7 +457,7 @@ public class EventsCommands extends ListenerAdapter {
                         MusicManager.setVolume(event.getGuild(), volume);
                         if(volume == 200) {
                             Random randomizer = new Random();
-                            int random = randomizer.nextInt(3);
+                            int random = randomizer.nextInt(9);
                             if(random == 2) {
                                 event.getHook().sendMessage("https://tenor.com/view/nuclear-catastrophic-disastrous-melt-down-gif-13918708").queue();
                             } else {
@@ -489,7 +492,7 @@ public class EventsCommands extends ListenerAdapter {
                     } else {
                         if(volume > 200) {
                             Random randomizer = new Random();
-                            int random = randomizer.nextInt(3);
+                            int random = randomizer.nextInt(9);
                             if(random == 2) {
                                 event.getHook().sendMessage("The volume has been capped at 200 to avoid this:\nhttps://tenor.com/view/explosion-mushroom-cloud-atomic-bomb-bomb-boom-gif-4464831").queue();
                             } else {
@@ -639,7 +642,51 @@ public class EventsCommands extends ListenerAdapter {
         if(event.getOption("song") != null) {
             String source = event.getOption("song").getAsString();
             if(source.startsWith("http://") || source.startsWith("https://")) {
-                MusicManager.add(event.getGuild(), source, event, startafterload);
+                if(source.contains("https://open.spotify.com/playlist/")) {
+                    Random randomizer = new Random();
+                    int random = randomizer.nextInt(9);
+                    if(random == 8) {
+                        event.getHook().sendMessage("Loading spotify playlist. Here is a gif to show you how long this can take:\nhttps://tenor.com/view/loading-forever-12years-later-gif-10516198").queue();
+                    } else {
+                        EmbedBuilder embedBuilder = new EmbedBuilder()
+                                .setDescription(":zzz:  Loading playlist from spotify...")
+                                .setColor(Color.YELLOW);
+                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                    }
+                    List<AudioTrack> trackList = SpotifySearchHandler.search(source);
+                    if(!trackList.isEmpty()) {
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                EmbedBuilder embedBuilder = new EmbedBuilder()
+                                        .setDescription(":zzz:  Converting to youtube...")
+                                        .setColor(Color.YELLOW);
+                                event.getHook().editOriginal(" ").setEmbeds(embedBuilder.build()).queue(null, new ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE));
+                                int index = 0;
+                                for(AudioTrack track : trackList) {
+                                    MusicManager.add(event.getGuild(), track.getInfo().uri, ((index == 0) && startafterload));
+                                    index++;
+                                    try {
+                                        TimeUnit.SECONDS.sleep(1);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                                EmbedBuilder embedBuilder2 = new EmbedBuilder()
+                                        .setDescription(":white_check_mark:  Successfully added " + trackList.size() + " songs from spotify")
+                                        .setColor(Color.GREEN);
+                                event.getHook().editOriginal(" ").setEmbeds(embedBuilder2.build()).queue(null, new ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE));
+                            }
+                        }).start();
+                    } else {
+                        EmbedBuilder embedBuilder = new EmbedBuilder()
+                                .setDescription(":warning:  Nothing was found")
+                                .setColor(Color.RED);
+                        event.getHook().editOriginal(" ").setEmbeds(embedBuilder.build()).queue(null, new ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE));
+                    }
+                } else {
+                    MusicManager.add(event.getGuild(), source, event, startafterload);
+                }
             } else {
                 List<AudioTrack> trackList = YTSearchHandler.search(source);
                 if(!trackList.isEmpty()) {
