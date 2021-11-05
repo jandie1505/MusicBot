@@ -40,7 +40,7 @@ public class SpotifySearchHandler {
                     spotifyApi.setAccessToken(clientCredentials.getAccessToken());
 
                     // GET PLAYLIST
-                    GetPlaylistsItemsRequest playlistsItemsRequest = spotifyApi.getPlaylistsItems(playlistId).build();
+                    GetPlaylistsItemsRequest playlistsItemsRequest = spotifyApi.getPlaylistsItems(playlistId).limit(1000).build();
                     Paging<PlaylistTrack> playlistTrackPaging = playlistsItemsRequest.execute();
 
                     // GET TRACKS OF PLAYLIST ENTRIES, SEARCH FOR THEM ON YOUTUBE AND ADD THEM TO A LIST

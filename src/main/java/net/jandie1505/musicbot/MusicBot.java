@@ -1,6 +1,8 @@
 package net.jandie1505.musicbot;
 
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.OnlineStatus;
+import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -89,6 +91,7 @@ public class MusicBot {
                         .createDefault(args[0], GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.DIRECT_MESSAGES, GatewayIntent.GUILD_INVITES, GatewayIntent.GUILD_EMOJIS)
                         .setShardsTotal(shardsTotal)
                         .build();
+                shardManager.setPresence(OnlineStatus.IDLE, Activity.playing("Starting up..."));
                 shardManager.addEventListener(new EventsBasic());
                 shardManager.addEventListener(new EventsCommands());
             } else {
@@ -137,6 +140,8 @@ public class MusicBot {
         taskMusicManager.start();
 
         MusicManager.init();
+
+        shardManager.setPresence(OnlineStatus.ONLINE, Activity.playing("/help, /play"));
 
         System.out.println("*********\n" +
                 "* READY *\n" +
