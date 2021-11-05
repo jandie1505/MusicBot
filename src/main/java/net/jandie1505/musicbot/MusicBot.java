@@ -76,14 +76,12 @@ public class MusicBot {
                 System.out.println("Bot owner is not specified");
             }
             if(args.length >= 6) {
-                SpotifySearchHandler.setClientId(args[5]);
                 System.out.println(args[5]);
             } else {
                 SpotifySearchHandler.setClientId("");
                 System.out.println("Starting without spotify client id (no support for spotify playlists)");
             }
             if(args.length >= 7) {
-                SpotifySearchHandler.setClientSecret(args[6]);
                 System.out.println(args[6]);
             } else {
                 SpotifySearchHandler.setClientSecret("");
