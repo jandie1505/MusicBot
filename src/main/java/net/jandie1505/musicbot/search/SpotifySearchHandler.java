@@ -22,7 +22,7 @@ public class SpotifySearchHandler {
     public static List<AudioTrack> search(String playlistlink) {
         List<AudioTrack> returnList = new ArrayList<>();
 
-        if((clientSecret != null) && (!clientSecret.equals(""))) {
+        if(((clientSecret != null) && (!clientSecret.equals("")) && (clientId != null ) && (!clientId.equals("")))) {
             try {
                 if(playlistlink.startsWith("https://open.spotify.com/playlist/")) {
                     // GET SPOTIFY PLAYLIST ID
