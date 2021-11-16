@@ -108,7 +108,7 @@ public class Commands {
                     GMS.reloadGuilds(true);
                     returnString = "SENT RELOAD GUILDS COMMAND";
                 }
-            } else if(cmd[1].equalsIgnoreCase("invite")) {
+            }/* else if(cmd[1].equalsIgnoreCase("invite")) {
                 if(cmd.length == 3) {
                     Guild g = MusicBot.getShardManager().getGuildById(cmd[2]);
                     if(g != null) {
@@ -122,7 +122,7 @@ public class Commands {
                         returnString = "GUILD IS NULL";
                     }
                 }
-            } else if(cmd[1].equalsIgnoreCase("whitelist")) {
+            }*/ else if(cmd[1].equalsIgnoreCase("whitelist")) {
                 if(cmd.length == 3) {
                     if(cmd[2].equalsIgnoreCase("list")) {
                         returnString = DatabaseManager.getGuildWhitelist().toString();
