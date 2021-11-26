@@ -5,10 +5,15 @@ import com.sedmelluq.discord.lavaplayer.player.event.AudioEventListener;
 import com.sedmelluq.discord.lavaplayer.player.event.PlayerPauseEvent;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.MessageBuilder;
+import net.dv8tion.jda.api.entities.Emoji;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.jandie1505.musicbot.MusicBot;
 import net.jandie1505.musicbot.console.Commands;
@@ -72,35 +77,7 @@ public class EventsCommands extends ListenerAdapter {
     private void nowplayingCommand(SlashCommandEvent event) {
         if(GMS.memberHasUserPermissions(event.getMember())) {
             event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
-            if(MusicManager.getPlayingTrack(event.getGuild()) != null) {
-                AudioTrack audioTrack = MusicManager.getPlayingTrack(event.getGuild());
-                String description = "";
-                if(MusicManager.isPaused(event.getGuild())) {
-                    description = ":pause_button:  Player is currently paused";
-                } else {
-                    description = ":arrow_forward:  Player is currently playing";
-                }
-                String playIcon = ":stop_button:";
-                String progressbar = "▬▬▬▬▬▬▬▬▬▬";
-
-                if(MusicManager.isPaused(event.getGuild())) {
-                    playIcon = ":pause_button:";
-                    progressbar = getProgressBar(audioTrack.getPosition(), audioTrack.getDuration());
-                } else if(!MusicManager.isPaused(event.getGuild())) {
-                    playIcon = ":arrow_forward:";
-                    progressbar = getProgressBar(audioTrack.getPosition(), audioTrack.getDuration());
-                }
-
-                EmbedBuilder embedBuilder = new EmbedBuilder()
-                        .setTitle(audioTrack.getInfo().title, audioTrack.getInfo().uri)
-                        .setDescription(playIcon + " " + progressbar + " `" + formatTime(audioTrack.getPosition()) + "/" + formatTime(audioTrack.getDuration()) + "` \nAuthor: " + audioTrack.getInfo().author);
-                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-            } else {
-                EmbedBuilder noMusicPlaying = new EmbedBuilder()
-                        .setTitle("No music playing")
-                        .setDescription(":stop_button: ▬▬▬▬▬▬▬▬▬▬ `--:--:--/--:--:--` \nAuthor: ---");
-                event.getHook().sendMessage("").addEmbeds(noMusicPlaying.build()).queue();
-            }
+            event.getHook().sendMessage(Messages.nowplayingMessage(event.getGuild(), GMS.memberHasDJPermissions(event.getMember())).build()).queue();
         }
     }
 
@@ -114,7 +91,7 @@ public class EventsCommands extends ListenerAdapter {
                     int index = 0;
                     for(AudioTrack track : MusicManager.getQueue(event.getGuild())) {
                         String current = "`" + index + ".` " +
-                                "`" + formatTime(track.getDuration()) + "` " +
+                                "`" + Messages.formatTime(track.getDuration()) + "` " +
                                 track.getInfo().title + " [" + track.getInfo().author + "]\n";
                         String nextString = queue + current;
                         if(nextString.length() <= 950) {
@@ -135,7 +112,7 @@ public class EventsCommands extends ListenerAdapter {
                     int index = 0;
                     for(AudioTrack track : MusicManager.getQueue(event.getGuild())) {
                         String current = "`" + index + ".` " +
-                                "`" + formatTime(track.getDuration()) + "` " +
+                                "`" + Messages.formatTime(track.getDuration()) + "` " +
                                 track.getInfo().title + " [" + track.getInfo().author + "]\n";
                         String nextString = queue + current;
                         if(nextString.length() <= 950) {
@@ -430,10 +407,10 @@ public class EventsCommands extends ListenerAdapter {
                 String returnString = "";
                 int index = 0;
                 for(AudioTrack track : trackList) {
-                    String current = "`" + index + ".` `" + formatTime(track.getInfo().length) + "` " + track.getInfo().title + " [" + track.getInfo().author + "]\n";
+                    String current = "`" + index + ".` `" + Messages.formatTime(track.getInfo().length) + "` " + track.getInfo().title + " [" + track.getInfo().author + "]\n";
                     String stringAfter = returnString + current;
                     if(!(stringAfter.length() > 1000)) {
-                        returnString = returnString + "`" + index + ".` `" + formatTime(track.getInfo().length) + "` " + track.getInfo().title + " [" + track.getInfo().author + "]\n";
+                        returnString = returnString + "`" + index + ".` `" + Messages.formatTime(track.getInfo().length) + "` " + track.getInfo().title + " [" + track.getInfo().author + "]\n";
                     }
                     index++;
                 }
@@ -848,41 +825,6 @@ public class EventsCommands extends ListenerAdapter {
         return new EmbedBuilder()
                 .setDescription(":warning:  Not connected")
                 .setColor(Color.RED);
-    }
-
-    private String formatTime(long millis) {
-        return String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(millis), TimeUnit.MILLISECONDS.toMinutes(millis) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis)), TimeUnit.MILLISECONDS.toSeconds(millis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis)));
-    }
-
-    private String getProgressBar(double position, double duration) {
-        String progressbar = "▬▬▬▬▬▬▬▬▬▬";
-        if(duration > 0) {
-            double percent = (position / duration) * 100;
-            if(percent >= 90) {
-                progressbar = "▬▬▬▬▬▬▬▬▬:radio_button:";
-            } else if(percent >= 80) {
-                progressbar = "▬▬▬▬▬▬▬▬:radio_button:▬";
-            } else if(percent >= 70) {
-                progressbar = "▬▬▬▬▬▬▬:radio_button:▬▬";
-            } else if(percent >= 60) {
-                progressbar = "▬▬▬▬▬▬:radio_button:▬▬▬";
-            } else if(percent >= 50) {
-                progressbar = "▬▬▬▬▬:radio_button:▬▬▬▬";
-            } else if(percent >= 40) {
-                progressbar = "▬▬▬▬:radio_button:▬▬▬▬▬";
-            } else if(percent >= 30) {
-                progressbar = "▬▬▬:radio_button:▬▬▬▬▬▬";
-            } else if(percent >= 20) {
-                progressbar = "▬▬:radio_button:▬▬▬▬▬▬▬";
-            } else if(percent >= 10) {
-                progressbar = "▬:radio_button:▬▬▬▬▬▬▬▬";
-            } else if(percent >= 0) {
-                progressbar = ":radio_button:▬▬▬▬▬▬▬▬▬";
-            } else {
-                progressbar = "▬▬▬▬▬▬▬▬▬▬";
-            }
-        }
-        return progressbar;
     }
 
     public EmbedBuilder getHelpMessage() {

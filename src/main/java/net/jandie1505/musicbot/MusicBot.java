@@ -101,6 +101,7 @@ public class MusicBot {
                 shardManager.setPresence(OnlineStatus.IDLE, Activity.playing("Starting up..."));
                 shardManager.addEventListener(new EventsBasic());
                 shardManager.addEventListener(new EventsCommands());
+                shardManager.addEventListener(new EventsButtons());
             } else {
                 System.out.println("Please enter a valid shards count");
             }
