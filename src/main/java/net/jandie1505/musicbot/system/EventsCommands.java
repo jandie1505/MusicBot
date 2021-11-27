@@ -141,8 +141,14 @@ public class EventsCommands extends ListenerAdapter {
             event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
             if(!MusicManager.isConnected(event.getGuild())) {
                 if(event.getMember().getVoiceState().inVoiceChannel()) {
-                    MusicManager.connect(event.getMember().getVoiceState().getChannel());
-                    this.play(event, true);
+                    if(MusicManager.connect(event.getMember().getVoiceState().getChannel())) {
+                        this.play(event, true);
+                    } else {
+                        EmbedBuilder embedBuilder = new EmbedBuilder()
+                                .setDescription(":warning:  Can't connect to voice channel (Missing permissions?)")
+                                .setColor(Color.RED);
+                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                    }
                 } else {
                     EmbedBuilder notInVoiceChannel = new EmbedBuilder()
                             .setDescription(":warning:  You are not in a voice channel")

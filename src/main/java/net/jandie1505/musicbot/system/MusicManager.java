@@ -16,34 +16,22 @@ import java.util.Map;
 
 public class MusicManager {
     private static Map<String, MusicPlayer> musicPlayers;
+    private static Map<String, Integer> playerExpiration;
 
     public static void init() {
         musicPlayers = new HashMap<>();
-    }
-
-    public static MusicPlayer getMusicPlayer(String guildId) {
-        if(musicPlayers.containsKey(guildId)) {
-            return musicPlayers.get(guildId);
-        } else {
-            MusicPlayer musicPlayer = new MusicPlayer();
-            musicPlayers.put(guildId, musicPlayer);
-            return musicPlayer;
-        }
-    }
-
-    public static String getGuildIdFromMusicPlayer(MusicPlayer musicPlayer) {
-        for(String guildId : musicPlayers.keySet()) {
-            if(musicPlayers.get(guildId) == musicPlayer) {
-                return guildId;
-            }
-        }
-        return "";
+        playerExpiration = new HashMap<>();
     }
 
     // CONNECTION
-    public static void connect(VoiceChannel voiceChannel) {
-        voiceChannel.getGuild().getAudioManager().setSendingHandler(getMusicPlayer(voiceChannel.getGuild().getId()).getAudioSendHandler());
-        voiceChannel.getGuild().getAudioManager().openAudioConnection(voiceChannel);
+    public static boolean connect(VoiceChannel voiceChannel) {
+        try {
+            voiceChannel.getGuild().getAudioManager().setSendingHandler(getMusicPlayer(voiceChannel.getGuild().getId()).getAudioSendHandler());
+            voiceChannel.getGuild().getAudioManager().openAudioConnection(voiceChannel);
+            return true;
+        } catch(Exception e) {
+            return false;
+        }
     }
     public static void disconnect(Guild g) {
         if(isConnected(g)) {
@@ -51,6 +39,7 @@ public class MusicManager {
             removePlayer(g.getId());
         }
     }
+
     public static boolean isConnected(Guild g) {
         return g.getSelfMember().getVoiceState().inVoiceChannel();
     }
@@ -175,20 +164,63 @@ public class MusicManager {
         for(String guildId : musicPlayers.keySet()) {
             Guild g = MusicBot.getShardManager().getGuildById(guildId);
             if(g == null) {
-                musicPlayers.get(guildId).destroy();
-                musicPlayers.remove(guildId);
+                removePlayer(guildId);
             } else {
-                if(!g.getSelfMember().getVoiceState().inVoiceChannel()) {
-                    musicPlayers.get(guildId).destroy();
-                    musicPlayers.remove(guildId);
+                if(g.getSelfMember().getVoiceState().inVoiceChannel()) {
+                    /*if(!playerExpiration.containsKey(guildId)) {
+                        playerExpiration.put(guildId, 900);
+                    }
+                    List<Member> memberList = g.getSelfMember().getVoiceState().getChannel().getMembers();
+                    memberList.remove(g.getSelfMember());
+                    if(memberList.isEmpty()) {
+                        if(playerExpiration.get(guildId) > 0) {
+                            playerExpiration.put(guildId, playerExpiration.get(guildId)-1);
+                        } else if(playerExpiration.get(guildId) == 0) {
+                            disconnect(g);
+                        }
+                    } else {
+                        playerExpiration.put(guildId, 900);
+                    }
+                     */
+                } else {
+                    removePlayer(guildId);
                 }
             }
         }
     }
 
+    public static void playerExpiration() {
+        for(String guildId : musicPlayers.keySet()) {
+            MusicPlayer musicPlayer = musicPlayers.get(guildId);
+
+        }
+    }
+
+    public static MusicPlayer getMusicPlayer(String guildId) {
+        if(musicPlayers.containsKey(guildId)) {
+            return musicPlayers.get(guildId);
+        } else {
+            MusicPlayer musicPlayer = new MusicPlayer();
+            musicPlayers.put(guildId, musicPlayer);
+            return musicPlayer;
+        }
+    }
+
+    public static String getGuildIdFromMusicPlayer(MusicPlayer musicPlayer) {
+        for(String guildId : musicPlayers.keySet()) {
+            if(musicPlayers.get(guildId) == musicPlayer) {
+                return guildId;
+            }
+        }
+        return "";
+    }
+
     public static void removePlayer(String guildId) {
         if(musicPlayers.containsKey(guildId)) {
             musicPlayers.get(guildId).destroy();
+        }
+        if(playerExpiration.containsKey(guildId)) {
+            playerExpiration.remove(guildId);
         }
         musicPlayers.remove(guildId);
     }

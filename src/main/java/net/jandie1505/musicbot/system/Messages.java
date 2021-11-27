@@ -48,18 +48,36 @@ public class Messages {
                 }
             }
 
+            String channelString = "";
+            if(g.getSelfMember().getVoiceState().inVoiceChannel()) {
+                channelString = g.getSelfMember().getVoiceState().getChannel().getName();
+            } else {
+                channelString = "---";
+            }
+
             EmbedBuilder embedBuilder = new EmbedBuilder()
                     .setTitle(audioTrack.getInfo().title, audioTrack.getInfo().uri)
-                    .setDescription(playIcon + " " + progressbar + " `" + formatTime(audioTrack.getPosition()) + "/" + formatTime(audioTrack.getDuration()) + "` \nAuthor: " + audioTrack.getInfo().author);
+                    .setDescription(playIcon + " " + progressbar + " `" + formatTime(audioTrack.getPosition()) + "/" + formatTime(audioTrack.getDuration()) + "` \nAuthor: " + audioTrack.getInfo().author + "\nChannel: " + channelString);
             messageBuilder.setEmbeds(embedBuilder.build());
 
             return messageBuilder;
         } else {
             MessageBuilder messageBuilder = new MessageBuilder();
+            String channelString = "";
+            if(g.getSelfMember().getVoiceState().inVoiceChannel()) {
+                channelString = g.getSelfMember().getVoiceState().getChannel().getName();
+            } else {
+                channelString = "---";
+            }
             EmbedBuilder noMusicPlaying = new EmbedBuilder()
                     .setTitle("No music playing")
-                    .setDescription(":stop_button: ▬▬▬▬▬▬▬▬▬▬ `--:--:--/--:--:--` \nAuthor: ---");
+                    .setDescription(":stop_button: ▬▬▬▬▬▬▬▬▬▬ `--:--:--/--:--:--` \nAuthor: ---\nChannel: " + channelString);
             messageBuilder.setEmbeds(noMusicPlaying.build());
+
+            messageBuilder.setActionRows(ActionRow.of(
+                    Button.secondary("refreshbutton", "\uD83D\uDD04")
+            ));
+
             return messageBuilder;
         }
     }
