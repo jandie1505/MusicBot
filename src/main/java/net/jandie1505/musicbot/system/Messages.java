@@ -3,13 +3,11 @@ package net.jandie1505.musicbot.system;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.MessageBuilder;
-import net.dv8tion.jda.api.entities.Emoji;
-import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.Button;
-import net.jandie1505.musicbot.MusicBot;
 
+import java.awt.*;
 import java.util.concurrent.TimeUnit;
 
 public class Messages {
@@ -36,11 +34,17 @@ public class Messages {
 
             if(showbuttons) {
                 if(MusicManager.isPaused(g)) {
-                    messageBuilder.setActionRows(ActionRow.of(Button.primary("playbutton", "▶"),
-                            Button.primary("refreshbutton", "\uD83D\uDD04")));
+                    messageBuilder.setActionRows(ActionRow.of(
+                            Button.primary("playbutton", "▶"),
+                            Button.primary("nowplayingskipbutton", "⏭"),
+                            Button.secondary("refreshbutton", "\uD83D\uDD04")
+                    ));
                 } else if(!MusicManager.isPaused(g)) {
-                    messageBuilder.setActionRows(ActionRow.of(Button.primary("pausebutton", "⏸"),
-                            Button.primary("refreshbutton", "\uD83D\uDD04")));
+                    messageBuilder.setActionRows(ActionRow.of(
+                            Button.primary("pausebutton", "⏸"),
+                            Button.primary("nowplayingskipbutton", "⏭"),
+                            Button.secondary("refreshbutton", "\uD83D\uDD04")
+                    ));
                 }
             }
 
@@ -60,6 +64,78 @@ public class Messages {
         }
     }
 
+    public static MessageBuilder getQueueMessage(Guild g, int indexOption) {
+        if(!MusicManager.getQueue(g).isEmpty()) {
+            MessageBuilder messageBuilder = new MessageBuilder();
+            if(indexOption != 0) {
+                String queue = "";
+                int index = 0;
+                for(AudioTrack track : MusicManager.getQueue(g)) {
+                    String current = "`" + index + ".` " +
+                            "`" + Messages.formatTime(track.getDuration()) + "` " +
+                            track.getInfo().title + " [" + track.getInfo().author + "]\n";
+                    String nextString = queue + current;
+                    if(nextString.length() <= 950) {
+                        if(index >= indexOption) {
+                            queue = queue + current;
+                        }
+                    } else {
+                        queue = queue + "`+ " + (MusicManager.getQueue(g).size()-index) + " entries. Use /queue <index> to search for indexes.`";
+                        break;
+                    }
+                    index++;
+                }
+                EmbedBuilder queueFull = new EmbedBuilder()
+                        .addField("Queue:", queue, false);
+                messageBuilder.setEmbeds(queueFull.build());
+
+                /*
+                messageBuilder.setActionRows(ActionRow.of(
+                        Button.primary("queuenext", "➡"),
+                        Button.primary("queueprevious", "⬅")
+                ));
+
+                 */
+
+                return messageBuilder;
+            } else {
+                String queue = "";
+                int index = 0;
+                for(AudioTrack track : MusicManager.getQueue(g)) {
+                    String current = "`" + index + ".` " +
+                            "`" + Messages.formatTime(track.getDuration()) + "` " +
+                            track.getInfo().title + " [" + track.getInfo().author + "]\n";
+                    String nextString = queue + current;
+                    if(nextString.length() <= 950) {
+                        queue = queue + current;
+                    } else {
+                        queue = queue + "`+ " + (MusicManager.getQueue(g).size()-index) + " entries. Use /queue <index> to search for indexes.`";
+                        break;
+                    }
+                    index++;
+                }
+                EmbedBuilder queueFull = new EmbedBuilder()
+                        .addField("Queue:", queue, false);
+                messageBuilder.setEmbeds(queueFull.build());
+
+                messageBuilder.setActionRows(ActionRow.of(
+                        Button.primary("queuenext", "➡")
+                ));
+
+                return messageBuilder;
+            }
+        } else {
+            MessageBuilder messageBuilder = new MessageBuilder();
+            EmbedBuilder queueEmpty = new EmbedBuilder()
+                    .setDescription("The queue is empty")
+                    .setColor(Color.RED);
+            messageBuilder.setEmbeds(queueEmpty.build());
+
+            return messageBuilder;
+        }
+    }
+
+    // UTILITY
     public static String formatTime(long millis) {
         return String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(millis), TimeUnit.MILLISECONDS.toMinutes(millis) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis)), TimeUnit.MILLISECONDS.toSeconds(millis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis)));
     }

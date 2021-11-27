@@ -3,6 +3,7 @@ package net.jandie1505.musicbot.system;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.Interaction;
 
 public class EventsButtons extends ListenerAdapter {
     @Override
@@ -38,6 +39,14 @@ public class EventsButtons extends ListenerAdapter {
             if(event.getGuild() != null) {
                 Message m = event.getMessage();
                 if(m != null) {
+                    event.editMessage(Messages.nowplayingMessage(event.getGuild(), GMS.memberHasDJPermissions(event.getMember())).build()).queue();
+                }
+            }
+        } else if(event.getButton().getId().equalsIgnoreCase("nowplayingskipbutton")) {
+            if(event.getGuild() != null) {
+                Message m = event.getMessage();
+                if(m != null) {
+                    MusicManager.next(event.getGuild());
                     event.editMessage(Messages.nowplayingMessage(event.getGuild(), GMS.memberHasDJPermissions(event.getMember())).build()).queue();
                 }
             }
