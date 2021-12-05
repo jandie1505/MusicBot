@@ -723,7 +723,7 @@ public class EventsCommands extends ListenerAdapter {
                                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                             }
                             List<AudioTrack> trackList = SpotifySearchHandler.search(source);
-                            if(!trackList.isEmpty()) {
+                            if(!trackList.isEmpty() && event.getGuild() != null && MusicManager.isConnected(event.getGuild())) {
                                 EmbedBuilder embedBuilder = new EmbedBuilder()
                                         .setDescription(":zzz:  Converting to youtube...")
                                         .setColor(Color.YELLOW);
