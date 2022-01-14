@@ -74,9 +74,25 @@ public class DatabaseManager {
                     "guildId VARCHAR(255)," +
                     "link VARCHAR(255)" +
                     ")";
+            String sql2 = "CREATE TABLE IF NOT EXISTS keyword_blacklist (" +
+                    "id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," +
+                    "guildId VARCHAR(255)," +
+                    "keyword VARCHAR(255)" +
+                    ")";
+            String sql3 = "CREATE TABLE IF NOT EXISTS artist_blacklist (" +
+                    "id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," +
+                    "guildId VARCHAR(255)," +
+                    "artist VARCHAR(255)" +
+                    ")";
             PreparedStatement statement = connection.prepareStatement(sql);
+            PreparedStatement statement2 = connection.prepareStatement(sql2);
+            PreparedStatement statement3 = connection.prepareStatement(sql3);
             statement.execute();
+            statement2.execute();
+            statement3.execute();
             Console.messageDB("Set up table music_blacklist");
+            Console.messageDB("Set up table keyword_blacklist");
+            Console.messageDB("Set up table artist_blacklist");
         } catch(Exception e) {
             System.out.println("Database error: " + e.getMessage());
         }
@@ -435,6 +451,282 @@ public class DatabaseManager {
             statement.setString(1, guildId);
             statement.execute();
             Console.messageDB("Cleared blacklist of guild " + guildId);
+        } catch(Exception e) {
+            System.out.println("Database error: " + e.getMessage());
+        }
+    }
+
+    // GLOBAL KEYWORD BLACKLIST
+    public static void addToGlobalKeywordBlacklist(String link) {
+        try {
+            String sql = "SELECT link FROM keyword_blacklist WHERE guildId IS NULL AND link = ?;";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, link);
+            ResultSet rs = statement.executeQuery();
+            if(!rs.next()) {
+                String sql2 = "INSERT INTO keyword_blacklist (guildId, link)" +
+                        " values (NULL, ?);";
+                PreparedStatement statement2 = connection.prepareStatement(sql2);
+                statement2.setString(1, link);
+                statement2.execute();
+                Console.messageDB("Added link to global keyword blacklist");
+            }
+        } catch(Exception e) {
+            System.out.println("Database error: " + e.getMessage());
+        }
+    }
+
+    public static void deleteFromGlobalKeywordBlacklist(String link) {
+        try {
+            String sql = "SELECT link FROM keyword_blacklist WHERE guildId IS NULL AND link = ?;";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, link);
+            ResultSet rs = statement.executeQuery();
+            if(rs.next()) {
+                String sql2 = "DELETE FROM keyword_blacklist WHERE guildId IS NULL AND link = ?;";
+                PreparedStatement statement2 = connection.prepareStatement(sql2);
+                statement2.setString(1, link);
+                statement2.execute();
+                Console.messageDB("Removed link from global keyword blacklist");
+            }
+        } catch(Exception e) {
+            System.out.println("Database error: " + e.getMessage());
+        }
+    }
+
+    public static List<String> getGlobalKeywordBlacklist() {
+        List<String> returnList = new ArrayList<>();
+
+        try {
+            String sql = "SELECT link FROM keyword_blacklist WHERE guildId IS NULL;";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            ResultSet rs = statement.executeQuery();
+            while(rs.next()) {
+                returnList.add(rs.getString("link"));
+            }
+        } catch(Exception e) {
+            System.out.println("Database error: " + e.getMessage());
+        }
+
+        return returnList;
+    }
+
+    public static void clearGlobalKeywordBlacklist() {
+        try {
+            String sql = "DELETE FROM keyword_blacklist WHERE guildId IS NULL;";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.execute();
+            Console.messageDB("Cleared global keyword blacklist");
+        } catch(Exception e) {
+            System.out.println("Database error: " + e.getMessage());
+        }
+    }
+
+    // GUILD KEYWORD BLACKLIST
+    public static void addToKeywordBlacklist(String guildId, String link) {
+        try {
+            String sql = "SELECT link FROM keyword_blacklist WHERE guildId = ? AND link = ?;";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, guildId);
+            statement.setString(2, link);
+            ResultSet rs = statement.executeQuery();
+            if(!rs.next()) {
+                String sql2 = "INSERT INTO keyword_blacklist (guildId, link)" +
+                        " values (?, ?);";
+                PreparedStatement statement2 = connection.prepareStatement(sql2);
+                statement2.setString(1, guildId);
+                statement2.setString(2, link);
+                statement2.execute();
+                Console.messageDB("Added link to keyword blacklist of guild " + guildId);
+            }
+        } catch(Exception e) {
+            System.out.println("Database error: " + e.getMessage());
+        }
+    }
+
+    public static void deleteFromKeywordBlacklist(String guildId, String link) {
+        try {
+            String sql = "SELECT link FROM keyword_blacklist WHERE guildId = ? AND link = ?;";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, guildId);
+            statement.setString(2, link);
+            ResultSet rs = statement.executeQuery();
+            if(rs.next()) {
+                String sql2 = "DELETE FROM keyword_blacklist WHERE guildId = ? AND link = ?;";
+                PreparedStatement statement2 = connection.prepareStatement(sql2);
+                statement2.setString(1, guildId);
+                statement2.setString(2, link);
+                statement2.execute();
+                Console.messageDB("Removed link from keyword blacklist of guild " + guildId);
+            }
+        } catch(Exception e) {
+            System.out.println("Database error: " + e.getMessage());
+        }
+    }
+
+    public static List<String> getKeywordBlacklist(String guildId) {
+        List<String> returnList = new ArrayList<>();
+
+        try {
+            String sql = "SELECT link FROM keyword_blacklist WHERE guildId = ?;";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, guildId);
+            ResultSet rs = statement.executeQuery();
+            while(rs.next()) {
+                returnList.add(rs.getString("link"));
+            }
+        } catch(Exception e) {
+            System.out.println("Database error: " + e.getMessage());
+        }
+
+        return returnList;
+    }
+
+    public static void clearKeywordBlacklist(String guildId) {
+        try {
+            String sql = "DELETE FROM keyword_blacklist WHERE guildId = ?;";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, guildId);
+            statement.execute();
+            Console.messageDB("Cleared keyword blacklist of guild " + guildId);
+        } catch(Exception e) {
+            System.out.println("Database error: " + e.getMessage());
+        }
+    }
+
+    // GLOBAL ARTIST BLACKLIST
+    public static void addToGlobalArtistBlacklist(String link) {
+        try {
+            String sql = "SELECT link FROM artist_blacklist WHERE guildId IS NULL AND link = ?;";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, link);
+            ResultSet rs = statement.executeQuery();
+            if(!rs.next()) {
+                String sql2 = "INSERT INTO artist_blacklist (guildId, link)" +
+                        " values (NULL, ?);";
+                PreparedStatement statement2 = connection.prepareStatement(sql2);
+                statement2.setString(1, link);
+                statement2.execute();
+                Console.messageDB("Added link to global artist blacklist");
+            }
+        } catch(Exception e) {
+            System.out.println("Database error: " + e.getMessage());
+        }
+    }
+
+    public static void deleteFromGlobalArtistBlacklist(String link) {
+        try {
+            String sql = "SELECT link FROM artist_blacklist WHERE guildId IS NULL AND link = ?;";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, link);
+            ResultSet rs = statement.executeQuery();
+            if(rs.next()) {
+                String sql2 = "DELETE FROM artist_blacklist WHERE guildId IS NULL AND link = ?;";
+                PreparedStatement statement2 = connection.prepareStatement(sql2);
+                statement2.setString(1, link);
+                statement2.execute();
+                Console.messageDB("Removed link from global artist blacklist");
+            }
+        } catch(Exception e) {
+            System.out.println("Database error: " + e.getMessage());
+        }
+    }
+
+    public static List<String> getGlobalArtistBlacklist() {
+        List<String> returnList = new ArrayList<>();
+
+        try {
+            String sql = "SELECT link FROM artist_blacklist WHERE guildId IS NULL;";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            ResultSet rs = statement.executeQuery();
+            while(rs.next()) {
+                returnList.add(rs.getString("link"));
+            }
+        } catch(Exception e) {
+            System.out.println("Database error: " + e.getMessage());
+        }
+
+        return returnList;
+    }
+
+    public static void clearGlobalArtistBlacklist() {
+        try {
+            String sql = "DELETE FROM artist_blacklist WHERE guildId IS NULL;";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.execute();
+            Console.messageDB("Cleared global artist blacklist");
+        } catch(Exception e) {
+            System.out.println("Database error: " + e.getMessage());
+        }
+    }
+
+    // GUILD ARTIST BLACKLIST
+    public static void addToArtistBlacklist(String guildId, String link) {
+        try {
+            String sql = "SELECT link FROM artist_blacklist WHERE guildId = ? AND link = ?;";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, guildId);
+            statement.setString(2, link);
+            ResultSet rs = statement.executeQuery();
+            if(!rs.next()) {
+                String sql2 = "INSERT INTO artist_blacklist (guildId, link)" +
+                        " values (?, ?);";
+                PreparedStatement statement2 = connection.prepareStatement(sql2);
+                statement2.setString(1, guildId);
+                statement2.setString(2, link);
+                statement2.execute();
+                Console.messageDB("Added link to artist blacklist of guild " + guildId);
+            }
+        } catch(Exception e) {
+            System.out.println("Database error: " + e.getMessage());
+        }
+    }
+
+    public static void deleteFromArtistBlacklist(String guildId, String link) {
+        try {
+            String sql = "SELECT link FROM artist_blacklist WHERE guildId = ? AND link = ?;";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, guildId);
+            statement.setString(2, link);
+            ResultSet rs = statement.executeQuery();
+            if(rs.next()) {
+                String sql2 = "DELETE FROM artist_blacklist WHERE guildId = ? AND link = ?;";
+                PreparedStatement statement2 = connection.prepareStatement(sql2);
+                statement2.setString(1, guildId);
+                statement2.setString(2, link);
+                statement2.execute();
+                Console.messageDB("Removed link from artist blacklist of guild " + guildId);
+            }
+        } catch(Exception e) {
+            System.out.println("Database error: " + e.getMessage());
+        }
+    }
+
+    public static List<String> getArtistBlacklist(String guildId) {
+        List<String> returnList = new ArrayList<>();
+
+        try {
+            String sql = "SELECT link FROM artist_blacklist WHERE guildId = ?;";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, guildId);
+            ResultSet rs = statement.executeQuery();
+            while(rs.next()) {
+                returnList.add(rs.getString("link"));
+            }
+        } catch(Exception e) {
+            System.out.println("Database error: " + e.getMessage());
+        }
+
+        return returnList;
+    }
+
+    public static void clearArtistBlacklist(String guildId) {
+        try {
+            String sql = "DELETE FROM artist_blacklist WHERE guildId = ?;";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, guildId);
+            statement.execute();
+            Console.messageDB("Cleared artist blacklist of guild " + guildId);
         } catch(Exception e) {
             System.out.println("Database error: " + e.getMessage());
         }

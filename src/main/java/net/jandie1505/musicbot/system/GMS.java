@@ -1,5 +1,6 @@
 package net.jandie1505.musicbot.system;
 
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -374,21 +375,35 @@ public class GMS {
             return false;
         }
     }
-    public static boolean isBlacklisted(Guild g, Member m, String link) {
+    public static boolean isBlacklisted(Guild g, Member m, AudioTrack audioTrack) {
         if(g != null) {
-            if(DatabaseManager.getGlobalBlacklist().contains(link)) {
+            if(DatabaseManager.getGlobalBlacklist().contains(audioTrack.getInfo().uri) || DatabaseManager.getGlobalBlacklist().contains(audioTrack.getIdentifier())) {
                 return true;
-            } else {
-                if(DatabaseManager.getBlacklist(g.getId()).contains(link)) {
-                    if(!GMS.memberHasDJPermissions(m)) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                } else {
-                    return false;
+            }
+            if(DatabaseManager.getGlobalArtistBlacklist().contains(audioTrack.getInfo().author)) {
+                return true;
+            }
+            for(String string : DatabaseManager.getGlobalKeywordBlacklist()) {
+                if(audioTrack.getInfo().title.contains(string)) {
+                    return true;
                 }
             }
+
+            if(GMS.memberHasAdminPermissions(m)) {
+                if(DatabaseManager.getBlacklist(g.getId()).contains(audioTrack.getInfo().uri) || DatabaseManager.getBlacklist(g.getId()).contains(audioTrack.getIdentifier())) {
+                    return true;
+                }
+                if(DatabaseManager.getArtistBlacklist(g.getId()).contains(audioTrack.getInfo().author)) {
+                    return true;
+                }
+                for(String string : DatabaseManager.getKeywordBlacklist(g.getId())) {
+                    if(audioTrack.getInfo().title.contains(string)) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         } else {
             return false;
         }
