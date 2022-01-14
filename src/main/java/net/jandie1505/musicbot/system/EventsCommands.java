@@ -708,7 +708,9 @@ public class EventsCommands extends ListenerAdapter {
         if(event.getOption("song") != null) {
             String source = event.getOption("song").getAsString();
             if(source.startsWith("http://") || source.startsWith("https://")) {
-                if(source.contains("https://open.spotify.com/playlist/")) {
+                if(source.contains("https://www.youtube.com/") || source.contains("https://youtube.com/")) {
+                    MusicManager.add(event.getGuild(), source, event, startafterload);
+                } else if(source.contains("https://open.spotify.com/playlist/")) {
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
@@ -753,7 +755,10 @@ public class EventsCommands extends ListenerAdapter {
                         }
                     }).start();
                 } else {
-                    MusicManager.add(event.getGuild(), source, event, startafterload);
+                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                            .setDescription(":warning:  Unknown error")
+                            .setColor(Color.RED);
+                    event.getHook().editOriginal(" ").setEmbeds(embedBuilder.build()).queue(null, new ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE));
                 }
             } else {
                 new Thread(new Runnable() {
