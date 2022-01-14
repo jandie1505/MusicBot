@@ -419,11 +419,19 @@ public class MusicBot {
                 SubcommandData mbsettingsBlacklistCommand = new SubcommandData("blacklist", "Manage the blacklist")
                         .addOptions(new OptionData(OptionType.STRING, "action", "Add/remove/clear/list").setRequired(true).addChoice("add", "add").addChoice("remove", "remove").addChoice("clear", "clear").addChoice("list", "list"))
                         .addOptions(new OptionData(OptionType.STRING, "link", "The source you want to blacklist"));
+                SubcommandData mbsettingsKeywordBlacklistCommand = new SubcommandData("keywordblacklist", "Manage the keyword blacklist")
+                        .addOptions(new OptionData(OptionType.STRING, "action", "keyword").setRequired(true).addChoice("add", "add").addChoice("remove", "remove").addChoice("clear", "clear").addChoice("list", "list"))
+                        .addOptions(new OptionData(OptionType.STRING, "keyword", "The keyword you want to blacklist"));
+                SubcommandData mbsettingsArtistBlacklistCommand = new SubcommandData("artistblacklist", "Manage the artist blacklist")
+                        .addOptions(new OptionData(OptionType.STRING, "action", "artist").setRequired(true).addChoice("add", "add").addChoice("remove", "remove").addChoice("clear", "clear").addChoice("list", "list"))
+                        .addOptions(new OptionData(OptionType.STRING, "keyword", "The artist name you want to blacklist"));
                 CommandData mbsettingsCommand = new CommandData("mbsettings", "Music bot settings command for administrators")
                         .addSubcommands(mbsettingsInfoCommand)
                         .addSubcommands(mbsettingsDJRoleCommand)
                         .addSubcommands(mbsettingsEphemeralCommand)
-                        .addSubcommands(mbsettingsBlacklistCommand);
+                        .addSubcommands(mbsettingsBlacklistCommand)
+                        .addSubcommands(mbsettingsKeywordBlacklistCommand)
+                        .addSubcommands(mbsettingsArtistBlacklistCommand);
                 jda.upsertCommand(mbsettingsCommand).queue();
                 Console.timestampMessage("Registered command mbsettings");
             }

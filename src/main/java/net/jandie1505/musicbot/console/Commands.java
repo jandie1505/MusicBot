@@ -30,6 +30,10 @@ public class Commands {
                     returnString = playerCommand(cmd);
                 } else if(cmd[0].equalsIgnoreCase("blacklist")) {
                     returnString = blacklistCommand(cmd);
+                } else if(cmd[0].equalsIgnoreCase("keywordblacklist")) {
+                    returnString = keywordBlacklistCommand(cmd);
+                } else if(cmd[0].equalsIgnoreCase("artistblacklist")) {
+                    returnString = artistBlacklistCommand(cmd);
                 } else if(cmd[0].equalsIgnoreCase("cmdreload")) {
                     if(cmd.length == 2) {
                         if(cmd[1].equalsIgnoreCase("true")) {
@@ -424,6 +428,112 @@ public class Commands {
         return returnString;
     }
 
+    private static String keywordBlacklistCommand(String[] cmd) {
+        String returnString = "";
+
+        if(cmd.length >= 3) {
+            if(cmd[1].equalsIgnoreCase("global")) {
+                if(cmd.length == 3) {
+                    if(cmd[2].equalsIgnoreCase("list")) {
+                        returnString = "GLOBAL KEYWORD BLACKLIST:\n" + DatabaseManager.getGlobalKeywordBlacklist().toString() + "\n";
+                    } else if(cmd[2].equalsIgnoreCase("clear")) {
+                        DatabaseManager.clearGlobalKeywordBlacklist();
+                        returnString = "CLEARED GLOBAL KEYWORD BLACKLIST";
+                    }
+                } else if(cmd.length == 4) {
+                    if(cmd[2].equalsIgnoreCase("add")) {
+                        DatabaseManager.addToGlobalKeywordBlacklist(cmd[3]);
+                        returnString = "ADDED LINK TO GLOBAL KEYWORD BLACKLIST";
+                    } else if(cmd[2].equalsIgnoreCase("remove")) {
+                        DatabaseManager.deleteFromGlobalKeywordBlacklist(cmd[3]);
+                        returnString = "REMOVED LINK FROM GLOBAL KEYWORD BLACKLIST";
+                    }
+                }
+            } else if(cmd[1].equalsIgnoreCase("guild")) {
+                if(cmd.length == 4) {
+                    if(cmd[3].equalsIgnoreCase("list")) {
+                        returnString = "KEYWORD BLACKLIST:\n" + DatabaseManager.getKeywordBlacklist(cmd[2]).toString() + "\n";
+                    } else if(cmd[3].equalsIgnoreCase("clear")) {
+                        DatabaseManager.clearKeywordBlacklist(cmd[3]);
+                        returnString = "CLEARED KEYWORD BLACKLIST";
+                    }
+                } else if(cmd.length == 5) {
+                    if(cmd[3].equalsIgnoreCase("add")) {
+                        DatabaseManager.addToKeywordBlacklist(cmd[2], cmd[4]);
+                        returnString = "ADDED LINK TO KEYWORD BLACKLIST";
+                    } else if(cmd[3].equalsIgnoreCase("remove")) {
+                        DatabaseManager.deleteFromKeywordBlacklist(cmd[2], cmd[4]);
+                        returnString = "REMOVED LINK FROM KEYWORD BLACKLIST";
+                    }
+                }
+            }
+        } else {
+            returnString = "keywordblacklist global add <link>\n" +
+                    "keywordblacklist global remove <link>\n" +
+                    "keywordblacklist global list\n" +
+                    "keywordblacklist global clear\n" +
+                    "keywordblacklist guild <guildId> add <link>\n" +
+                    "keywordblacklist guild <guildId> remove <link>\n" +
+                    "keywordblacklist guild <guildId> list\n" +
+                    "keywordblacklist guild <guildId> clear\n";
+        }
+
+        return returnString;
+    }
+    private static String artistBlacklistCommand(String[] cmd) {
+        String returnString = "";
+
+        if(cmd.length >= 3) {
+            if(cmd[1].equalsIgnoreCase("global")) {
+                if(cmd.length == 3) {
+                    if(cmd[2].equalsIgnoreCase("list")) {
+                        returnString = "GLOBAL ARTIST BLACKLIST:\n" + DatabaseManager.getGlobalArtistBlacklist().toString() + "\n";
+                    } else if(cmd[2].equalsIgnoreCase("clear")) {
+                        DatabaseManager.clearGlobalArtistBlacklist();
+                        returnString = "CLEARED GLOBAL ARTIST BLACKLIST";
+                    }
+                } else if(cmd.length == 4) {
+                    if(cmd[2].equalsIgnoreCase("add")) {
+                        DatabaseManager.addToGlobalArtistBlacklist(cmd[3].replace("%20", " "));
+                        returnString = "ADDED LINK TO GLOBAL ARTIST BLACKLIST";
+                    } else if(cmd[2].equalsIgnoreCase("remove")) {
+                        DatabaseManager.deleteFromGlobalArtistBlacklist(cmd[3].replace("%20", " "));
+                        returnString = "REMOVED LINK FROM GLOBAL ARTIST BLACKLIST";
+                    }
+                }
+            } else if(cmd[1].equalsIgnoreCase("guild")) {
+                if(cmd.length == 4) {
+                    if(cmd[3].equalsIgnoreCase("list")) {
+                        returnString = "ARTIST BLACKLIST:\n" + DatabaseManager.getArtistBlacklist(cmd[2]).toString() + "\n";
+                    } else if(cmd[3].equalsIgnoreCase("clear")) {
+                        DatabaseManager.clearArtistBlacklist(cmd[3]);
+                        returnString = "CLEARED ARTIST BLACKLIST";
+                    }
+                } else if(cmd.length == 5) {
+                    if(cmd[3].equalsIgnoreCase("add")) {
+                        DatabaseManager.addToArtistBlacklist(cmd[2], cmd[4].replace("%20", " "));
+                        returnString = "ADDED LINK TO ARTIST BLACKLIST";
+                    } else if(cmd[3].equalsIgnoreCase("remove")) {
+                        DatabaseManager.deleteFromArtistBlacklist(cmd[2], cmd[4].replace("%20", " "));
+                        returnString = "REMOVED LINK FROM ARTIST BLACKLIST";
+                    }
+                }
+            }
+        } else {
+            returnString = "artistblacklist global add <link>\n" +
+                    "artistblacklist global remove <link>\n" +
+                    "artistblacklist global list\n" +
+                    "artistblacklist global clear\n" +
+                    "artistblacklist guild <guildId> add <link>\n" +
+                    "artistblacklist guild <guildId> remove <link>\n" +
+                    "artistblacklist guild <guildId> list\n" +
+                    "artistblacklist guild <guildId> clear\n" +
+                    "Use %20 for space\n";
+        }
+
+        return returnString;
+    }
+
     private static String helpCommand(String[] cmd) {
         return "Help commands:\n" +
                 "guild - Guild management\n" +
@@ -432,6 +542,9 @@ public class Commands {
                 "player - Manage guild music players\n" +
                 "cmdreload [true] - Reload all slash commands\n" +
                 "shard - Manage shards\n" +
-                "verbose - Enable/disable verbose logging\n";
+                "verbose - Enable/disable verbose logging\n" +
+                "blacklist - Manage url/identifier blacklist\n" +
+                "keywordblacklist - Manage keyword blacklist\n" +
+                "artistblacklist - Manage artist blacklist\n";
     }
 }

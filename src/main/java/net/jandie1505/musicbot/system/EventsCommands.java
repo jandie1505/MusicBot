@@ -674,6 +674,148 @@ public class EventsCommands extends ListenerAdapter {
                             event.getHook().sendMessage("").addEmbeds(queueFull.build()).queue();
                         }
                     }
+                } else if(event.getSubcommandName().equalsIgnoreCase("keywordblacklist")) {
+                    if(event.getOption("action") != null) {
+                        if(event.getOption("action").getAsString().equalsIgnoreCase("add")) {
+                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                            if(event.getOption("keyword") != null) {
+                                if(!DatabaseManager.getKeywordBlacklist(event.getGuild().getId()).contains(event.getOption("keyword").getAsString())) {
+                                    DatabaseManager.addToBlacklist(event.getGuild().getId(), event.getOption("keyword").getAsString());
+                                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                                            .setDescription(":white_check_mark:  Added keyword to blacklist")
+                                            .setColor(Color.GREEN);
+                                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                } else {
+                                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                                            .setDescription(":warning:  Already added to keyword blacklist")
+                                            .setColor(Color.RED);
+                                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                }
+                            } else {
+                                EmbedBuilder embedBuilder = new EmbedBuilder()
+                                        .setDescription(":warning:  Keyword required")
+                                        .setColor(Color.RED);
+                                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                            }
+                        } else if(event.getOption("action").getAsString().equalsIgnoreCase("remove")) {
+                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                            if(event.getOption("keyword") != null) {
+                                if(DatabaseManager.getKeywordBlacklist(event.getGuild().getId()).contains(event.getOption("keyword").getAsString())) {
+                                    DatabaseManager.deleteFromBlacklist(event.getGuild().getId(), event.getOption("keyword").getAsString());
+                                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                                            .setDescription(":white_check_mark:  Removed keyword from blacklist")
+                                            .setColor(Color.GREEN);
+                                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                } else {
+                                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                                            .setDescription(":warning:  Already not in keyword blacklist")
+                                            .setColor(Color.RED);
+                                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                }
+                            } else {
+                                EmbedBuilder embedBuilder = new EmbedBuilder()
+                                        .setDescription(":warning:  Keyword required")
+                                        .setColor(Color.RED);
+                                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                            }
+                        } else if(event.getOption("action").getAsString().equalsIgnoreCase("clear")) {
+                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                            DatabaseManager.clearBlacklist(event.getGuild().getId());
+                            EmbedBuilder embedBuilder = new EmbedBuilder()
+                                    .setDescription(":white_check_mark:  Cleared keyword blacklist")
+                                    .setColor(Color.GREEN);
+                            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                        } else if(event.getOption("action").getAsString().equalsIgnoreCase("list")) {
+                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                            String blacklist = "";
+                            int index = 0;
+                            for(String string : DatabaseManager.getKeywordBlacklist(event.getGuild().getId())) {
+                                String current = string + "\n";
+                                String nextString = blacklist + current;
+                                if(nextString.length() <= 950) {
+                                    blacklist = blacklist + current;
+                                } else {
+                                    blacklist = blacklist + "`+ " + (DatabaseManager.getKeywordBlacklist(event.getGuild().getId()).size()-index) + " entries.`";
+                                    break;
+                                }
+                                index++;
+                            }
+                            EmbedBuilder queueFull = new EmbedBuilder()
+                                    .addField("Keyword Blacklist:", blacklist, false);
+                            event.getHook().sendMessage("").addEmbeds(queueFull.build()).queue();
+                        }
+                    }
+                } else if(event.getSubcommandName().equalsIgnoreCase("artistblacklist")) {
+                    if(event.getOption("action") != null) {
+                        if(event.getOption("action").getAsString().equalsIgnoreCase("add")) {
+                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                            if(event.getOption("artist") != null) {
+                                if(!DatabaseManager.getArtistBlacklist(event.getGuild().getId()).contains(event.getOption("artist").getAsString())) {
+                                    DatabaseManager.addToBlacklist(event.getGuild().getId(), event.getOption("artist").getAsString());
+                                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                                            .setDescription(":white_check_mark:  Added artist to blacklist")
+                                            .setColor(Color.GREEN);
+                                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                } else {
+                                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                                            .setDescription(":warning:  Already added to artist blacklist")
+                                            .setColor(Color.RED);
+                                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                }
+                            } else {
+                                EmbedBuilder embedBuilder = new EmbedBuilder()
+                                        .setDescription(":warning:  Artist required")
+                                        .setColor(Color.RED);
+                                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                            }
+                        } else if(event.getOption("action").getAsString().equalsIgnoreCase("remove")) {
+                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                            if(event.getOption("artist") != null) {
+                                if(DatabaseManager.getArtistBlacklist(event.getGuild().getId()).contains(event.getOption("artist").getAsString())) {
+                                    DatabaseManager.deleteFromBlacklist(event.getGuild().getId(), event.getOption("artist").getAsString());
+                                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                                            .setDescription(":white_check_mark:  Removed artist from blacklist")
+                                            .setColor(Color.GREEN);
+                                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                } else {
+                                    EmbedBuilder embedBuilder = new EmbedBuilder()
+                                            .setDescription(":warning:  Already not in artist blacklist")
+                                            .setColor(Color.RED);
+                                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                                }
+                            } else {
+                                EmbedBuilder embedBuilder = new EmbedBuilder()
+                                        .setDescription(":warning:  Artist required")
+                                        .setColor(Color.RED);
+                                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                            }
+                        } else if(event.getOption("action").getAsString().equalsIgnoreCase("clear")) {
+                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                            DatabaseManager.clearBlacklist(event.getGuild().getId());
+                            EmbedBuilder embedBuilder = new EmbedBuilder()
+                                    .setDescription(":white_check_mark:  Cleared artist blacklist")
+                                    .setColor(Color.GREEN);
+                            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
+                        } else if(event.getOption("action").getAsString().equalsIgnoreCase("list")) {
+                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                            String blacklist = "";
+                            int index = 0;
+                            for(String string : DatabaseManager.getArtistBlacklist(event.getGuild().getId())) {
+                                String current = string + "\n";
+                                String nextString = blacklist + current;
+                                if(nextString.length() <= 950) {
+                                    blacklist = blacklist + current;
+                                } else {
+                                    blacklist = blacklist + "`+ " + (DatabaseManager.getArtistBlacklist(event.getGuild().getId()).size()-index) + " entries.`";
+                                    break;
+                                }
+                                index++;
+                            }
+                            EmbedBuilder queueFull = new EmbedBuilder()
+                                    .addField("Artist Blacklist:", blacklist, false);
+                            event.getHook().sendMessage("").addEmbeds(queueFull.build()).queue();
+                        }
+                    }
                 }
             }
         }
