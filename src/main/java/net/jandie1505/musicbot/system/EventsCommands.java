@@ -732,7 +732,7 @@ public class EventsCommands extends ListenerAdapter {
                                 event.getHook().editOriginal(" ").setEmbeds(embedBuilder.build()).queue(null, new ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE));
                                 int index = 0;
                                 for(AudioTrack track : trackList) {
-                                    if(!GMS.isBlacklisted(event.getGuild(), event.getMember(), track.getInfo().uri)) {
+                                    if(!GMS.isBlacklisted(event.getGuild(), event.getMember(), track.getInfo().uri) && !GMS.isBlacklisted(event.getGuild(), event.getMember(), track.getInfo().identifier)) {
                                         MusicManager.add(event.getGuild(), track.getInfo().uri, ((index == 0) && startafterload));
                                     }
                                     index++;

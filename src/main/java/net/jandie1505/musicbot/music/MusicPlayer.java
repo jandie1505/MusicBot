@@ -70,7 +70,7 @@ public class MusicPlayer {
         playerManager.loadItem(source, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack audioTrack) {
-                if(!GMS.isBlacklisted(event.getGuild(), event.getMember(), audioTrack.getInfo().uri)) {
+                if(!GMS.isBlacklisted(event.getGuild(), event.getMember(), audioTrack.getInfo().uri) && !GMS.isBlacklisted(event.getGuild(), event.getMember(), audioTrack.getInfo().identifier)) {
                     queue.add(audioTrack);
                     EmbedBuilder embedBuilder = new EmbedBuilder()
                             .setDescription("Added " + audioTrack.getInfo().title + " [" + audioTrack.getInfo().author + "] to queue")
@@ -91,7 +91,7 @@ public class MusicPlayer {
             public void playlistLoaded(AudioPlaylist audioPlaylist) {
                 boolean blacklisted = false;
                 for(AudioTrack track : audioPlaylist.getTracks()) {
-                    if(!GMS.isBlacklisted(event.getGuild(), event.getMember(), track.getInfo().uri)) {
+                    if(!GMS.isBlacklisted(event.getGuild(), event.getMember(), track.getInfo().uri) && !GMS.isBlacklisted(event.getGuild(), event.getMember(), track.getInfo().identifier)) {
                         queue.add(track);
                     } else {
                         blacklisted = true;
@@ -261,7 +261,7 @@ public class MusicPlayer {
         playerManager.loadItem(source, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack audioTrack) {
-                if(!GMS.isBlacklisted(event.getGuild(), event.getMember(), audioTrack.getInfo().uri)) {
+                if(!GMS.isBlacklisted(event.getGuild(), event.getMember(), audioTrack.getInfo().uri) && !GMS.isBlacklisted(event.getGuild(), event.getMember(), audioTrack.getInfo().identifier)) {
                     play(audioTrack);
                     EmbedBuilder embedBuilder = new EmbedBuilder()
                             .setDescription("Playing " + audioTrack.getInfo().title + " [" + audioTrack.getInfo().author + "] now")
