@@ -459,10 +459,10 @@ public class Commands {
                     }
                 } else if(cmd.length == 5) {
                     if(cmd[3].equalsIgnoreCase("add")) {
-                        DatabaseManager.addToKeywordBlacklist(cmd[2], cmd[4]);
+                        DatabaseManager.addToKeywordBlacklist(cmd[2], cmd[4].replace("%20", " "));
                         returnString = "ADDED LINK TO KEYWORD BLACKLIST";
                     } else if(cmd[3].equalsIgnoreCase("remove")) {
-                        DatabaseManager.deleteFromKeywordBlacklist(cmd[2], cmd[4]);
+                        DatabaseManager.deleteFromKeywordBlacklist(cmd[2], cmd[4].replace("%20", " "));
                         returnString = "REMOVED LINK FROM KEYWORD BLACKLIST";
                     }
                 }
@@ -475,7 +475,8 @@ public class Commands {
                     "keywordblacklist guild <guildId> add <link>\n" +
                     "keywordblacklist guild <guildId> remove <link>\n" +
                     "keywordblacklist guild <guildId> list\n" +
-                    "keywordblacklist guild <guildId> clear\n";
+                    "keywordblacklist guild <guildId> clear\n" +
+                    "Use %20 for space\n";
         }
 
         return returnString;
