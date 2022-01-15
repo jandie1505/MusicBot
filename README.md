@@ -32,6 +32,8 @@
 ##### Other commands
 - /cmd `<command>` - Send a command to the bot console (Owner only!)
 - /help - Shows the bot help page (everyone)
+## Blacklists
+There are 3 types of blacklists. The default blacklist or music blacklist, the keyword blacklist and the artist blacklist. The default blacklist is for blacklisting video ids or youtube video urls. The keyword blacklist is for blacklisting keywords in the title of the video. The artist blacklist is for blacklisting channel names. All these blacklists are available as a global and a guild blacklist. Guild admins can bypass the guild blacklist. The global blacklist can't be bypassed. The blacklists can be managed with the `blacklist`, `keywordblacklist` and `artistblacklist` commands.
 ## Bot console
 The bot console can also be accessed with the `/cmd <command>` command (owner only).
 ##### Commands
@@ -39,6 +41,8 @@ The bot console can also be accessed with the `/cmd <command>` command (owner on
 - `guild` - Guild management
 - `player` - Player management
 - `blacklist` - Music blacklist management
+- `keywordblacklist` - Keyword blacklist management
+- `artistblacklist` - Channel name blacklist management
 - `cmdreload <true>` - Reload commands (true = complete reload)
 - `shards` - Shards management
 - `verbose` - Verbose logging
