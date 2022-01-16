@@ -872,10 +872,12 @@ public class EventsCommands extends ListenerAdapter {
                                         .setDescription(":zzz:  Converting to youtube...")
                                         .setColor(Color.YELLOW);
                                 event.getHook().editOriginal(" ").setEmbeds(embedBuilder.build()).queue(null, new ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE));
+                                boolean blacklisted = false;
                                 int index = 0;
                                 for(AudioTrack track : trackList) {
                                     if(!GMS.isBlacklisted(event.getGuild(), event.getMember(), track)) {
                                         MusicManager.add(event.getGuild(), track.getInfo().uri, ((index == 0) && startafterload));
+                                        blacklisted = true;
                                     }
                                     index++;
                                     try {
@@ -884,10 +886,17 @@ public class EventsCommands extends ListenerAdapter {
                                         e.printStackTrace();
                                     }
                                 }
-                                EmbedBuilder embedBuilder2 = new EmbedBuilder()
-                                        .setDescription(":white_check_mark:  Successfully added " + trackList.size() + " songs from spotify")
-                                        .setColor(Color.GREEN);
-                                event.getHook().editOriginal(" ").setEmbeds(embedBuilder2.build()).queue(null, new ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE));
+                                if(blacklisted) {
+                                    EmbedBuilder embedBuilder2 = new EmbedBuilder()
+                                            .setDescription(":white_check_mark:  Successfully added " + trackList.size() + " songs from spotify (some tracks are blacklisted)")
+                                            .setColor(Color.GREEN);
+                                    event.getHook().editOriginal(" ").setEmbeds(embedBuilder2.build()).queue(null, new ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE));
+                                } else {
+                                    EmbedBuilder embedBuilder2 = new EmbedBuilder()
+                                            .setDescription(":white_check_mark:  Successfully added " + trackList.size() + " songs from spotify")
+                                            .setColor(Color.GREEN);
+                                    event.getHook().editOriginal(" ").setEmbeds(embedBuilder2.build()).queue(null, new ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE));
+                                }
                             } else {
                                 EmbedBuilder embedBuilder = new EmbedBuilder()
                                         .setDescription(":warning:  Nothing was found")
@@ -898,7 +907,7 @@ public class EventsCommands extends ListenerAdapter {
                     }).start();
                 } else {
                     EmbedBuilder embedBuilder = new EmbedBuilder()
-                            .setDescription(":warning:  Unknown error")
+                            .setDescription(":warning:  Incompatible link")
                             .setColor(Color.RED);
                     event.getHook().editOriginal(" ").setEmbeds(embedBuilder.build()).queue(null, new ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE));
                 }
