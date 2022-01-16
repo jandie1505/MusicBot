@@ -877,6 +877,7 @@ public class EventsCommands extends ListenerAdapter {
                                 for(AudioTrack track : trackList) {
                                     if(!GMS.isBlacklisted(event.getGuild(), event.getMember(), track)) {
                                         MusicManager.add(event.getGuild(), track.getInfo().uri, ((index == 0) && startafterload));
+                                    } else {
                                         blacklisted = true;
                                     }
                                     index++;
