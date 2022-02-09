@@ -19,43 +19,62 @@ public class Commands {
 
         try {
             if(cmd.length >= 1) {
-                if(cmd[0].equalsIgnoreCase("guild")) {
-                    returnString = guildCommand(cmd);
-                } else if(cmd[0].equalsIgnoreCase("stop") || cmd[0].equalsIgnoreCase("shutdown")) {
-                    returnString = "SENT SHUTDOWN COMMAND";
-                    MusicBot.shutdown();
-                } else if(cmd[0].equalsIgnoreCase("invite")) {
-                    returnString = "https://discord.com/api/oauth2/authorize?client_id=" + MusicBot.getShardManager().retrieveApplicationInfo().getJDA().getSelfUser().getApplicationId() + "&permissions=2251418689&scope=bot%20applications.commands";
-                } else if(cmd[0].equalsIgnoreCase("player")) {
-                    returnString = playerCommand(cmd);
-                } else if(cmd[0].equalsIgnoreCase("blacklist")) {
-                    returnString = blacklistCommand(cmd);
-                } else if(cmd[0].equalsIgnoreCase("keywordblacklist")) {
-                    returnString = keywordBlacklistCommand(cmd);
-                } else if(cmd[0].equalsIgnoreCase("artistblacklist")) {
-                    returnString = artistBlacklistCommand(cmd);
-                } else if(cmd[0].equalsIgnoreCase("cmdreload")) {
-                    if(cmd.length == 2) {
-                        if(cmd[1].equalsIgnoreCase("true")) {
-                            MusicBot.upsertCommands(true);
-                            returnString = "SENT COMPLETE COMMANDS RELOAD COMMAND";
+                if(MusicBot.completeOnline()) {
+                    if(cmd[0].equalsIgnoreCase("guild")) {
+                        returnString = guildCommand(cmd);
+                    } else if(cmd[0].equalsIgnoreCase("stop") || cmd[0].equalsIgnoreCase("shutdown")) {
+                        returnString = "SENT SHUTDOWN COMMAND";
+                        MusicBot.shutdown();
+                    } else if(cmd[0].equalsIgnoreCase("invite")) {
+                        returnString = "https://discord.com/api/oauth2/authorize?client_id=" + MusicBot.getShardManager().retrieveApplicationInfo().getJDA().getSelfUser().getApplicationId() + "&permissions=2251418689&scope=bot%20applications.commands";
+                    } else if(cmd[0].equalsIgnoreCase("player")) {
+                        returnString = playerCommand(cmd);
+                    } else if(cmd[0].equalsIgnoreCase("blacklist")) {
+                        returnString = blacklistCommand(cmd);
+                    } else if(cmd[0].equalsIgnoreCase("keywordblacklist")) {
+                        returnString = keywordBlacklistCommand(cmd);
+                    } else if(cmd[0].equalsIgnoreCase("artistblacklist")) {
+                        returnString = artistBlacklistCommand(cmd);
+                    } else if(cmd[0].equalsIgnoreCase("cmdreload")) {
+                        if(cmd.length == 2) {
+                            if(cmd[1].equalsIgnoreCase("true")) {
+                                MusicBot.upsertCommands(true);
+                                returnString = "SENT COMPLETE COMMANDS RELOAD COMMAND";
+                            } else {
+                                MusicBot.upsertCommands(false);
+                                returnString = "SENT COMMANDS RELOAD COMMAND";
+                            }
                         } else {
                             MusicBot.upsertCommands(false);
                             returnString = "SENT COMMANDS RELOAD COMMAND";
                         }
-                    } else {
-                        MusicBot.upsertCommands(false);
-                        returnString = "SENT COMMANDS RELOAD COMMAND";
+                    } else if(cmd[0].equalsIgnoreCase("shard") || cmd[0].equalsIgnoreCase("shards")) {
+                        returnString = shardsCommand(cmd);
+                    } else if(cmd[0].equalsIgnoreCase("verbose")) {
+                        returnString = verboseCommand(cmd);
+                    } else if(cmd[0].equalsIgnoreCase("help")) {
+                        returnString = helpCommand(cmd);
                     }
-                } else if(cmd[0].equalsIgnoreCase("shard") || cmd[0].equalsIgnoreCase("shards")) {
-                    returnString = shardsCommand(cmd);
-                } else if(cmd[0].equalsIgnoreCase("verbose")) {
-                    returnString = verboseCommand(cmd);
-                } else if(cmd[0].equalsIgnoreCase("help")) {
-                    returnString = helpCommand(cmd);
-                }
-                else {
-                    returnString = "Unknown command. Use help for a list of available commands.";
+                    else {
+                        returnString = "Unknown command. Use help for a list of available commands.";
+                    }
+                } else {
+                    if(cmd[0].equalsIgnoreCase("stop") || cmd[0].equalsIgnoreCase("shutdown")) {
+                        returnString = "SENT SHUTDOWN COMMAND";
+                        MusicBot.shutdown();
+                    } else if(cmd[0].equalsIgnoreCase("shard") || cmd[0].equalsIgnoreCase("shards")) {
+                         returnString = shardsCommand(cmd);
+                    } else if(cmd[0].equalsIgnoreCase("verbose")) {
+                        returnString = verboseCommand(cmd);
+                    } else if(cmd[0].equalsIgnoreCase("blacklist")) {
+                        returnString = blacklistCommand(cmd);
+                    } else if(cmd[0].equalsIgnoreCase("keywordblacklist")) {
+                        returnString = keywordBlacklistCommand(cmd);
+                    } else if(cmd[0].equalsIgnoreCase("artistblacklist")) {
+                        returnString = artistBlacklistCommand(cmd);
+                    } else {
+                        returnString = "The bot is in limited mode. Some commands are disabled.";
+                    }
                 }
             }
         } catch(Exception e) {
