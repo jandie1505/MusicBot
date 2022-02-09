@@ -300,6 +300,7 @@ public class Commands {
                 }
                 returnString = returnString + "* SHARDS ONLINE: " + MusicBot.getShardManager().getShardsRunning() + "\n" +
                         "* SHARDS QUEUED: " + MusicBot.getShardManager().getShardsQueued() + "\n" +
+                        "* SHARDS COUNT: " + MusicBot.getShardManager().getShards().size() + "\n" +
                         "* SHARDS TOTAL: " + MusicBot.getShardManager().getShardsTotal() + "\n";
             } else if(cmd[1].equalsIgnoreCase("listraw")) {
                 returnString = MusicBot.getShardManager().getShards().toString();

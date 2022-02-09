@@ -2,10 +2,11 @@ package net.jandie1505.musicbot.system;
 
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventListener;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import net.dv8tion.jda.api.entities.AudioChannel;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.VoiceChannel;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.jandie1505.musicbot.MusicBot;
 import net.jandie1505.musicbot.music.MusicPlayer;
 
@@ -24,10 +25,10 @@ public class MusicManager {
     }
 
     // CONNECTION
-    public static boolean connect(VoiceChannel voiceChannel) {
+    public static boolean connect(AudioChannel audioChannel) {
         try {
-            voiceChannel.getGuild().getAudioManager().setSendingHandler(getMusicPlayer(voiceChannel.getGuild().getId()).getAudioSendHandler());
-            voiceChannel.getGuild().getAudioManager().openAudioConnection(voiceChannel);
+            audioChannel.getGuild().getAudioManager().setSendingHandler(getMusicPlayer(audioChannel.getGuild().getId()).getAudioSendHandler());
+            audioChannel.getGuild().getAudioManager().openAudioConnection(audioChannel);
             return true;
         } catch(Exception e) {
             return false;
@@ -41,7 +42,7 @@ public class MusicManager {
     }
 
     public static boolean isConnected(Guild g) {
-        return g.getSelfMember().getVoiceState().inVoiceChannel();
+        return g.getSelfMember().getVoiceState().inAudioChannel();
     }
 
     public static void joinVoiceChannel(VoiceChannel voiceChannel) {
@@ -55,7 +56,7 @@ public class MusicManager {
     public static void add(Guild g, String source, boolean startafterload) {
         getMusicPlayer(g.getId()).queue(source, startafterload);
     }
-    public static void add(Guild g, String source, SlashCommandEvent event, boolean startafterload) {
+    public static void add(Guild g, String source, SlashCommandInteractionEvent event, boolean startafterload) {
         getMusicPlayer(g.getId()).queue(source, event, startafterload);
     }
     public static void remove(Guild g, int index) {
@@ -109,7 +110,7 @@ public class MusicManager {
     public static void playnow(Guild g, String source) {
         getMusicPlayer(g.getId()).playnow(source);
     }
-    public static void playnow(Guild g, String source, SlashCommandEvent event) {
+    public static void playnow(Guild g, String source, SlashCommandInteractionEvent event) {
         getMusicPlayer(g.getId()).playnow(source, event);
     }
 
@@ -166,7 +167,7 @@ public class MusicManager {
             if(g == null) {
                 removePlayer(guildId);
             } else {
-                if(g.getSelfMember().getVoiceState().inVoiceChannel()) {
+                if(g.getSelfMember().getVoiceState().inAudioChannel()) {
                     /*if(!playerExpiration.containsKey(guildId)) {
                         playerExpiration.put(guildId, 900);
                     }

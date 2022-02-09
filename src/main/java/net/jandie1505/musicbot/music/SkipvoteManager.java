@@ -35,12 +35,12 @@ public class SkipvoteManager implements Runnable {
         Guild g = MusicBot.getShardManager().getGuildById(MusicManager.getGuildIdFromMusicPlayer(musicPlayer));
         while(!thread.isInterrupted()) {
             try {
-                if(g != null && musicPlayer != null && g.getSelfMember().getVoiceState().inVoiceChannel()) {
+                if(g != null && musicPlayer != null && g.getSelfMember().getVoiceState().inAudioChannel()) {
                     this.membercount = g.getSelfMember().getVoiceState().getChannel().getMembers().size() - 1;
                     this.votecount = 0;
                     if(!memberList.isEmpty()) {
                         for(Member m : memberList) {
-                            if(m != null && m.getVoiceState().inVoiceChannel() && m.getVoiceState().getChannel() == g.getSelfMember().getVoiceState().getChannel()) {
+                            if(m != null && m.getVoiceState().inAudioChannel() && m.getVoiceState().getChannel() == g.getSelfMember().getVoiceState().getChannel()) {
                                 votecount++;
                             } else {
                                 memberList.remove(m);

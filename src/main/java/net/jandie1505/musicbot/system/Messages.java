@@ -5,7 +5,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.Button;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 
 import java.awt.*;
 import java.util.concurrent.TimeUnit;
@@ -49,7 +49,7 @@ public class Messages {
             }
 
             String channelString = "";
-            if(g.getSelfMember().getVoiceState().inVoiceChannel()) {
+            if(g.getSelfMember().getVoiceState().inAudioChannel()) {
                 channelString = g.getSelfMember().getVoiceState().getChannel().getName();
             } else {
                 channelString = "---";
@@ -64,7 +64,7 @@ public class Messages {
         } else {
             MessageBuilder messageBuilder = new MessageBuilder();
             String channelString = "";
-            if(g.getSelfMember().getVoiceState().inVoiceChannel()) {
+            if(g.getSelfMember().getVoiceState().inAudioChannel()) {
                 channelString = g.getSelfMember().getVoiceState().getChannel().getName();
             } else {
                 channelString = "---";

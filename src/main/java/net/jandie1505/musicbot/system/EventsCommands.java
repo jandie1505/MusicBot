@@ -5,15 +5,11 @@ import com.sedmelluq.discord.lavaplayer.player.event.AudioEventListener;
 import com.sedmelluq.discord.lavaplayer.player.event.PlayerPauseEvent;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.MessageBuilder;
-import net.dv8tion.jda.api.entities.Emoji;
-import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.entities.VoiceChannel;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.jandie1505.musicbot.MusicBot;
 import net.jandie1505.musicbot.console.Commands;
@@ -28,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 public class EventsCommands extends ListenerAdapter {
     // EVENT
     @Override
-    public void onSlashCommand(SlashCommandEvent event) {
+    public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         if(event.getMember() != null && event.getGuild() != null) {
             if(event.getName().equalsIgnoreCase("nowplaying")) {
                 this.nowplayingCommand(event);
@@ -74,14 +70,14 @@ public class EventsCommands extends ListenerAdapter {
     }
 
     // COMMANDS
-    private void nowplayingCommand(SlashCommandEvent event) {
+    private void nowplayingCommand(SlashCommandInteractionEvent event) {
         if(GMS.memberHasUserPermissions(event.getMember())) {
             event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
             event.getHook().sendMessage(Messages.nowplayingMessage(event.getGuild(), GMS.memberHasDJPermissions(event.getMember())).build()).queue();
         }
     }
 
-    private void queueCommand(SlashCommandEvent event) {
+    private void queueCommand(SlashCommandInteractionEvent event) {
         if(GMS.memberHasUserPermissions(event.getMember())) {
             event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
             if(!MusicManager.getQueue(event.getGuild()).isEmpty()) {
@@ -136,11 +132,11 @@ public class EventsCommands extends ListenerAdapter {
         }
     }
 
-    private void playCommand(SlashCommandEvent event) {
+    private void playCommand(SlashCommandInteractionEvent event) {
         if(GMS.memberHasUserPermissions(event.getMember())) {
             event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
             if(!MusicManager.isConnected(event.getGuild())) {
-                if(event.getMember().getVoiceState().inVoiceChannel()) {
+                if(event.getMember().getVoiceState().inAudioChannel()) {
                     if(MusicManager.connect(event.getMember().getVoiceState().getChannel())) {
                         this.play(event, true);
                     } else {
@@ -165,7 +161,7 @@ public class EventsCommands extends ListenerAdapter {
         }
     }
 
-    private void addCommand(SlashCommandEvent event) {
+    private void addCommand(SlashCommandInteractionEvent event) {
         if(GMS.memberHasUserPermissions(event.getMember())) {
             event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
             if(MusicManager.isConnected(event.getGuild())) {
@@ -183,7 +179,7 @@ public class EventsCommands extends ListenerAdapter {
         }
     }
 
-    private void stopCommand(SlashCommandEvent event) {
+    private void stopCommand(SlashCommandInteractionEvent event) {
         if(GMS.memberHasDJPermissions(event.getMember())) {
             event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
             if(MusicManager.isConnected(event.getGuild())) {
@@ -214,7 +210,7 @@ public class EventsCommands extends ListenerAdapter {
         }
     }
 
-    private void leaveCommand(SlashCommandEvent event) {
+    private void leaveCommand(SlashCommandInteractionEvent event) {
         if(GMS.memberHasDJPermissions(event.getMember())) {
             event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
             if(MusicManager.isConnected(event.getGuild())) {
@@ -236,7 +232,7 @@ public class EventsCommands extends ListenerAdapter {
         }
     }
 
-    private void forceskipCommand(SlashCommandEvent event) {
+    private void forceskipCommand(SlashCommandInteractionEvent event) {
         if(GMS.memberHasDJPermissions(event.getMember())) {
             event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
             if(MusicManager.isConnected(event.getGuild())) {
@@ -278,7 +274,7 @@ public class EventsCommands extends ListenerAdapter {
         }
     }
 
-    private void removeCommand(SlashCommandEvent event) {
+    private void removeCommand(SlashCommandInteractionEvent event) {
         if(GMS.memberHasDJPermissions(event.getMember())) {
             event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
             if(MusicManager.isConnected(event.getGuild())) {
@@ -308,7 +304,7 @@ public class EventsCommands extends ListenerAdapter {
         }
     }
 
-    private void clearCommand(SlashCommandEvent event) {
+    private void clearCommand(SlashCommandInteractionEvent event) {
         if(GMS.memberHasDJPermissions(event.getMember())) {
             event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
             if(MusicManager.isConnected(event.getGuild())) {
@@ -323,7 +319,7 @@ public class EventsCommands extends ListenerAdapter {
         }
     }
 
-    private void movetrackCommand(SlashCommandEvent event) {
+    private void movetrackCommand(SlashCommandInteractionEvent event) {
         if(GMS.memberHasDJPermissions(event.getMember())) {
             event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
             if(MusicManager.isConnected(event.getGuild())) {
@@ -357,7 +353,7 @@ public class EventsCommands extends ListenerAdapter {
         }
     }
 
-    private void shuffleCommand(SlashCommandEvent event) {
+    private void shuffleCommand(SlashCommandInteractionEvent event) {
         if(GMS.memberHasDJPermissions(event.getMember())) {
             event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
             if(MusicManager.isConnected(event.getGuild())) {
@@ -379,12 +375,12 @@ public class EventsCommands extends ListenerAdapter {
         }
     }
 
-    private void playnowCommand(SlashCommandEvent event) {
+    private void playnowCommand(SlashCommandInteractionEvent event) {
         if(GMS.memberHasDJPermissions(event.getMember())) {
             event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
             if(event.getOption("song") != null) {
                 if(!MusicManager.isConnected(event.getGuild())) {
-                    if(event.getMember().getVoiceState().inVoiceChannel()) {
+                    if(event.getMember().getVoiceState().inAudioChannel()) {
                         MusicManager.connect(event.getMember().getVoiceState().getChannel());
                         this.playnow(event);
                     } else {
@@ -405,7 +401,7 @@ public class EventsCommands extends ListenerAdapter {
         }
     }
 
-    private void searchCommand(SlashCommandEvent event) {
+    private void searchCommand(SlashCommandInteractionEvent event) {
         if(GMS.memberHasUserPermissions(event.getMember())) {
             event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
             if(event.getOption("query") != null) {
@@ -432,7 +428,7 @@ public class EventsCommands extends ListenerAdapter {
         }
     }
 
-    private void volumeCommand(SlashCommandEvent event) {
+    private void volumeCommand(SlashCommandInteractionEvent event) {
         if(GMS.memberHasDJPermissions(event.getMember())) {
             event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
             if(System.getProperty("os.arch").equalsIgnoreCase("amd64")) {
@@ -511,7 +507,7 @@ public class EventsCommands extends ListenerAdapter {
         }
     }
 
-    private void skipCommand(SlashCommandEvent event) {
+    private void skipCommand(SlashCommandInteractionEvent event) {
         if(GMS.memberHasUserPermissions(event.getMember())) {
             event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
             if(MusicManager.isConnected(event.getGuild())) {
@@ -534,7 +530,7 @@ public class EventsCommands extends ListenerAdapter {
         }
     }
 
-    private void mbsettingsCommand(SlashCommandEvent event) {
+    private void mbsettingsCommand(SlashCommandInteractionEvent event) {
         if(GMS.memberHasAdminPermissions(event.getMember())) {
             if(event.getSubcommandName() != null) {
                 if(event.getSubcommandName().equalsIgnoreCase("info")) {
@@ -821,7 +817,7 @@ public class EventsCommands extends ListenerAdapter {
         }
     }
 
-    private void cmdCommand(SlashCommandEvent event) {
+    private void cmdCommand(SlashCommandInteractionEvent event) {
         if(event.getMember().getId().equals(MusicBot.getBowOwner())) {
             event.deferReply(true).queue();
             if(event.getOption("cmd") != null) {
@@ -838,7 +834,7 @@ public class EventsCommands extends ListenerAdapter {
         }
     }
 
-    private void helpCommand(SlashCommandEvent event) {
+    private void helpCommand(SlashCommandInteractionEvent event) {
         event.deferReply(true).queue();
         event.getHook().sendMessage("").addEmbeds(getHelpMessage().build()).queue();
     }
@@ -846,7 +842,7 @@ public class EventsCommands extends ListenerAdapter {
 
 
     // UTILITY
-    private void play(SlashCommandEvent event, boolean startafterload) {
+    private void play(SlashCommandInteractionEvent event, boolean startafterload) {
         if(event.getOption("song") != null) {
             String source = event.getOption("song").getAsString();
             if(source.startsWith("http://") || source.startsWith("https://")) {
@@ -955,7 +951,7 @@ public class EventsCommands extends ListenerAdapter {
             }
         }
     }
-    private void playnow(SlashCommandEvent event) {
+    private void playnow(SlashCommandInteractionEvent event) {
         if(event.getOption("song") != null) {
             String source = event.getOption("song").getAsString();
             if(source.startsWith("http://") || source.startsWith("https://")) {

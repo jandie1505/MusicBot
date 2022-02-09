@@ -1,13 +1,12 @@
 package net.jandie1505.musicbot.system;
 
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.interactions.Interaction;
 
 public class EventsButtons extends ListenerAdapter {
     @Override
-    public void onButtonClick(ButtonClickEvent event) {
+    public void onButtonInteraction(ButtonInteractionEvent event) {
         if(event.getButton().getId().equalsIgnoreCase("playbutton")) {
             if(GMS.memberHasDJPermissions(event.getMember())) {
                 if(event.getGuild() != null) {

@@ -11,6 +11,7 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
 import net.dv8tion.jda.api.sharding.ShardManager;
+import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 import net.jandie1505.musicbot.console.Console;
 import net.jandie1505.musicbot.search.SpotifySearchHandler;
 import net.jandie1505.musicbot.system.*;
@@ -297,115 +298,115 @@ public class MusicBot {
             }
 
             if(!cmdNameList.contains("cmd") || reloadall) {
-                CommandData cmdCommand = new CommandData("cmd", "cmd")
+                CommandData cmdCommand = new CommandDataImpl("cmd", "cmd")
                         .addOptions(new OptionData(OptionType.STRING, "cmd", "cmd").setRequired(true));
                 jda.upsertCommand(cmdCommand).queue();
                 Console.timestampMessage("Registered command cmd");
             }
             if(!cmdNameList.contains("invite") || reloadall) {
-                CommandData inviteCommand = new CommandData("invite", "Invite MusicBot to your server");
+                CommandData inviteCommand = new CommandDataImpl("invite", "Invite MusicBot to your server");
                 jda.upsertCommand(inviteCommand).queue();
                 Console.timestampMessage("Registered command invite");
             }
             if(!cmdNameList.contains("help") || reloadall) {
-                CommandData commandData = new CommandData("help", "Get help and information about MusicBot");
+                CommandData commandData = new CommandDataImpl("help", "Get help and information about MusicBot");
                 jda.upsertCommand(commandData).queue();
                 Console.timestampMessage("Registered command help");
             }
             if(!cmdNameList.contains("nowplaying") || reloadall) {
-                CommandData nowplayingCommand = new CommandData("nowplaying", "Shows information about the song which is currently playing");
+                CommandData nowplayingCommand = new CommandDataImpl("nowplaying", "Shows information about the song which is currently playing");
                 jda.upsertCommand(nowplayingCommand).queue();
                 Console.timestampMessage("Registered command nowplaying");
             }
             if(!cmdNameList.contains("queue") || reloadall) {
-                CommandData queueCommand = new CommandData("queue", "Shows the current queue")
+                CommandData queueCommand = new CommandDataImpl("queue", "Shows the current queue")
                         .addOptions(new OptionData(OptionType.INTEGER, "index", "Search for queue indexes"));
                 jda.upsertCommand(queueCommand).queue();
                 Console.timestampMessage("Registered command queue");
             }
             if(!cmdNameList.contains("play") || reloadall) {
-                CommandData playCommand = new CommandData("play", "Play a song")
+                CommandData playCommand = new CommandDataImpl("play", "Play a song")
                         .addOptions(new OptionData(OptionType.STRING, "song", "The song link / song name / playlist link you want to play"));
                 jda.upsertCommand(playCommand).queue();
                 Console.timestampMessage("Registered command play");
             }
             if(!cmdNameList.contains("add") || reloadall) {
-                CommandData addCommand = new CommandData("add", "Add a song to queue without starting to play")
+                CommandData addCommand = new CommandDataImpl("add", "Add a song to queue without starting to play")
                         .addOptions(new OptionData(OptionType.STRING, "song", "The song link / song name / playlist link you want to add").setRequired(true));
                 jda.upsertCommand(addCommand).queue();
                 Console.timestampMessage("Registered command add");
             }
             if(!cmdNameList.contains("pause") || reloadall) {
-                CommandData pauseCommand = new CommandData("pause", "Stop playing music");
+                CommandData pauseCommand = new CommandDataImpl("pause", "Stop playing music");
                 jda.upsertCommand(pauseCommand).queue();
                 Console.timestampMessage("Registered command pause");
             }
             if(!cmdNameList.contains("remove") || reloadall) {
-                CommandData removeCommand = new CommandData("remove", "Remove a specific song from the queue")
+                CommandData removeCommand = new CommandDataImpl("remove", "Remove a specific song from the queue")
                         .addOptions(new OptionData(OptionType.INTEGER, "index", "The index of the song you want to remove").setRequired(true));
                 jda.upsertCommand(removeCommand).queue();
                 Console.timestampMessage("Registered command remove");
             }
             if(!cmdNameList.contains("clear") || reloadall) {
-                CommandData clearCommand = new CommandData("clear", "Clear the queue");
+                CommandData clearCommand = new CommandDataImpl("clear", "Clear the queue");
                 jda.upsertCommand(clearCommand).queue();
                 Console.timestampMessage("Registered command clear");
             }
             if(!cmdNameList.contains("search") || reloadall) {
-                CommandData searchCommand = new CommandData("search", "YTSearchHandler youtube")
+                CommandData searchCommand = new CommandDataImpl("search", "YTSearchHandler youtube")
                         .addOptions(new OptionData(OptionType.STRING, "query", "The text you want to search for").setRequired(true));
                 jda.upsertCommand(searchCommand).queue();
                 Console.timestampMessage("Registered command search");
             }
             if(!cmdNameList.contains("shuffle") || reloadall) {
-                CommandData shuffleCommand = new CommandData("shuffle", "Shuffle the queue");
+                CommandData shuffleCommand = new CommandDataImpl("shuffle", "Shuffle the queue");
                 jda.upsertCommand(shuffleCommand).queue();
                 Console.timestampMessage("Registered command shuffle");
             }
             if(!cmdNameList.contains("skip") || reloadall) {
-                CommandData skipCommand = new CommandData("skip", "Skip a song")
+                CommandData skipCommand = new CommandDataImpl("skip", "Skip a song")
                         .addOptions(new OptionData(OptionType.INTEGER, "position", "Skip to a specific queue position"));
                 jda.upsertCommand(skipCommand).queue();
                 Console.timestampMessage("Registered command skip");
             }
             if(!cmdNameList.contains("removeuser") || reloadall) {
-                CommandData removeUserCommand = new CommandData("removeuser", "Removes all songs by a specific member")
+                CommandData removeUserCommand = new CommandDataImpl("removeuser", "Removes all songs by a specific member")
                         .addOptions(new OptionData(OptionType.USER, "member", "The member you want to remove the music from").setRequired(true));
                 jda.upsertCommand(removeUserCommand).queue();
                 Console.timestampMessage("Registered command removeuser");
             }
             if(!cmdNameList.contains("forceskip") || reloadall) {
-                CommandData forceskipCommand = new CommandData("forceskip", "Force skip a song")
+                CommandData forceskipCommand = new CommandDataImpl("forceskip", "Force skip a song")
                         .addOptions(new OptionData(OptionType.INTEGER, "position", "Skip to a specific queue position"));
                 jda.upsertCommand(forceskipCommand).queue();
                 Console.timestampMessage("Registered command forceskip");
             }
             if(!cmdNameList.contains("movetrack") || reloadall) {
-                CommandData movetrackCommand = new CommandData("movetrack", "Move a specific track in queue")
+                CommandData movetrackCommand = new CommandDataImpl("movetrack", "Move a specific track in queue")
                         .addOptions(new OptionData(OptionType.INTEGER, "from", "The track you want to move").setRequired(true))
                         .addOptions(new OptionData(OptionType.INTEGER, "to", "The queue position you want to move the track to").setRequired(true));
                 jda.upsertCommand(movetrackCommand).queue();
                 Console.timestampMessage("Registered command movetrack");
             }
             if(!cmdNameList.contains("playnow") || reloadall) {
-                CommandData playnowCommand = new CommandData("playnow", "Stop the current song and play the specified song immediately")
+                CommandData playnowCommand = new CommandDataImpl("playnow", "Stop the current song and play the specified song immediately")
                         .addOptions(new OptionData(OptionType.STRING, "song", "The song you want to play").setRequired(true));
                 jda.upsertCommand(playnowCommand).queue();
                 Console.timestampMessage("Registered command playnow");
             }
             if(!cmdNameList.contains("stop") || reloadall) {
-                CommandData stopCommand = new CommandData("stop", "Stop playing music");
+                CommandData stopCommand = new CommandDataImpl("stop", "Stop playing music");
                 jda.upsertCommand(stopCommand).queue();
                 Console.timestampMessage("Registered command stop");
             }
             if(!cmdNameList.contains("volume") || reloadall) {
-                CommandData volumeCommand = new CommandData("volume", "Change the volume")
+                CommandData volumeCommand = new CommandDataImpl("volume", "Change the volume")
                         .addOptions(new OptionData(OptionType.INTEGER, "volume", "Change the volume to this value"));
                 jda.upsertCommand(volumeCommand).queue();
                 Console.timestampMessage("Registered command volume");
             }
             if(!cmdNameList.contains("leave") || reloadall) {
-                CommandData leaveCommand = new CommandData("leave", "Leave the voice channel");
+                CommandData leaveCommand = new CommandDataImpl("leave", "Leave the voice channel");
                 jda.upsertCommand(leaveCommand).queue();
                 Console.timestampMessage("Registered command leave");
             }
@@ -425,7 +426,7 @@ public class MusicBot {
                 SubcommandData mbsettingsArtistBlacklistCommand = new SubcommandData("artistblacklist", "Manage the artist blacklist")
                         .addOptions(new OptionData(OptionType.STRING, "action", "artist").setRequired(true).addChoice("add", "add").addChoice("remove", "remove").addChoice("clear", "clear").addChoice("list", "list"))
                         .addOptions(new OptionData(OptionType.STRING, "keyword", "The artist name you want to blacklist"));
-                CommandData mbsettingsCommand = new CommandData("mbsettings", "Music bot settings command for administrators")
+                CommandData mbsettingsCommand = new CommandDataImpl("mbsettings", "Music bot settings command for administrators")
                         .addSubcommands(mbsettingsInfoCommand)
                         .addSubcommands(mbsettingsDJRoleCommand)
                         .addSubcommands(mbsettingsEphemeralCommand)

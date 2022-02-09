@@ -10,7 +10,7 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.jandie1505.musicbot.system.GMS;
 
 import java.awt.*;
@@ -66,7 +66,7 @@ public class MusicPlayer {
         });
     }
 
-    public void queue(String source, SlashCommandEvent event, boolean startafterload) {
+    public void queue(String source, SlashCommandInteractionEvent event, boolean startafterload) {
         playerManager.loadItem(source, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack audioTrack) {
@@ -257,7 +257,7 @@ public class MusicPlayer {
             public void loadFailed(FriendlyException e) {}
         });
     }
-    public void playnow(String source, SlashCommandEvent event) {
+    public void playnow(String source, SlashCommandInteractionEvent event) {
         playerManager.loadItem(source, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack audioTrack) {
