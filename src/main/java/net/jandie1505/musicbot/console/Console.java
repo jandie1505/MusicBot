@@ -1,10 +1,5 @@
 package net.jandie1505.musicbot.console;
 
-import net.jandie1505.musicbot.MusicBot;
-import org.beryx.textio.TextIO;
-import org.beryx.textio.console.ConsoleTextTerminal;
-import org.beryx.textio.system.SystemTextTerminal;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
@@ -15,15 +10,9 @@ public class Console implements Runnable {
     private static boolean DBMLogging;
 
     // NOT STATIC
-    private TextIO textIO;
     private Thread thread;
 
     public Console() {
-        if(System.console() != null) {
-            textIO = new TextIO(new ConsoleTextTerminal());
-        } else {
-            textIO = new TextIO(new SystemTextTerminal());
-        }
         thread = new Thread(this);
     }
 
@@ -32,7 +21,8 @@ public class Console implements Runnable {
         System.out.println("Console started");
         while(!thread.isInterrupted()) {
             try {
-                textIO.getTextTerminal().println(Commands.command(textIO.newStringInputReader().read("> ")));
+                Scanner scan = new Scanner(System.in);
+                System.out.println(Commands.command(scan.nextLine()));
             } catch(Exception ignored) {}
         }
         System.out.println("Console stopped");
@@ -80,7 +70,7 @@ public class Console implements Runnable {
     }
 
     public static void defaultMessage(String msg) {
-        MusicBot.getConsole().textIO.getTextTerminal().println(msg);
+        System.out.println(msg);
     }
 
     public static void timestampMessage(String msg) {

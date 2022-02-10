@@ -105,6 +105,8 @@ public class MusicBot {
                 shardManager.addEventListener(new EventsCommands());
                 shardManager.addEventListener(new EventsButtons());
 
+                reloadShards();
+
                 taskShardsReload = new TaskShardsReload();
                 taskShardsReload.start();
 
@@ -144,21 +146,16 @@ public class MusicBot {
         }
     }
 
-    // READY AND SHUTDOWN
-    private static void onReady() {
-
-    }
-
     public static void shutdown() {
         System.out.println("*****************\n" +
                 "* SHUTTING DOWN *\n" +
                 "*****************\n");
-        shardManager.shutdown();
         try {
+            shardManager.shutdown();
             TimeUnit.SECONDS.sleep(1);
-        } catch (InterruptedException e) {
+        } catch(InterruptedException e) {
             e.printStackTrace();
-        }
+        } catch(Exception ignored) {}
         System.exit(1);
     }
 

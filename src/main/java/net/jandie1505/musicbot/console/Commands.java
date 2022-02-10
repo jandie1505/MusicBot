@@ -329,6 +329,9 @@ public class Commands {
                 MusicBot.startShards();
             } else if(cmd[1].equalsIgnoreCase("stopall")) {
                 MusicBot.stopShards();
+            } else if(cmd[1].equalsIgnoreCase("reload")) {
+                MusicBot.reloadShards();
+                returnString = "SENT RELOAD SHARDS COMMAND";
             }
         } else if(cmd.length == 3) {
             if(cmd[1].equalsIgnoreCase("info")) {
