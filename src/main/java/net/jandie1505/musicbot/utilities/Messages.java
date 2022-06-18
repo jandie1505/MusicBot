@@ -1,4 +1,4 @@
-package net.jandie1505.musicbot.system;
+package net.jandie1505.musicbot.utilities;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -6,17 +6,18 @@ import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.jandie1505.musicbot.MusicBot;
 
 import java.awt.*;
 import java.util.concurrent.TimeUnit;
 
 public class Messages {
-    public static MessageBuilder nowplayingMessage(Guild g, boolean showbuttons) {
-        if(MusicManager.getPlayingTrack(g) != null) {
+    public static MessageBuilder nowplayingMessage(MusicBot musicBot, Guild g, boolean showbuttons) {
+        if(musicBot.getMusicManager().getPlayingTrack(g) != null) {
             MessageBuilder messageBuilder = new MessageBuilder();
-            AudioTrack audioTrack = MusicManager.getPlayingTrack(g);
+            AudioTrack audioTrack = musicBot.getMusicManager().getPlayingTrack(g);
             String description = "";
-            if(MusicManager.isPaused(g)) {
+            if(musicBot.getMusicManager().isPaused(g)) {
                 description = ":pause_button:  Player is currently paused";
             } else {
                 description = ":arrow_forward:  Player is currently playing";
@@ -24,22 +25,22 @@ public class Messages {
             String playIcon = ":stop_button:";
             String progressbar = "▬▬▬▬▬▬▬▬▬▬";
 
-            if(MusicManager.isPaused(g)) {
+            if(musicBot.getMusicManager().isPaused(g)) {
                 playIcon = ":pause_button:";
                 progressbar = getProgressBar(audioTrack.getPosition(), audioTrack.getDuration());
-            } else if(!MusicManager.isPaused(g)) {
+            } else if(!musicBot.getMusicManager().isPaused(g)) {
                 playIcon = ":arrow_forward:";
                 progressbar = getProgressBar(audioTrack.getPosition(), audioTrack.getDuration());
             }
 
             if(showbuttons) {
-                if(MusicManager.isPaused(g)) {
+                if(musicBot.getMusicManager().isPaused(g)) {
                     messageBuilder.setActionRows(ActionRow.of(
                             Button.primary("playbutton", "▶"),
                             Button.primary("nowplayingskipbutton", "⏭"),
                             Button.secondary("refreshbutton", "\uD83D\uDD04")
                     ));
-                } else if(!MusicManager.isPaused(g)) {
+                } else if(!musicBot.getMusicManager().isPaused(g)) {
                     messageBuilder.setActionRows(ActionRow.of(
                             Button.primary("pausebutton", "⏸"),
                             Button.primary("nowplayingskipbutton", "⏭"),
@@ -82,13 +83,13 @@ public class Messages {
         }
     }
 
-    public static MessageBuilder getQueueMessage(Guild g, int indexOption) {
-        if(!MusicManager.getQueue(g).isEmpty()) {
+    public static MessageBuilder getQueueMessage(MusicBot musicBot, Guild g, int indexOption) {
+        if(!musicBot.getMusicManager().getQueue(g).isEmpty()) {
             MessageBuilder messageBuilder = new MessageBuilder();
             if(indexOption != 0) {
                 String queue = "";
                 int index = 0;
-                for(AudioTrack track : MusicManager.getQueue(g)) {
+                for(AudioTrack track : musicBot.getMusicManager().getQueue(g)) {
                     String current = "`" + index + ".` " +
                             "`" + Messages.formatTime(track.getDuration()) + "` " +
                             track.getInfo().title + " [" + track.getInfo().author + "]\n";
@@ -98,7 +99,7 @@ public class Messages {
                             queue = queue + current;
                         }
                     } else {
-                        queue = queue + "`+ " + (MusicManager.getQueue(g).size()-index) + " entries. Use /queue <index> to search for indexes.`";
+                        queue = queue + "`+ " + (musicBot.getMusicManager().getQueue(g).size()-index) + " entries. Use /queue <index> to search for indexes.`";
                         break;
                     }
                     index++;
@@ -119,7 +120,7 @@ public class Messages {
             } else {
                 String queue = "";
                 int index = 0;
-                for(AudioTrack track : MusicManager.getQueue(g)) {
+                for(AudioTrack track : musicBot.getMusicManager().getQueue(g)) {
                     String current = "`" + index + ".` " +
                             "`" + Messages.formatTime(track.getDuration()) + "` " +
                             track.getInfo().title + " [" + track.getInfo().author + "]\n";
@@ -127,7 +128,7 @@ public class Messages {
                     if(nextString.length() <= 950) {
                         queue = queue + current;
                     } else {
-                        queue = queue + "`+ " + (MusicManager.getQueue(g).size()-index) + " entries. Use /queue <index> to search for indexes.`";
+                        queue = queue + "`+ " + (musicBot.getMusicManager().getQueue(g).size()-index) + " entries. Use /queue <index> to search for indexes.`";
                         break;
                     }
                     index++;

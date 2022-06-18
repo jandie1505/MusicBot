@@ -1,4 +1,4 @@
-package net.jandie1505.musicbot.search;
+package net.jandie1505.musicbot.utilities;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.wrapper.spotify.SpotifyApi;

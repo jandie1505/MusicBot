@@ -12,9 +12,9 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.jandie1505.musicbot.MusicBot;
 import net.jandie1505.musicbot.console.Commands;
-import net.jandie1505.musicbot.search.SpotifySearchHandler;
-import net.jandie1505.musicbot.search.YTSearchHandler;
-import net.jandie1505.musicbot.system.Messages;
+import net.jandie1505.musicbot.utilities.SpotifySearchHandler;
+import net.jandie1505.musicbot.utilities.YTSearchHandler;
+import net.jandie1505.musicbot.utilities.Messages;
 
 import java.awt.*;
 import java.util.List;
@@ -80,7 +80,7 @@ public class EventsCommands extends ListenerAdapter {
     private void nowplayingCommand(SlashCommandInteractionEvent event) {
         if(this.musicBot.getGMS().memberHasUserPermissions(event.getMember())) {
             event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
-            event.getHook().sendMessage(Messages.nowplayingMessage(event.getGuild(), this.musicBot.getGMS().memberHasDJPermissions(event.getMember())).build()).queue();
+            event.getHook().sendMessage(Messages.nowplayingMessage(musicBot, event.getGuild(), this.musicBot.getGMS().memberHasDJPermissions(event.getMember())).build()).queue();
         }
     }
 
@@ -828,7 +828,7 @@ public class EventsCommands extends ListenerAdapter {
         if(event.getMember().getId().equals(this.musicBot.getConfigManager().getConfig().getBotOwner())) {
             event.deferReply(true).queue();
             if(event.getOption("cmd") != null) {
-                String response = Commands.command(event.getOption("cmd").getAsString());
+                String response = Commands.command(musicBot, event.getOption("cmd").getAsString());
                 EmbedBuilder embedBuilder = new EmbedBuilder()
                         .addField("Command response:", response, false);
                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
