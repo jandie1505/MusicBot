@@ -17,7 +17,9 @@ import net.jandie1505.musicbot.console.Console;
 import net.jandie1505.musicbot.eventlisteners.EventsBasic;
 import net.jandie1505.musicbot.eventlisteners.EventsButtons;
 import net.jandie1505.musicbot.eventlisteners.EventsCommands;
-import net.jandie1505.musicbot.system.*;
+import net.jandie1505.musicbot.system.DatabaseManager;
+import net.jandie1505.musicbot.system.GMS;
+import net.jandie1505.musicbot.system.MusicManager;
 import net.jandie1505.musicbot.tasks.TaskShardsReload;
 
 import javax.security.auth.login.LoginException;

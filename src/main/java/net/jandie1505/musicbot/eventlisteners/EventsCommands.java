@@ -12,9 +12,9 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.jandie1505.musicbot.MusicBot;
 import net.jandie1505.musicbot.console.Commands;
+import net.jandie1505.musicbot.utilities.Messages;
 import net.jandie1505.musicbot.utilities.SpotifySearchHandler;
 import net.jandie1505.musicbot.utilities.YTSearchHandler;
-import net.jandie1505.musicbot.utilities.Messages;
 
 import java.awt.*;
 import java.util.List;

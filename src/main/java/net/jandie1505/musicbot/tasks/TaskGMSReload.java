@@ -1,6 +1,5 @@
 package net.jandie1505.musicbot.tasks;
 
-import net.jandie1505.musicbot.MusicBot;
 import net.jandie1505.musicbot.system.GMS;
 
 import java.util.concurrent.TimeUnit;
