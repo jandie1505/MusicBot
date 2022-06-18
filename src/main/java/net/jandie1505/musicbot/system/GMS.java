@@ -11,7 +11,6 @@ import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.exceptions.PermissionException;
 import net.dv8tion.jda.api.requests.ErrorResponse;
-import net.dv8tion.jda.api.sharding.ShardManager;
 import net.jandie1505.musicbot.MusicBot;
 import net.jandie1505.musicbot.console.Console;
 import org.json.JSONArray;
@@ -21,18 +20,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GMS {
-    private static ShardManager shardManager;
-
-    public static void init() {
-        shardManager = MusicBot.getShardManager();
+    private MusicBot musicBot;
+    //private static this.musicBot.getShardManager() this.musicBot.getShardManager();
+    
+    public GMS(MusicBot musicBot) {
+        this.musicBot = musicBot;
     }
 
-    public static void reloadGuilds(boolean completeReload) {
+    public void reloadGuilds(boolean completeReload) {
         Console.messageGMS("Checking database guilds...");
         for(String guildId : DatabaseManager.getRegisteredGuilds()) {
-            Guild g = shardManager.getGuildById(guildId);
+            Guild g = this.musicBot.getShardManager().getGuildById(guildId);
             if(g == null) {
-                if(!MusicBot.completeOnline()) {
+                if(!this.musicBot.completeOnline()) {
                     Console.messageGMS("Guild " + guildId + " will not be deleted because not all shards are online", true);
                 } else {
                     DatabaseManager.deleteGuild(guildId);
@@ -41,7 +41,7 @@ public class GMS {
             }
         }
         Console.messageGMS("Checking discord guilds...");
-        for(Guild g : shardManager.getGuilds()) {
+        for(Guild g : this.musicBot.getShardManager().getGuilds()) {
             if(g != null) {
                 if(completeReload) {
                     setupGuild(g);
@@ -56,8 +56,8 @@ public class GMS {
         Console.messageGMS("Reloaded guilds");
     }
 
-    public static void leaveGuild(String guildId) {
-        Guild g = shardManager.getGuildById(guildId);
+    public void leaveGuild(String guildId) {
+        Guild g = this.musicBot.getShardManager().getGuildById(guildId);
         if(g != null) {
             g.leave().queue();
         }
@@ -65,8 +65,8 @@ public class GMS {
         Console.messageDB("Left guild " + guildId, true);
     }
 
-    public static void leaveGuild(String guildId, String reason) {
-        Guild g = shardManager.getGuildById(guildId);
+    public void leaveGuild(String guildId, String reason) {
+        Guild g = this.musicBot.getShardManager().getGuildById(guildId);
         if(g != null) {
             g.retrieveOwner().queue(member -> {
                 member.getUser().openPrivateChannel().queue(privateChannel -> {
@@ -90,11 +90,11 @@ public class GMS {
         DatabaseManager.deleteGuild(guildId);
     }
 
-    public static void setupGuild(Guild g) {
+    public void setupGuild(Guild g) {
         if(g != null) {
             String guildId = g .getId();
-            if(!MusicBot.getPublicMode() && !DatabaseManager.isGuildWhitelisted(g.getId())) {
-                GMS.leaveGuild(g.getId());
+            if(!this.musicBot.getPublicMode() && !DatabaseManager.isGuildWhitelisted(g.getId())) {
+                this.leaveGuild(g.getId());
                 Console.messageGMS("Removed bot from guild " + guildId + " because it is not whitelisted");
             } else {
                 if(!g.getSelfMember().hasPermission(Permission.CREATE_INSTANT_INVITE)
@@ -108,7 +108,7 @@ public class GMS {
                         || !g.getSelfMember().hasPermission(Permission.VOICE_CONNECT)
                         || !g.getSelfMember().hasPermission(Permission.VOICE_SPEAK)
                         || !g.getSelfMember().hasPermission(Permission.VOICE_USE_VAD)) {
-                    GMS.leaveGuild(g.getId(), "Missing permissions");
+                    this.leaveGuild(g.getId(), "Missing permissions");
                     Console.messageGMS("Removed bot from guild " + guildId + " because of missing permissions");
                 } else {
                     DatabaseManager.registerGuild(g.getId());
@@ -120,7 +120,7 @@ public class GMS {
         }
     }
 
-    public static void setupCommands(Guild g) {
+    public void setupCommands(Guild g) {
         /*
         if(g != null) {
             String guildId = g.getId();
@@ -244,7 +244,7 @@ public class GMS {
          */
     }
 
-    public static Invite createGuildInvite(Guild g) {
+    public Invite createGuildInvite(Guild g) {
         try {
             if(g != null) {
                 return g.getTextChannels().get(0).createInvite().complete();
@@ -257,7 +257,7 @@ public class GMS {
     }
 
     // DJ Roles
-    public static void addDJRole(String guildId, String roleId) {
+    public void addDJRole(String guildId, String roleId) {
         try {
             JSONArray moderatorRoles = new JSONArray(DatabaseManager.getDJRoles(guildId));
             if(!moderatorRoles.toList().contains(roleId)) {
@@ -268,7 +268,7 @@ public class GMS {
         } catch(Exception ignored) {}
     }
 
-    public static void removeDJRole(String guildId, String roleId) {
+    public void removeDJRole(String guildId, String roleId) {
         try {
             JSONArray moderatorRoles = new JSONArray(DatabaseManager.getDJRoles(guildId));
             if(moderatorRoles.toList().contains(roleId)) {
@@ -279,7 +279,7 @@ public class GMS {
         } catch(Exception ignored) {}
     }
 
-    public static void clearDJRoles(String guildId) {
+    public void clearDJRoles(String guildId) {
         try {
             JSONArray moderatorRoles = new JSONArray(DatabaseManager.getDJRoles(guildId));
             moderatorRoles.clear();
@@ -288,7 +288,7 @@ public class GMS {
         } catch(Exception ignored) {}
     }
 
-    public static List<String> getDJRoles(String guildId) {
+    public List<String> getDJRoles(String guildId) {
         List<String> returnList = new ArrayList<>();
 
         try {
@@ -302,9 +302,9 @@ public class GMS {
         return returnList;
     }
 
-    public static void reloadDJRoles(String guildId) {
+    public void reloadDJRoles(String guildId) {
         try {
-            Guild g = shardManager.getGuildById(guildId);
+            Guild g = this.musicBot.getShardManager().getGuildById(guildId);
             if(g != null) {
                 for(String roleId : getDJRoles(guildId)) {
                     Role role = g.getRoleById(roleId);
@@ -324,7 +324,7 @@ public class GMS {
     1 = Normal users have the permission to add tracks to the queue and voteskip
     2 = Normal users have DJ permissions
      */
-    public static boolean memberHasUserPermissions(Member m) {
+    public boolean memberHasUserPermissions(Member m) {
         return true;
         /*if(m != null) {
             if(memberHasDJPermissions(m)) {
@@ -338,7 +338,7 @@ public class GMS {
          */
     }
 
-    public static boolean memberHasDJPermissions(Member m) {
+    public boolean memberHasDJPermissions(Member m) {
         if(memberHasAdminPermissions(m)) {
             return true;
         } else if(m.hasPermission(Permission.MANAGE_CHANNEL) || m.hasPermission(Permission.MANAGE_SERVER)) {
@@ -346,8 +346,8 @@ public class GMS {
         } else if(DatabaseManager.getRestrictToRoles(m.getGuild().getId()) >= 2) {
             return true;
         } else {
-            for(String roleId : GMS.getDJRoles(m.getGuild().getId())) {
-                Role role = shardManager.getRoleById(roleId);
+            for(String roleId : this.getDJRoles(m.getGuild().getId())) {
+                Role role = this.musicBot.getShardManager().getRoleById(roleId);
                 if(role != null) {
                     if(m.getRoles().contains(role)) {
                         return true;
@@ -358,7 +358,7 @@ public class GMS {
         return false;
     }
 
-    public static boolean memberHasAdminPermissions(Member m) {
+    public boolean memberHasAdminPermissions(Member m) {
         if(m.hasPermission(Permission.ADMINISTRATOR)) {
             return true;
         }
@@ -366,14 +366,14 @@ public class GMS {
     }
 
     // BLACKLIST
-    public static boolean isBlacklisted(Guild g, String link) {
+    public boolean isBlacklisted(Guild g, String link) {
         if(g != null) {
             return !DatabaseManager.getGlobalBlacklist().contains(link) || !DatabaseManager.getBlacklist(g.getId()).contains(link);
         } else {
             return false;
         }
     }
-    public static boolean isBlacklisted(Guild g, Member m, AudioTrack audioTrack) {
+    public boolean isBlacklisted(Guild g, Member m, AudioTrack audioTrack) {
         if(g != null) {
             if(DatabaseManager.getGlobalBlacklist().contains(audioTrack.getInfo().uri) || DatabaseManager.getGlobalBlacklist().contains(audioTrack.getIdentifier())) {
                 return true;
@@ -387,7 +387,7 @@ public class GMS {
                 }
             }
 
-            if(GMS.memberHasAdminPermissions(m)) {
+            if(this.memberHasAdminPermissions(m)) {
                 if(DatabaseManager.getBlacklist(g.getId()).contains(audioTrack.getInfo().uri) || DatabaseManager.getBlacklist(g.getId()).contains(audioTrack.getIdentifier())) {
                     return true;
                 }
