@@ -13,6 +13,8 @@ import net.dv8tion.jda.api.exceptions.PermissionException;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.jandie1505.musicbot.MusicBot;
 import net.jandie1505.musicbot.console.Console;
+import net.jandie1505.musicbot.tasks.TaskGMSReload;
+import net.jandie1505.musicbot.tasks.TaskGMSReloadComplete;
 import org.json.JSONArray;
 
 import java.awt.*;
@@ -20,11 +22,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GMS {
-    private MusicBot musicBot;
-    //private static this.musicBot.getShardManager() this.musicBot.getShardManager();
+    private final MusicBot musicBot;
+    private final TaskGMSReload taskGMSReload;
+    private final TaskGMSReloadComplete taskGMSReloadComplete;
     
     public GMS(MusicBot musicBot) {
         this.musicBot = musicBot;
+        this.taskGMSReload = new TaskGMSReload(this);
+        this.taskGMSReloadComplete = new TaskGMSReloadComplete(this);
     }
 
     public void reloadGuilds(boolean completeReload) {
@@ -405,5 +410,9 @@ public class GMS {
         } else {
             return false;
         }
+    }
+
+    public MusicBot getMusicBot() {
+        return this.musicBot;
     }
 }

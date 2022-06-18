@@ -5,31 +5,35 @@ import net.jandie1505.musicbot.system.GMS;
 import java.util.concurrent.TimeUnit;
 
 public class TaskGMSReloadComplete implements Runnable {
+
+    private final GMS gms;
     private Thread thread;
 
-    public TaskGMSReloadComplete() {
-        thread = new Thread(this);
+    public TaskGMSReloadComplete(GMS gms) {
+        this.gms = gms;
     }
 
     @Override
     public void run() {
         System.out.println("TaskGMSReloadComplete started");
-        while(!thread.isInterrupted()) {
+        while(thread == Thread.currentThread() && !thread.isInterrupted() && gms.getMusicBot().isOperational()) {
             try {
                 TimeUnit.SECONDS.sleep(86400);
-                GMS.reloadGuilds(true);
+                gms.reloadGuilds(true);
             } catch(Exception ignored) {}
         }
         System.out.println("TaskGMSReloadComplete stopped");
     }
 
     public void start() {
-        if(!thread.isAlive()) {
+        if(this.thread == null || !thread.isAlive()) {
+            this.thread = new Thread(this);
+            this.thread.setName("MUSICBOT-TASK-GMSRELOADCOMPLETE-" + this);
             thread.start();
         }
     }
 
     public void stop() {
-        thread.interrupt();
+        this.thread.interrupt();
     }
 }

@@ -41,17 +41,11 @@ public class MusicBot {
     private boolean shardAutoMode = true;
     private String bowOwner = "";
     private TaskShardsReload taskShardsReload;
-    private TaskGMSReload taskGMSReload;
-    private TaskGMSReloadComplete taskGMSReloadComplete;
     private TaskMusicManager taskMusicManager;
 
     public MusicBot() {
         this.console = new Console();
         this.console.start();
-
-        this.databaseManager = new DatabaseManager(this);
-        this.gms = new GMS(this);
-        this.musicManager = new MusicManager(this);
 
         if(args.length >= 4) {
             if(args[3].equalsIgnoreCase("true")) {
@@ -66,7 +60,7 @@ public class MusicBot {
         }
 
         try {
-            DatabaseManager.init();
+            this.databaseManager = new DatabaseManager(this);
 
             if(args.length >= 2) {
                 shardsTotal = Integer.parseInt(args[1]);
@@ -121,19 +115,15 @@ public class MusicBot {
                 this.taskShardsReload = new TaskShardsReload();
                 this.taskShardsReload.start();
 
-                GMS.init();
+                this.gms = new GMS(this);
 
-                this.taskGMSReload = new TaskGMSReload();
-                this.taskGMSReloadComplete = new TaskGMSReloadComplete();
                 this.taskMusicManager = new TaskMusicManager();
 
-                GMS.reloadGuilds(true);
+                this.gms.reloadGuilds(true);
 
-                this.taskGMSReload.start();
-                this.taskGMSReloadComplete.start();
                 this.taskMusicManager.start();
 
-                MusicManager.init();
+                this.musicManager = new MusicManager(this);
 
                 Console.defaultMessage(
                         "*****************************************\n"
@@ -449,6 +439,12 @@ public class MusicBot {
 
     public Console getConsole() {
         return console;
+    }
+
+    // OPERATIONAL STATUS
+
+    public boolean isOperational() {
+        return true;
     }
 
     // STATIC

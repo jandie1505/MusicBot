@@ -5,9 +5,11 @@ import net.jandie1505.musicbot.MusicBot;
 import java.util.concurrent.TimeUnit;
 
 public class TaskShardsReload implements Runnable {
+
+    private MusicBot musicBot;
     private Thread thread;
 
-    public TaskShardsReload() {
+    public TaskShardsReload(MusicBot musicBot) {
         thread = new Thread(this);
     }
 

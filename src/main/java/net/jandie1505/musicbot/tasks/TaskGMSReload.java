@@ -1,35 +1,40 @@
 package net.jandie1505.musicbot.tasks;
 
+import net.jandie1505.musicbot.MusicBot;
 import net.jandie1505.musicbot.system.GMS;
 
 import java.util.concurrent.TimeUnit;
 
 public class TaskGMSReload implements Runnable {
+
+    private final GMS gms;
     private Thread thread;
 
-    public TaskGMSReload() {
-        thread = new Thread(this);
+    public TaskGMSReload(GMS gms) {
+        this.gms = gms;
     }
 
     @Override
     public void run() {
         System.out.println("TaskGMSReload started");
-        while(!thread.isInterrupted()) {
+        while(thread == Thread.currentThread() && Thread.currentThread().isInterrupted() && gms.getMusicBot().isOperational()) {
             try {
                 TimeUnit.SECONDS.sleep(900);
-                GMS.reloadGuilds(false);
+                gms.reloadGuilds(false);
             } catch(Exception ignored) {}
         }
         System.out.println("TaskGMSReload stopped");
     }
 
     public void start() {
-        if(!thread.isAlive()) {
+        if(this.thread == null || !this.thread.isAlive()) {
+            this.thread = new Thread(this);
+            this.thread.setName("MUSICBOT-TASK-GMSRELOAD-" + this);
             thread.start();
         }
     }
 
     public void stop() {
-        thread.interrupt();
+        this.thread.interrupt();
     }
 }
