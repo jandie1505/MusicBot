@@ -38,23 +38,25 @@ public class MusicBot {
     private final MusicManager musicManager;
     private final int shardsTotal;
 
-    public MusicBot(String token, int shardsCount, boolean disableShardsCheck) throws LoginException, SQLException, IOException, ClassNotFoundException {
+    public MusicBot(String token, int shardsCount, boolean disableShardsCheck, boolean ignoreConfigFile) throws LoginException, SQLException, IOException, ClassNotFoundException {
         this.console = new Console();
         this.console.start();
 
         this.configManager = new ConfigManager(this);
         this.configManager.getConfig().setDisableShardsCheck(disableShardsCheck);
 
-        try {
-            File configFile = new File(System.getProperty("user.dir"), "config.json");
+        if(!ignoreConfigFile) {
+            try {
+                File configFile = new File(System.getProperty("user.dir"), "config.json");
 
-            if(!configFile.exists()) {
-                configFile.createNewFile();
+                if(!configFile.exists()) {
+                    configFile.createNewFile();
+                }
+
+                this.configManager.loadConfig(configFile);
+            } catch (IOException e) {
+
             }
-
-            this.configManager.loadConfig(configFile);
-        } catch (IOException e) {
-
         }
 
         this.databaseManager = new DatabaseManager(this);
@@ -398,7 +400,7 @@ public class MusicBot {
 
     // STATIC
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         System.out.println("MusicBot by jandie1505 (https://github.com/jandie1505/MusicBot)");
 
         int waitTime = 3;
@@ -424,17 +426,76 @@ public class MusicBot {
             waitTime = 30;
         }
 
+        boolean showLauncherStackTrace = false;
+        showLauncherStackTrace = Boolean.parseBoolean(startArguments.get("showLauncherStackTrace"));
+        if(showLauncherStackTrace) {
+            System.out.println("showLauncherStackTrace option enabled");
+        }
+
         boolean defaultConfigValues = false;
         defaultConfigValues = Boolean.parseBoolean(startArguments.get("defaultConfigValues"));
         if (defaultConfigValues) {
             System.out.println("defaultConfigValues option enabled");
         }
 
-        System.out.println("Starting server in " + waitTime + " seconds...");
+        String overrideToken = null;
+        overrideToken = startArguments.get("overrideToken");
+        if(overrideToken != null) {
+            System.out.println("Bot token specified via overrideToken option");
+        }
+
+        int overrideShardsCount = -1;
+        try {
+            overrideShardsCount = Integer.parseInt(startArguments.get("overrideShardsCount"));
+        } catch (IllegalArgumentException ignored) {
+            // NOT REQUIRED
+        }
+
+        boolean disableShardsCheck = false;
+        disableShardsCheck = Boolean.parseBoolean(startArguments.get("disableShardsCheck"));
+        if(disableShardsCheck) {
+            System.out.println("" +
+                    "-------------------- WARNING --------------------\n" +
+                    "Start option disableShardsCheck is enabled.\n" +
+                    "This prevents the bot from automatically restarting stopped shards.\n" +
+                    "If not all shards are online, important checks like the guild cleanup are disabled.\n" +
+                    "Don't use the disableShardCheck option for a long time.\n" +
+                    "-------------------------------------------------");
+
+            waitTime = 10;
+        }
+
+        System.out.println("Starting bot in " + waitTime + " seconds...");
         try {
             TimeUnit.SECONDS.sleep(waitTime);
         } catch (Exception ignored) {}
 
-        new MusicBot();
+        try {
+            new MusicBot(overrideToken, overrideShardsCount, disableShardsCheck, defaultConfigValues);
+        } catch (LoginException e) {
+            System.out.println("Failed to start the bot: Please check your token (LoginException)");
+            if(showLauncherStackTrace) {
+                e.printStackTrace();
+            }
+            System.exit(-1);
+        } catch (SQLException e) {
+            System.out.println("Failed to start the bot: Database error (SQLException)");
+            if(showLauncherStackTrace) {
+                e.printStackTrace();
+            }
+            System.exit(-2);
+        } catch (IOException e) {
+            System.out.println("Failed to start the bot: Config/Database file error (IOException)");
+            if(showLauncherStackTrace) {
+                e.printStackTrace();
+            }
+            System.exit(-3);
+        } catch (ClassNotFoundException e) {
+            System.out.println("Failed to start the bot: ClassNotFoundException (This error can occur if the database driver was not found)");
+            if(showLauncherStackTrace) {
+                e.printStackTrace();
+            }
+            System.exit(-4);
+        }
     }
 }
