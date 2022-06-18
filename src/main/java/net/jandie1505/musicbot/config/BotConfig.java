@@ -6,12 +6,14 @@ public class BotConfig {
     private int shardsCount;
     private boolean publicMode;
     private String botOwner;
+    private boolean disableShardsCheck;
 
     public BotConfig() {
         this.token = "";
         this.shardsCount = 1;
         this.publicMode = false;
         this.botOwner = "";
+        this.disableShardsCheck = false;
     }
 
 
@@ -49,5 +51,13 @@ public class BotConfig {
 
     public void setBotOwner(String botOwner) {
         this.botOwner = botOwner;
+    }
+
+    public boolean isDisableShardsCheck() {
+        return disableShardsCheck;
+    }
+
+    public void setDisableShardsCheck(boolean disableShardsCheck) {
+        this.disableShardsCheck = disableShardsCheck;
     }
 }

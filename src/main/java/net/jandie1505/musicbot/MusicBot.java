@@ -37,15 +37,13 @@ public class MusicBot {
     private final GMS gms;
     private final MusicManager musicManager;
     private final int shardsTotal;
-    private boolean disableShardsCheck;
 
     public MusicBot(String token, int shardsCount, boolean disableShardsCheck) throws LoginException, SQLException, IOException, ClassNotFoundException {
         this.console = new Console();
         this.console.start();
 
-        this.disableShardsCheck = disableShardsCheck;
-
         this.configManager = new ConfigManager(this);
+        this.configManager.getConfig().setDisableShardsCheck(disableShardsCheck);
 
         try {
             File configFile = new File(System.getProperty("user.dir"), "config.json");
@@ -101,7 +99,7 @@ public class MusicBot {
                 "*****************************************\n"
                         + "Application ID: " + this.shardManager.retrieveApplicationInfo().getJDA().getSelfUser().getApplicationId() + "\n"
                         + "Username: " + this.shardManager.retrieveApplicationInfo().getJDA().getSelfUser().getName() + "#" + shardManager.retrieveApplicationInfo().getJDA().getSelfUser().getDiscriminator() + "\n"
-                        + "Public mode: " + this.getPublicMode() + "\n"
+                        + "Public mode: " + this.configManager.getConfig().isPublicMode() + "\n"
                         + "Shards: " + this.shardManager.getShardsRunning() + " + " + shardManager.getShardsQueued() + " = " + shardManager.getShardsTotal() + "\n"
                         + "*****************************************");
     }
@@ -183,18 +181,10 @@ public class MusicBot {
         }).start();
     }
 
-    public void setDisableShardsCheck(boolean disableShardsCheck) {
-        this.disableShardsCheck = disableShardsCheck;
-    }
-
-    public boolean getDisableShardsCheck() {
-        return this.disableShardsCheck;
-    }
-
     public void reloadShards() {
         new Thread(() -> {
             if(shardManager.getShardsRunning() < shardManager.getShardsTotal()) {
-                if(!this.getDisableShardsCheck()) {
+                if(!this.getConfigManager().getConfig().isDisableShardsCheck()) {
                     Console.messageShardManager("Only " + shardManager.getShardsRunning() + " of " + shardManager.getShardsTotal() + " are online. Auto restarting...");
                     startShards();
                 } else {
