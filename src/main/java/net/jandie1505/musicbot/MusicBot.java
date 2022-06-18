@@ -14,6 +14,9 @@ import net.dv8tion.jda.api.sharding.ShardManager;
 import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 import net.jandie1505.musicbot.config.ConfigManager;
 import net.jandie1505.musicbot.console.Console;
+import net.jandie1505.musicbot.eventlisteners.EventsBasic;
+import net.jandie1505.musicbot.eventlisteners.EventsButtons;
+import net.jandie1505.musicbot.eventlisteners.EventsCommands;
 import net.jandie1505.musicbot.system.*;
 import net.jandie1505.musicbot.tasks.TaskShardsReload;
 
@@ -82,9 +85,9 @@ public class MusicBot {
                 .setShardsTotal(shardsTotal)
                 .build();
         this.shardManager.setPresence(OnlineStatus.IDLE, Activity.playing("Starting up..."));
-        this.shardManager.addEventListener(new EventsBasic());
-        this.shardManager.addEventListener(new EventsCommands());
-        this.shardManager.addEventListener(new EventsButtons());
+        this.shardManager.addEventListener(new EventsBasic(this));
+        this.shardManager.addEventListener(new EventsCommands(this));
+        this.shardManager.addEventListener(new EventsButtons(this));
 
         this.reloadShards();
 

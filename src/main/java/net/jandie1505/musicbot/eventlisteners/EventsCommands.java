@@ -1,4 +1,4 @@
-package net.jandie1505.musicbot.system;
+package net.jandie1505.musicbot.eventlisteners;
 
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEvent;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventListener;
@@ -6,7 +6,6 @@ import com.sedmelluq.discord.lavaplayer.player.event.PlayerPauseEvent;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -15,6 +14,7 @@ import net.jandie1505.musicbot.MusicBot;
 import net.jandie1505.musicbot.console.Commands;
 import net.jandie1505.musicbot.search.SpotifySearchHandler;
 import net.jandie1505.musicbot.search.YTSearchHandler;
+import net.jandie1505.musicbot.system.Messages;
 
 import java.awt.*;
 import java.util.List;
@@ -22,6 +22,13 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class EventsCommands extends ListenerAdapter {
+    
+    private MusicBot musicBot;
+    
+    public EventsCommands(MusicBot musicBot) {
+        this.musicBot = musicBot;
+    }
+    
     // EVENT
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
@@ -71,21 +78,21 @@ public class EventsCommands extends ListenerAdapter {
 
     // COMMANDS
     private void nowplayingCommand(SlashCommandInteractionEvent event) {
-        if(GMS.memberHasUserPermissions(event.getMember())) {
-            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
-            event.getHook().sendMessage(Messages.nowplayingMessage(event.getGuild(), GMS.memberHasDJPermissions(event.getMember())).build()).queue();
+        if(this.musicBot.getGMS().memberHasUserPermissions(event.getMember())) {
+            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            event.getHook().sendMessage(Messages.nowplayingMessage(event.getGuild(), this.musicBot.getGMS().memberHasDJPermissions(event.getMember())).build()).queue();
         }
     }
 
     private void queueCommand(SlashCommandInteractionEvent event) {
-        if(GMS.memberHasUserPermissions(event.getMember())) {
-            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
-            if(!MusicManager.getQueue(event.getGuild()).isEmpty()) {
+        if(this.musicBot.getGMS().memberHasUserPermissions(event.getMember())) {
+            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            if(!this.musicBot.getMusicManager().getQueue(event.getGuild()).isEmpty()) {
                 if(event.getOption("index") != null) {
                     int queueIndex = (int) event.getOption("index").getAsLong();
                     String queue = "";
                     int index = 0;
-                    for(AudioTrack track : MusicManager.getQueue(event.getGuild())) {
+                    for(AudioTrack track : this.musicBot.getMusicManager().getQueue(event.getGuild())) {
                         String current = "`" + index + ".` " +
                                 "`" + Messages.formatTime(track.getDuration()) + "` " +
                                 track.getInfo().title + " [" + track.getInfo().author + "]\n";
@@ -95,7 +102,7 @@ public class EventsCommands extends ListenerAdapter {
                                 queue = queue + current;
                             }
                         } else {
-                            queue = queue + "`+ " + (MusicManager.getQueue(event.getGuild()).size()-index) + " entries. Use /queue <index> to search for indexes.`";
+                            queue = queue + "`+ " + (this.musicBot.getMusicManager().getQueue(event.getGuild()).size()-index) + " entries. Use /queue <index> to search for indexes.`";
                             break;
                         }
                         index++;
@@ -106,7 +113,7 @@ public class EventsCommands extends ListenerAdapter {
                 } else {
                     String queue = "";
                     int index = 0;
-                    for(AudioTrack track : MusicManager.getQueue(event.getGuild())) {
+                    for(AudioTrack track : this.musicBot.getMusicManager().getQueue(event.getGuild())) {
                         String current = "`" + index + ".` " +
                                 "`" + Messages.formatTime(track.getDuration()) + "` " +
                                 track.getInfo().title + " [" + track.getInfo().author + "]\n";
@@ -114,7 +121,7 @@ public class EventsCommands extends ListenerAdapter {
                         if(nextString.length() <= 950) {
                             queue = queue + current;
                         } else {
-                            queue = queue + "`+ " + (MusicManager.getQueue(event.getGuild()).size()-index) + " entries. Use /queue <index> to search for indexes.`";
+                            queue = queue + "`+ " + (this.musicBot.getMusicManager().getQueue(event.getGuild()).size()-index) + " entries. Use /queue <index> to search for indexes.`";
                             break;
                         }
                         index++;
@@ -133,11 +140,11 @@ public class EventsCommands extends ListenerAdapter {
     }
 
     private void playCommand(SlashCommandInteractionEvent event) {
-        if(GMS.memberHasUserPermissions(event.getMember())) {
-            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
-            if(!MusicManager.isConnected(event.getGuild())) {
+        if(this.musicBot.getGMS().memberHasUserPermissions(event.getMember())) {
+            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            if(!this.musicBot.getMusicManager().isConnected(event.getGuild())) {
                 if(event.getMember().getVoiceState().inAudioChannel()) {
-                    if(MusicManager.connect(event.getMember().getVoiceState().getChannel())) {
+                    if(this.musicBot.getMusicManager().connect(event.getMember().getVoiceState().getChannel())) {
                         this.play(event, true);
                     } else {
                         EmbedBuilder embedBuilder = new EmbedBuilder()
@@ -152,7 +159,7 @@ public class EventsCommands extends ListenerAdapter {
                     event.getHook().sendMessage("").addEmbeds(notInVoiceChannel.build()).queue();
                 }
             } else {
-                if(!MusicManager.isPaused(event.getGuild()) && MusicManager.getPlayingTrack(event.getGuild()) == null) {
+                if(!this.musicBot.getMusicManager().isPaused(event.getGuild()) && this.musicBot.getMusicManager().getPlayingTrack(event.getGuild()) == null) {
                     this.play(event, true);
                 } else {
                     this.play(event, false);
@@ -162,11 +169,11 @@ public class EventsCommands extends ListenerAdapter {
     }
 
     private void addCommand(SlashCommandInteractionEvent event) {
-        if(GMS.memberHasUserPermissions(event.getMember())) {
-            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
-            if(MusicManager.isConnected(event.getGuild())) {
+        if(this.musicBot.getGMS().memberHasUserPermissions(event.getMember())) {
+            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            if(this.musicBot.getMusicManager().isConnected(event.getGuild())) {
                 if(event.getOption("song") != null) {
-                    MusicManager.add(event.getGuild(), event.getOption("song").getAsString(), event, false);
+                    this.musicBot.getMusicManager().add(event.getGuild(), event.getOption("song").getAsString(), event, false);
                 } else {
                     EmbedBuilder embedBuilder = new EmbedBuilder()
                             .setDescription(":warning:  Song required")
@@ -180,11 +187,11 @@ public class EventsCommands extends ListenerAdapter {
     }
 
     private void stopCommand(SlashCommandInteractionEvent event) {
-        if(GMS.memberHasDJPermissions(event.getMember())) {
-            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
-            if(MusicManager.isConnected(event.getGuild())) {
-                if(!MusicManager.isPaused(event.getGuild())) {
-                    MusicManager.setPause(event.getGuild(), true, new AudioEventListener() {
+        if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
+            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            if(this.musicBot.getMusicManager().isConnected(event.getGuild())) {
+                if(!this.musicBot.getMusicManager().isPaused(event.getGuild())) {
+                    this.musicBot.getMusicManager().setPause(event.getGuild(), true, new AudioEventListener() {
                         @Override
                         public void onEvent(AudioEvent audioEvent) {
                             if(audioEvent instanceof PlayerPauseEvent) {
@@ -211,19 +218,19 @@ public class EventsCommands extends ListenerAdapter {
     }
 
     private void leaveCommand(SlashCommandInteractionEvent event) {
-        if(GMS.memberHasDJPermissions(event.getMember())) {
-            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
-            if(MusicManager.isConnected(event.getGuild())) {
-                MusicManager.clear(event.getGuild());
-                MusicManager.stop(event.getGuild());
-                MusicManager.disconnect(event.getGuild());
+        if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
+            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            if(this.musicBot.getMusicManager().isConnected(event.getGuild())) {
+                this.musicBot.getMusicManager().clear(event.getGuild());
+                this.musicBot.getMusicManager().stop(event.getGuild());
+                this.musicBot.getMusicManager().disconnect(event.getGuild());
                 EmbedBuilder embedBuilder = new EmbedBuilder()
                         .setDescription(":white_check_mark:  Left voice channel")
                         .setColor(Color.RED);
                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
             } else {
-                MusicManager.clear(event.getGuild());
-                MusicManager.stop(event.getGuild());
+                this.musicBot.getMusicManager().clear(event.getGuild());
+                this.musicBot.getMusicManager().stop(event.getGuild());
                 EmbedBuilder embedBuilder = new EmbedBuilder()
                         .setDescription("Already not connected")
                         .setColor(Color.RED);
@@ -233,15 +240,15 @@ public class EventsCommands extends ListenerAdapter {
     }
 
     private void forceskipCommand(SlashCommandInteractionEvent event) {
-        if(GMS.memberHasDJPermissions(event.getMember())) {
-            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
-            if(MusicManager.isConnected(event.getGuild())) {
+        if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
+            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            if(this.musicBot.getMusicManager().isConnected(event.getGuild())) {
                 if(event.getOption("position") != null) {
-                    if(MusicManager.getPlayingTrack(event.getGuild()) != null) {
+                    if(this.musicBot.getMusicManager().getPlayingTrack(event.getGuild()) != null) {
                         String previousSong = "";
-                        previousSong = MusicManager.getPlayingTrack(event.getGuild()).getInfo().title;
+                        previousSong = this.musicBot.getMusicManager().getPlayingTrack(event.getGuild()).getInfo().title;
                         int position = (int) event.getOption("position").getAsLong();
-                        MusicManager.next(event.getGuild(), position);
+                        this.musicBot.getMusicManager().next(event.getGuild(), position);
                         EmbedBuilder embedBuilder = new EmbedBuilder()
                                 .setDescription(":track_next:  Skipped " + previousSong)
                                 .setColor(Color.GREEN);
@@ -253,10 +260,10 @@ public class EventsCommands extends ListenerAdapter {
                         event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                     }
                 } else {
-                    if(MusicManager.getPlayingTrack(event.getGuild()) != null) {
+                    if(this.musicBot.getMusicManager().getPlayingTrack(event.getGuild()) != null) {
                         String previousSong = "";
-                        previousSong = MusicManager.getPlayingTrack(event.getGuild()).getInfo().title;
-                        MusicManager.next(event.getGuild());
+                        previousSong = this.musicBot.getMusicManager().getPlayingTrack(event.getGuild()).getInfo().title;
+                        this.musicBot.getMusicManager().next(event.getGuild());
                         EmbedBuilder embedBuilder = new EmbedBuilder()
                                 .setDescription(":track_next:  Skipped " + previousSong)
                                 .setColor(Color.GREEN);
@@ -275,13 +282,13 @@ public class EventsCommands extends ListenerAdapter {
     }
 
     private void removeCommand(SlashCommandInteractionEvent event) {
-        if(GMS.memberHasDJPermissions(event.getMember())) {
-            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
-            if(MusicManager.isConnected(event.getGuild())) {
+        if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
+            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            if(this.musicBot.getMusicManager().isConnected(event.getGuild())) {
                 if(event.getOption("index") != null) {
                     int index = (int) event.getOption("index").getAsLong();
-                    if(index < MusicManager.getQueue(event.getGuild()).size()) {
-                        MusicManager.remove(event.getGuild(), index);
+                    if(index < this.musicBot.getMusicManager().getQueue(event.getGuild()).size()) {
+                        this.musicBot.getMusicManager().remove(event.getGuild(), index);
                         EmbedBuilder embedBuilder = new EmbedBuilder()
                                 .setDescription(":white_check_mark:  Successfully removed")
                                 .setColor(Color.GREEN);
@@ -305,10 +312,10 @@ public class EventsCommands extends ListenerAdapter {
     }
 
     private void clearCommand(SlashCommandInteractionEvent event) {
-        if(GMS.memberHasDJPermissions(event.getMember())) {
-            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
-            if(MusicManager.isConnected(event.getGuild())) {
-                MusicManager.clear(event.getGuild());
+        if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
+            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            if(this.musicBot.getMusicManager().isConnected(event.getGuild())) {
+                this.musicBot.getMusicManager().clear(event.getGuild());
                 EmbedBuilder embedBuilder = new EmbedBuilder()
                         .setDescription(":asterisk:  Queue cleared")
                         .setColor(Color.GREEN);
@@ -320,14 +327,14 @@ public class EventsCommands extends ListenerAdapter {
     }
 
     private void movetrackCommand(SlashCommandInteractionEvent event) {
-        if(GMS.memberHasDJPermissions(event.getMember())) {
-            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
-            if(MusicManager.isConnected(event.getGuild())) {
+        if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
+            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            if(this.musicBot.getMusicManager().isConnected(event.getGuild())) {
                 if(event.getOption("from") != null && event.getOption("to") != null) {
                     int from = (int) event.getOption("from").getAsLong();
                     int to = (int) event.getOption("to").getAsLong();
-                    if(from < MusicManager.getQueue(event.getGuild()).size()) {
-                        MusicManager.move(event.getGuild(), from, to);
+                    if(from < this.musicBot.getMusicManager().getQueue(event.getGuild()).size()) {
+                        this.musicBot.getMusicManager().move(event.getGuild(), from, to);
                         EmbedBuilder embedBuilder = new EmbedBuilder()
                                 .setDescription(":white_check_mark:  Successfully moved")
                                 .setColor(Color.GREEN);
@@ -354,11 +361,11 @@ public class EventsCommands extends ListenerAdapter {
     }
 
     private void shuffleCommand(SlashCommandInteractionEvent event) {
-        if(GMS.memberHasDJPermissions(event.getMember())) {
-            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
-            if(MusicManager.isConnected(event.getGuild())) {
-                if(!MusicManager.getQueue(event.getGuild()).isEmpty()) {
-                    MusicManager.shuffle(event.getGuild());
+        if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
+            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            if(this.musicBot.getMusicManager().isConnected(event.getGuild())) {
+                if(!this.musicBot.getMusicManager().getQueue(event.getGuild()).isEmpty()) {
+                    this.musicBot.getMusicManager().shuffle(event.getGuild());
                     EmbedBuilder embedBuilder = new EmbedBuilder()
                             .setDescription(":twisted_rightwards_arrows:  Shuffled queue")
                             .setColor(Color.RED);
@@ -376,12 +383,12 @@ public class EventsCommands extends ListenerAdapter {
     }
 
     private void playnowCommand(SlashCommandInteractionEvent event) {
-        if(GMS.memberHasDJPermissions(event.getMember())) {
-            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+        if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
+            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
             if(event.getOption("song") != null) {
-                if(!MusicManager.isConnected(event.getGuild())) {
+                if(!this.musicBot.getMusicManager().isConnected(event.getGuild())) {
                     if(event.getMember().getVoiceState().inAudioChannel()) {
-                        MusicManager.connect(event.getMember().getVoiceState().getChannel());
+                        this.musicBot.getMusicManager().connect(event.getMember().getVoiceState().getChannel());
                         this.playnow(event);
                     } else {
                         EmbedBuilder notInVoiceChannel = new EmbedBuilder()
@@ -402,8 +409,8 @@ public class EventsCommands extends ListenerAdapter {
     }
 
     private void searchCommand(SlashCommandInteractionEvent event) {
-        if(GMS.memberHasUserPermissions(event.getMember())) {
-            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+        if(this.musicBot.getGMS().memberHasUserPermissions(event.getMember())) {
+            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
             if(event.getOption("query") != null) {
                 List<AudioTrack> trackList = YTSearchHandler.search(event.getOption("query").getAsString());
                 String returnString = "";
@@ -429,14 +436,14 @@ public class EventsCommands extends ListenerAdapter {
     }
 
     private void volumeCommand(SlashCommandInteractionEvent event) {
-        if(GMS.memberHasDJPermissions(event.getMember())) {
-            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+        if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
+            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
             if(System.getProperty("os.arch").equalsIgnoreCase("amd64")) {
-                if(MusicManager.isConnected(event.getGuild())) {
+                if(this.musicBot.getMusicManager().isConnected(event.getGuild())) {
                     if(event.getOption("volume") != null) {
                         int volume = (int) event.getOption("volume").getAsLong();
                         if((volume <= 200) && (volume >= 0)) {
-                            MusicManager.setVolume(event.getGuild(), volume);
+                            this.musicBot.getMusicManager().setVolume(event.getGuild(), volume);
                             if(volume == 200) {
                                 Random randomizer = new Random();
                                 int random = randomizer.nextInt(9);
@@ -492,7 +499,7 @@ public class EventsCommands extends ListenerAdapter {
                         }
                     } else {
                         EmbedBuilder embedBuilder = new EmbedBuilder()
-                                .setDescription("Current volume is: " + MusicManager.getVolume(event.getGuild()));
+                                .setDescription("Current volume is: " + this.musicBot.getMusicManager().getVolume(event.getGuild()));
                         event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                     }
                 } else {
@@ -508,19 +515,19 @@ public class EventsCommands extends ListenerAdapter {
     }
 
     private void skipCommand(SlashCommandInteractionEvent event) {
-        if(GMS.memberHasUserPermissions(event.getMember())) {
-            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
-            if(MusicManager.isConnected(event.getGuild())) {
-                if(MusicManager.getSkipvotes(event.getGuild()).contains(event.getMember())) {
-                    MusicManager.removeSkipvote(event.getGuild(), event.getMember());
+        if(this.musicBot.getGMS().memberHasUserPermissions(event.getMember())) {
+            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            if(this.musicBot.getMusicManager().isConnected(event.getGuild())) {
+                if(this.musicBot.getMusicManager().getSkipvotes(event.getGuild()).contains(event.getMember())) {
+                    this.musicBot.getMusicManager().removeSkipvote(event.getGuild(), event.getMember());
                     EmbedBuilder embedBuilder = new EmbedBuilder()
-                            .setDescription(":negative_squared_cross_mark: Removed skipvote (" + (MusicManager.getVoteCount(event.getGuild())-1) + "/" + ((event.getGuild().getSelfMember().getVoiceState().getChannel().getMembers().size()-1)/2) + ")")
+                            .setDescription(":negative_squared_cross_mark: Removed skipvote (" + (this.musicBot.getMusicManager().getVoteCount(event.getGuild())-1) + "/" + ((event.getGuild().getSelfMember().getVoiceState().getChannel().getMembers().size()-1)/2) + ")")
                             .setColor(Color.YELLOW);
                     event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                 } else {
-                    MusicManager.addSkipvote(event.getGuild(), event.getMember());
+                    this.musicBot.getMusicManager().addSkipvote(event.getGuild(), event.getMember());
                     EmbedBuilder embedBuilder = new EmbedBuilder()
-                            .setDescription(":fast_forward:  You have voted to skip (" + (MusicManager.getVoteCount(event.getGuild())+1) + "/" + ((event.getGuild().getSelfMember().getVoiceState().getChannel().getMembers().size()-1)/2) + ")")
+                            .setDescription(":fast_forward:  You have voted to skip (" + (this.musicBot.getMusicManager().getVoteCount(event.getGuild())+1) + "/" + ((event.getGuild().getSelfMember().getVoiceState().getChannel().getMembers().size()-1)/2) + ")")
                             .setColor(Color.YELLOW);
                     event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                 }
@@ -531,12 +538,12 @@ public class EventsCommands extends ListenerAdapter {
     }
 
     private void mbsettingsCommand(SlashCommandInteractionEvent event) {
-        if(GMS.memberHasAdminPermissions(event.getMember())) {
+        if(this.musicBot.getGMS().memberHasAdminPermissions(event.getMember())) {
             if(event.getSubcommandName() != null) {
                 if(event.getSubcommandName().equalsIgnoreCase("info")) {
-                    event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                    event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
                     String djroles = "";
-                    for(String DJRoleId : GMS.getDJRoles(event.getGuild().getId())) {
+                    for(String DJRoleId : this.musicBot.getGMS().getDJRoles(event.getGuild().getId())) {
                         Role role = event.getGuild().getRoleById(DJRoleId);
                         if(role != null) {
                             djroles = djroles + role.getName() + " (" + role.getId() + ")\n";
@@ -546,16 +553,16 @@ public class EventsCommands extends ListenerAdapter {
                             .setTitle("MusicBot Settings")
                             .setDescription("MusicBot by jandie1505")
                             .addField("DJ Roles:", djroles, false)
-                            .addField("Ephemeral replies:", String.valueOf(DatabaseManager.getEphemeralState(event.getGuild().getId())), false)
-                            .addField("Blacklisted tracks:", String.valueOf(DatabaseManager.getBlacklist(event.getGuild().getId()).size()) + " blacklisted tracks\n" + String.valueOf(DatabaseManager.getGlobalBlacklist().size()) + " global blacklisted tracks", false);
+                            .addField("Ephemeral replies:", String.valueOf(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())), false)
+                            .addField("Blacklisted tracks:", String.valueOf(this.musicBot.getDatabaseManager().getBlacklist(event.getGuild().getId()).size()) + " blacklisted tracks\n" + String.valueOf(this.musicBot.getDatabaseManager().getGlobalBlacklist().size()) + " global blacklisted tracks", false);
                     event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                 } else if(event.getSubcommandName().equalsIgnoreCase("djrole")) {
                     if(event.getOption("action") != null) {
                         if(event.getOption("action").getAsString().equalsIgnoreCase("add")) {
-                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
-                            GMS.reloadDJRoles(event.getGuild().getId());
+                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+                            this.musicBot.getGMS().reloadDJRoles(event.getGuild().getId());
                             if(event.getOption("role") != null) {
-                                GMS.addDJRole(event.getGuild().getId(), event.getOption("role").getAsRole().getId());
+                                this.musicBot.getGMS().addDJRole(event.getGuild().getId(), event.getOption("role").getAsRole().getId());
                                 EmbedBuilder embedBuilder = new EmbedBuilder()
                                         .setDescription(":white_check_mark:  Added DJ Role")
                                         .setColor(Color.GREEN);
@@ -567,10 +574,10 @@ public class EventsCommands extends ListenerAdapter {
                                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                             }
                         } else if(event.getOption("action").getAsString().equalsIgnoreCase("remove")) {
-                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
-                            GMS.reloadDJRoles(event.getGuild().getId());
+                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+                            this.musicBot.getGMS().reloadDJRoles(event.getGuild().getId());
                             if(event.getOption("role") != null) {
-                                GMS.removeDJRole(event.getGuild().getId(), event.getOption("role").getAsRole().getId());
+                                this.musicBot.getGMS().removeDJRole(event.getGuild().getId(), event.getOption("role").getAsRole().getId());
                                 EmbedBuilder embedBuilder = new EmbedBuilder()
                                         .setDescription(":white_check_mark:  Removed DJ Role")
                                         .setColor(Color.GREEN);
@@ -582,8 +589,8 @@ public class EventsCommands extends ListenerAdapter {
                                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                             }
                         } else if(event.getOption("action").getAsString().equalsIgnoreCase("clear")) {
-                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
-                            GMS.clearDJRoles(event.getGuild().getId());
+                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+                            this.musicBot.getGMS().clearDJRoles(event.getGuild().getId());
                             EmbedBuilder embedBuilder = new EmbedBuilder()
                                     .setDescription(":white_check_mark:  Cleared DJ Roles")
                                     .setColor(Color.GREEN);
@@ -592,8 +599,8 @@ public class EventsCommands extends ListenerAdapter {
                     }
                 } else if(event.getSubcommandName().equalsIgnoreCase("ephemeral")) {
                     if(event.getOption("state") != null) {
-                        event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
-                        DatabaseManager.setEphemeralState(event.getGuild().getId(), event.getOption("state").getAsBoolean());
+                        event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+                        this.musicBot.getDatabaseManager().setEphemeralState(event.getGuild().getId(), event.getOption("state").getAsBoolean());
                         EmbedBuilder embedBuilder = new EmbedBuilder()
                                 .setDescription(":white_check_mark:  Set ephemeral state to " + event.getOption("state").getAsBoolean())
                                 .setColor(Color.GREEN);
@@ -602,10 +609,10 @@ public class EventsCommands extends ListenerAdapter {
                 } else if(event.getSubcommandName().equalsIgnoreCase("blacklist")) {
                     if(event.getOption("action") != null) {
                         if(event.getOption("action").getAsString().equalsIgnoreCase("add")) {
-                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
                             if(event.getOption("link") != null) {
-                                if(!DatabaseManager.getBlacklist(event.getGuild().getId()).contains(event.getOption("link").getAsString())) {
-                                    DatabaseManager.addToBlacklist(event.getGuild().getId(), event.getOption("link").getAsString());
+                                if(!this.musicBot.getDatabaseManager().getBlacklist(event.getGuild().getId()).contains(event.getOption("link").getAsString())) {
+                                    this.musicBot.getDatabaseManager().addToBlacklist(event.getGuild().getId(), event.getOption("link").getAsString());
                                     EmbedBuilder embedBuilder = new EmbedBuilder()
                                             .setDescription(":white_check_mark:  Added link to blacklist")
                                             .setColor(Color.GREEN);
@@ -623,10 +630,10 @@ public class EventsCommands extends ListenerAdapter {
                                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                             }
                         } else if(event.getOption("action").getAsString().equalsIgnoreCase("remove")) {
-                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
                             if(event.getOption("link") != null) {
-                                if(DatabaseManager.getBlacklist(event.getGuild().getId()).contains(event.getOption("link").getAsString())) {
-                                    DatabaseManager.deleteFromBlacklist(event.getGuild().getId(), event.getOption("link").getAsString());
+                                if(this.musicBot.getDatabaseManager().getBlacklist(event.getGuild().getId()).contains(event.getOption("link").getAsString())) {
+                                    this.musicBot.getDatabaseManager().deleteFromBlacklist(event.getGuild().getId(), event.getOption("link").getAsString());
                                     EmbedBuilder embedBuilder = new EmbedBuilder()
                                             .setDescription(":white_check_mark:  Removed link from blacklist")
                                             .setColor(Color.GREEN);
@@ -644,23 +651,23 @@ public class EventsCommands extends ListenerAdapter {
                                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                             }
                         } else if(event.getOption("action").getAsString().equalsIgnoreCase("clear")) {
-                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
-                            DatabaseManager.clearBlacklist(event.getGuild().getId());
+                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+                            this.musicBot.getDatabaseManager().clearBlacklist(event.getGuild().getId());
                             EmbedBuilder embedBuilder = new EmbedBuilder()
                                     .setDescription(":white_check_mark:  Cleared blacklist")
                                     .setColor(Color.GREEN);
                             event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                         } else if(event.getOption("action").getAsString().equalsIgnoreCase("list")) {
-                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
                             String blacklist = "";
                             int index = 0;
-                            for(String string : DatabaseManager.getBlacklist(event.getGuild().getId())) {
+                            for(String string : this.musicBot.getDatabaseManager().getBlacklist(event.getGuild().getId())) {
                                 String current = string + "\n";
                                 String nextString = blacklist + current;
                                 if(nextString.length() <= 950) {
                                     blacklist = blacklist + current;
                                 } else {
-                                    blacklist = blacklist + "`+ " + (DatabaseManager.getBlacklist(event.getGuild().getId()).size()-index) + " entries.`";
+                                    blacklist = blacklist + "`+ " + (this.musicBot.getDatabaseManager().getBlacklist(event.getGuild().getId()).size()-index) + " entries.`";
                                     break;
                                 }
                                 index++;
@@ -673,10 +680,10 @@ public class EventsCommands extends ListenerAdapter {
                 } else if(event.getSubcommandName().equalsIgnoreCase("keywordblacklist")) {
                     if(event.getOption("action") != null) {
                         if(event.getOption("action").getAsString().equalsIgnoreCase("add")) {
-                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
                             if(event.getOption("keyword") != null) {
-                                if(!DatabaseManager.getKeywordBlacklist(event.getGuild().getId()).contains(event.getOption("keyword").getAsString())) {
-                                    DatabaseManager.addToBlacklist(event.getGuild().getId(), event.getOption("keyword").getAsString());
+                                if(!this.musicBot.getDatabaseManager().getKeywordBlacklist(event.getGuild().getId()).contains(event.getOption("keyword").getAsString())) {
+                                    this.musicBot.getDatabaseManager().addToBlacklist(event.getGuild().getId(), event.getOption("keyword").getAsString());
                                     EmbedBuilder embedBuilder = new EmbedBuilder()
                                             .setDescription(":white_check_mark:  Added keyword to blacklist")
                                             .setColor(Color.GREEN);
@@ -694,10 +701,10 @@ public class EventsCommands extends ListenerAdapter {
                                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                             }
                         } else if(event.getOption("action").getAsString().equalsIgnoreCase("remove")) {
-                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
                             if(event.getOption("keyword") != null) {
-                                if(DatabaseManager.getKeywordBlacklist(event.getGuild().getId()).contains(event.getOption("keyword").getAsString())) {
-                                    DatabaseManager.deleteFromBlacklist(event.getGuild().getId(), event.getOption("keyword").getAsString());
+                                if(this.musicBot.getDatabaseManager().getKeywordBlacklist(event.getGuild().getId()).contains(event.getOption("keyword").getAsString())) {
+                                    this.musicBot.getDatabaseManager().deleteFromBlacklist(event.getGuild().getId(), event.getOption("keyword").getAsString());
                                     EmbedBuilder embedBuilder = new EmbedBuilder()
                                             .setDescription(":white_check_mark:  Removed keyword from blacklist")
                                             .setColor(Color.GREEN);
@@ -715,23 +722,23 @@ public class EventsCommands extends ListenerAdapter {
                                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                             }
                         } else if(event.getOption("action").getAsString().equalsIgnoreCase("clear")) {
-                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
-                            DatabaseManager.clearBlacklist(event.getGuild().getId());
+                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+                            this.musicBot.getDatabaseManager().clearBlacklist(event.getGuild().getId());
                             EmbedBuilder embedBuilder = new EmbedBuilder()
                                     .setDescription(":white_check_mark:  Cleared keyword blacklist")
                                     .setColor(Color.GREEN);
                             event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                         } else if(event.getOption("action").getAsString().equalsIgnoreCase("list")) {
-                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
                             String blacklist = "";
                             int index = 0;
-                            for(String string : DatabaseManager.getKeywordBlacklist(event.getGuild().getId())) {
+                            for(String string : this.musicBot.getDatabaseManager().getKeywordBlacklist(event.getGuild().getId())) {
                                 String current = string + "\n";
                                 String nextString = blacklist + current;
                                 if(nextString.length() <= 950) {
                                     blacklist = blacklist + current;
                                 } else {
-                                    blacklist = blacklist + "`+ " + (DatabaseManager.getKeywordBlacklist(event.getGuild().getId()).size()-index) + " entries.`";
+                                    blacklist = blacklist + "`+ " + (this.musicBot.getDatabaseManager().getKeywordBlacklist(event.getGuild().getId()).size()-index) + " entries.`";
                                     break;
                                 }
                                 index++;
@@ -744,10 +751,10 @@ public class EventsCommands extends ListenerAdapter {
                 } else if(event.getSubcommandName().equalsIgnoreCase("artistblacklist")) {
                     if(event.getOption("action") != null) {
                         if(event.getOption("action").getAsString().equalsIgnoreCase("add")) {
-                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
                             if(event.getOption("artist") != null) {
-                                if(!DatabaseManager.getArtistBlacklist(event.getGuild().getId()).contains(event.getOption("artist").getAsString())) {
-                                    DatabaseManager.addToBlacklist(event.getGuild().getId(), event.getOption("artist").getAsString());
+                                if(!this.musicBot.getDatabaseManager().getArtistBlacklist(event.getGuild().getId()).contains(event.getOption("artist").getAsString())) {
+                                    this.musicBot.getDatabaseManager().addToBlacklist(event.getGuild().getId(), event.getOption("artist").getAsString());
                                     EmbedBuilder embedBuilder = new EmbedBuilder()
                                             .setDescription(":white_check_mark:  Added artist to blacklist")
                                             .setColor(Color.GREEN);
@@ -765,10 +772,10 @@ public class EventsCommands extends ListenerAdapter {
                                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                             }
                         } else if(event.getOption("action").getAsString().equalsIgnoreCase("remove")) {
-                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
                             if(event.getOption("artist") != null) {
-                                if(DatabaseManager.getArtistBlacklist(event.getGuild().getId()).contains(event.getOption("artist").getAsString())) {
-                                    DatabaseManager.deleteFromBlacklist(event.getGuild().getId(), event.getOption("artist").getAsString());
+                                if(this.musicBot.getDatabaseManager().getArtistBlacklist(event.getGuild().getId()).contains(event.getOption("artist").getAsString())) {
+                                    this.musicBot.getDatabaseManager().deleteFromBlacklist(event.getGuild().getId(), event.getOption("artist").getAsString());
                                     EmbedBuilder embedBuilder = new EmbedBuilder()
                                             .setDescription(":white_check_mark:  Removed artist from blacklist")
                                             .setColor(Color.GREEN);
@@ -786,23 +793,23 @@ public class EventsCommands extends ListenerAdapter {
                                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                             }
                         } else if(event.getOption("action").getAsString().equalsIgnoreCase("clear")) {
-                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
-                            DatabaseManager.clearBlacklist(event.getGuild().getId());
+                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+                            this.musicBot.getDatabaseManager().clearBlacklist(event.getGuild().getId());
                             EmbedBuilder embedBuilder = new EmbedBuilder()
                                     .setDescription(":white_check_mark:  Cleared artist blacklist")
                                     .setColor(Color.GREEN);
                             event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                         } else if(event.getOption("action").getAsString().equalsIgnoreCase("list")) {
-                            event.deferReply(DatabaseManager.getEphemeralState(event.getGuild().getId())).queue();
+                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
                             String blacklist = "";
                             int index = 0;
-                            for(String string : DatabaseManager.getArtistBlacklist(event.getGuild().getId())) {
+                            for(String string : this.musicBot.getDatabaseManager().getArtistBlacklist(event.getGuild().getId())) {
                                 String current = string + "\n";
                                 String nextString = blacklist + current;
                                 if(nextString.length() <= 950) {
                                     blacklist = blacklist + current;
                                 } else {
-                                    blacklist = blacklist + "`+ " + (DatabaseManager.getArtistBlacklist(event.getGuild().getId()).size()-index) + " entries.`";
+                                    blacklist = blacklist + "`+ " + (this.musicBot.getDatabaseManager().getArtistBlacklist(event.getGuild().getId()).size()-index) + " entries.`";
                                     break;
                                 }
                                 index++;
@@ -818,7 +825,7 @@ public class EventsCommands extends ListenerAdapter {
     }
 
     private void cmdCommand(SlashCommandInteractionEvent event) {
-        if(event.getMember().getId().equals(MusicBot.getBowOwner())) {
+        if(event.getMember().getId().equals(this.musicBot.getConfigManager().getConfig().getBotOwner())) {
             event.deferReply(true).queue();
             if(event.getOption("cmd") != null) {
                 String response = Commands.command(event.getOption("cmd").getAsString());
@@ -847,7 +854,7 @@ public class EventsCommands extends ListenerAdapter {
             String source = event.getOption("song").getAsString();
             if(source.startsWith("http://") || source.startsWith("https://")) {
                 if(source.contains("https://www.youtube.com/") || source.contains("https://youtube.com/")) {
-                    MusicManager.add(event.getGuild(), source, event, startafterload);
+                    this.musicBot.getMusicManager().add(event.getGuild(), source, event, startafterload);
                 } else if(source.contains("https://open.spotify.com/playlist/")) {
                     new Thread(new Runnable() {
                         @Override
@@ -862,8 +869,8 @@ public class EventsCommands extends ListenerAdapter {
                                         .setColor(Color.YELLOW);
                                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                             }
-                            List<AudioTrack> trackList = SpotifySearchHandler.search(source);
-                            if(!trackList.isEmpty() && event.getGuild() != null && MusicManager.isConnected(event.getGuild())) {
+                            List<AudioTrack> trackList = SpotifySearchHandler.search(source, musicBot.getConfigManager().getConfig().getSpotifyClientId(), musicBot.getConfigManager().getConfig().getSpotifyClientSecret());
+                            if(!trackList.isEmpty() && event.getGuild() != null && musicBot.getMusicManager().isConnected(event.getGuild())) {
                                 EmbedBuilder embedBuilder = new EmbedBuilder()
                                         .setDescription(":zzz:  Converting to youtube...")
                                         .setColor(Color.YELLOW);
@@ -871,8 +878,8 @@ public class EventsCommands extends ListenerAdapter {
                                 boolean blacklisted = false;
                                 int index = 0;
                                 for(AudioTrack track : trackList) {
-                                    if(!GMS.isBlacklisted(event.getGuild(), event.getMember(), track)) {
-                                        MusicManager.add(event.getGuild(), track.getInfo().uri, ((index == 0) && startafterload));
+                                    if(!musicBot.getGMS().isBlacklisted(event.getGuild(), event.getMember(), track)) {
+                                        musicBot.getMusicManager().add(event.getGuild(), track.getInfo().uri, ((index == 0) && startafterload));
                                     } else {
                                         blacklisted = true;
                                     }
@@ -914,7 +921,7 @@ public class EventsCommands extends ListenerAdapter {
                     public void run() {
                         List<AudioTrack> trackList = YTSearchHandler.search(source);
                         if(!trackList.isEmpty()) {
-                            MusicManager.add(event.getGuild(), trackList.get(0).getInfo().uri, event, startafterload);
+                            musicBot.getMusicManager().add(event.getGuild(), trackList.get(0).getInfo().uri, event, startafterload);
                         } else {
                             EmbedBuilder embedBuilder = new EmbedBuilder()
                                     .setDescription(":warning:  Nothing was found")
@@ -925,13 +932,13 @@ public class EventsCommands extends ListenerAdapter {
                 }).start();
             }
         } else {
-            if(GMS.memberHasDJPermissions(event.getMember())) {
-                if(!MusicManager.getQueue(event.getGuild()).isEmpty() || MusicManager.isPaused(event.getGuild()) || MusicManager.getPlayingTrack(event.getGuild()) != null) {
-                    if(MusicManager.isPaused(event.getGuild())) {
-                        MusicManager.setPause(event.getGuild(), false);
+            if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
+                if(!this.musicBot.getMusicManager().getQueue(event.getGuild()).isEmpty() || this.musicBot.getMusicManager().isPaused(event.getGuild()) || this.musicBot.getMusicManager().getPlayingTrack(event.getGuild()) != null) {
+                    if(this.musicBot.getMusicManager().isPaused(event.getGuild())) {
+                        this.musicBot.getMusicManager().setPause(event.getGuild(), false);
                     }
-                    if(MusicManager.getPlayingTrack(event.getGuild()) == null) {
-                        MusicManager.next(event.getGuild());
+                    if(this.musicBot.getMusicManager().getPlayingTrack(event.getGuild()) == null) {
+                        this.musicBot.getMusicManager().next(event.getGuild());
                     }
                     EmbedBuilder resumedMessage = new EmbedBuilder()
                             .setDescription(":arrow_forward:  Resumed playback")
@@ -955,14 +962,14 @@ public class EventsCommands extends ListenerAdapter {
         if(event.getOption("song") != null) {
             String source = event.getOption("song").getAsString();
             if(source.startsWith("http://") || source.startsWith("https://")) {
-                MusicManager.playnow(event.getGuild(), source, event);
+                this.musicBot.getMusicManager().playnow(event.getGuild(), source, event);
             } else {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
                         List<AudioTrack> trackList = YTSearchHandler.search(source);
                         if(!trackList.isEmpty()) {
-                            MusicManager.playnow(event.getGuild(), trackList.get(0).getInfo().uri, event);
+                            musicBot.getMusicManager().playnow(event.getGuild(), trackList.get(0).getInfo().uri, event);
                         } else {
                             EmbedBuilder embedBuilder = new EmbedBuilder()
                                     .setDescription(":warning:  Nothing was found")
