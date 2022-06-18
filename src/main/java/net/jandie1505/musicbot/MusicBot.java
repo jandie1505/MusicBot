@@ -37,10 +37,13 @@ public class MusicBot {
     private final GMS gms;
     private final MusicManager musicManager;
     private final int shardsTotal;
+    private boolean disableShardsCheck;
 
-    public MusicBot(String token, int shardsCount) throws LoginException, SQLException, IOException, ClassNotFoundException {
+    public MusicBot(String token, int shardsCount, boolean disableShardsCheck) throws LoginException, SQLException, IOException, ClassNotFoundException {
         this.console = new Console();
         this.console.start();
+
+        this.disableShardsCheck = disableShardsCheck;
 
         this.configManager = new ConfigManager(this);
 
@@ -180,18 +183,18 @@ public class MusicBot {
         }).start();
     }
 
-    public void setShardAutoMode(boolean mode) {
-        this.shardAutoMode = mode;
+    public void setDisableShardsCheck(boolean disableShardsCheck) {
+        this.disableShardsCheck = disableShardsCheck;
     }
 
-    public boolean getShardAutoMode() {
-        return this.shardAutoMode;
+    public boolean getDisableShardsCheck() {
+        return this.disableShardsCheck;
     }
 
     public void reloadShards() {
         new Thread(() -> {
             if(shardManager.getShardsRunning() < shardManager.getShardsTotal()) {
-                if(getShardAutoMode()) {
+                if(!this.getDisableShardsCheck()) {
                     Console.messageShardManager("Only " + shardManager.getShardsRunning() + " of " + shardManager.getShardsTotal() + " are online. Auto restarting...");
                     startShards();
                 } else {
@@ -373,28 +376,28 @@ public class MusicBot {
     }
 
     // GETTER METHODS
-    public ShardManager getShardManager() {
-        return shardManager;
+    public Console getConsole() {
+        return this.console;
+    }
+
+    public ConfigManager getConfigManager() {
+        return this.configManager;
     }
 
     public DatabaseManager getDatabaseManager() {
         return this.databaseManager;
     }
 
+    public ShardManager getShardManager() {
+        return shardManager;
+    }
+
     public GMS getGMS() {
         return this.gms;
     }
 
-    public boolean getPublicMode() {
-        return publicMode;
-    }
-
-    public String getBowOwner() {
-        return bowOwner;
-    }
-
-    public Console getConsole() {
-        return console;
+    public MusicManager getMusicManager() {
+        return this.musicManager;
     }
 
     // OPERATIONAL STATUS
