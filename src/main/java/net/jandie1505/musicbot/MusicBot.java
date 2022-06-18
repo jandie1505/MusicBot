@@ -12,15 +12,13 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
 import net.dv8tion.jda.api.sharding.ShardManager;
 import net.dv8tion.jda.internal.interactions.CommandDataImpl;
+import net.jandie1505.musicbot.config.ConfigManager;
 import net.jandie1505.musicbot.console.Console;
-import net.jandie1505.musicbot.search.SpotifySearchHandler;
 import net.jandie1505.musicbot.system.*;
-import net.jandie1505.musicbot.tasks.TaskGMSReload;
-import net.jandie1505.musicbot.tasks.TaskGMSReloadComplete;
-import net.jandie1505.musicbot.tasks.TaskMusicManager;
 import net.jandie1505.musicbot.tasks.TaskShardsReload;
 
 import javax.security.auth.login.LoginException;
+import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
@@ -31,27 +29,49 @@ public class MusicBot {
     private static MusicBot instance;
 
     // INSTANCE
-    private Console console;
-    private ShardManager shardManager;
+    private final Console console;
+    private final ConfigManager configManager;
     private final DatabaseManager databaseManager;
+    private final ShardManager shardManager;
+    private final TaskShardsReload taskShardsReload;
     private final GMS gms;
     private final MusicManager musicManager;
     private final int shardsTotal;
-    private boolean publicMode;
-    private boolean shardAutoMode = true;
-    private String bowOwner = "";
-    private TaskShardsReload taskShardsReload;
 
     public MusicBot(String token, int shardsCount) throws LoginException, SQLException, IOException, ClassNotFoundException {
         this.console = new Console();
         this.console.start();
+
+        this.configManager = new ConfigManager(this);
+
+        try {
+            File configFile = new File(System.getProperty("user.dir"), "config.json");
+
+            if(!configFile.exists()) {
+                configFile.createNewFile();
+            }
+
+            this.configManager.loadConfig(configFile);
+        } catch (IOException e) {
+
+        }
 
         this.databaseManager = new DatabaseManager(this);
 
         if(shardsCount > 1) {
             this.shardsTotal = shardsCount;
         } else {
-            this.shardsTotal = 1;
+            shardsCount = this.configManager.getConfig().getShardsCount();
+
+            if(shardsCount > 1) {
+                this.shardsTotal = shardsCount;
+            } else {
+                this.shardsTotal = 1;
+            }
+        }
+
+        if(token == null || !token.equalsIgnoreCase("")) {
+            token = this.configManager.getConfig().getToken();
         }
 
         this.shardManager = DefaultShardManagerBuilder
