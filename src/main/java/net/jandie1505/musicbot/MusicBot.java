@@ -35,6 +35,7 @@ public class MusicBot {
     private ShardManager shardManager;
     private final DatabaseManager databaseManager;
     private final GMS gms;
+    private final MusicManager musicManager;
     private int shardsTotal = 1;
     private boolean publicMode;
     private boolean shardAutoMode = true;
@@ -50,6 +51,7 @@ public class MusicBot {
 
         this.databaseManager = new DatabaseManager(this);
         this.gms = new GMS(this);
+        this.musicManager = new MusicManager(this);
 
         if(args.length >= 4) {
             if(args[3].equalsIgnoreCase("true")) {
