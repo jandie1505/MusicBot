@@ -30,6 +30,9 @@ public class GMS {
         this.musicBot = musicBot;
         this.taskGMSReload = new TaskGMSReload(this);
         this.taskGMSReloadComplete = new TaskGMSReloadComplete(this);
+
+        this.taskGMSReload.start();
+        this.taskGMSReloadComplete.start();
     }
 
     public void reloadGuilds(boolean completeReload) {

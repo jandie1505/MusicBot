@@ -21,9 +21,9 @@ import net.jandie1505.musicbot.tasks.TaskMusicManager;
 import net.jandie1505.musicbot.tasks.TaskShardsReload;
 
 import javax.security.auth.login.LoginException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class MusicBot {
@@ -36,115 +36,51 @@ public class MusicBot {
     private final DatabaseManager databaseManager;
     private final GMS gms;
     private final MusicManager musicManager;
-    private int shardsTotal = 1;
+    private final int shardsTotal;
     private boolean publicMode;
     private boolean shardAutoMode = true;
     private String bowOwner = "";
     private TaskShardsReload taskShardsReload;
-    private TaskMusicManager taskMusicManager;
 
-    public MusicBot() {
+    public MusicBot(String token, int shardsCount) throws LoginException, SQLException, IOException, ClassNotFoundException {
         this.console = new Console();
         this.console.start();
 
-        if(args.length >= 4) {
-            if(args[3].equalsIgnoreCase("true")) {
-                Console.setGMSLogging(true);
-                Console.setDBMLogging(true);
-            } else {
-                Console.setGMSLogging(false);
-                Console.setDBMLogging(false);
-            }
+        this.databaseManager = new DatabaseManager(this);
+
+        if(shardsCount > 1) {
+            this.shardsTotal = shardsCount;
         } else {
-            Console.defaultMessage("Disabled verbose logging mode because the start argument was not specified.");
+            this.shardsTotal = 1;
         }
 
-        try {
-            this.databaseManager = new DatabaseManager(this);
+        this.shardManager = DefaultShardManagerBuilder
+                .createDefault(token, GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.DIRECT_MESSAGES, GatewayIntent.GUILD_INVITES, GatewayIntent.GUILD_EMOJIS)
+                .setShardsTotal(shardsTotal)
+                .build();
+        this.shardManager.setPresence(OnlineStatus.IDLE, Activity.playing("Starting up..."));
+        this.shardManager.addEventListener(new EventsBasic());
+        this.shardManager.addEventListener(new EventsCommands());
+        this.shardManager.addEventListener(new EventsButtons());
 
-            if(args.length >= 2) {
-                shardsTotal = Integer.parseInt(args[1]);
-            } else {
-                Console.defaultMessage("No shards count specified. Starting with 1 shard.");
-            }
-            if(args.length >= 3) {
-                if(args[2].equalsIgnoreCase("true")) {
-                    publicMode = true;
-                } else {
-                    publicMode = false;
-                }
-            } else {
-                Console.defaultMessage("Starting in private mode because the mode was not specified.");
-            }
-            if(args.length >= 5) {
-                bowOwner = args[4];
-            } else {
-                bowOwner = "";
-                Console.defaultMessage("Bot owner is not specified");
-            }
-            if(args.length >= 6) {
-                SpotifySearchHandler.setClientId(args[5]);
-            } else {
-                SpotifySearchHandler.setClientId("");
-                Console.defaultMessage("Starting without spotify client id (no support for spotify playlists)");
-            }
-            if(args.length >= 7) {
-                SpotifySearchHandler.setClientSecret(args[6]);
-            } else {
-                SpotifySearchHandler.setClientSecret("");
-                Console.defaultMessage("Starting without spotify client secret (no support for spotify playlists)");
-            }
+        this.reloadShards();
 
-            Console.defaultMessage("*****************************\n" +
-                    "* Starting bot in 3 seconds *\n" +
-                    "*****************************");
-            TimeUnit.SECONDS.sleep(3);
+        this.taskShardsReload = new TaskShardsReload(this);
+        this.taskShardsReload.start();
 
-            if(shardsTotal > 0) {
-                this.shardManager = DefaultShardManagerBuilder
-                        .createDefault(args[0], GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.DIRECT_MESSAGES, GatewayIntent.GUILD_INVITES, GatewayIntent.GUILD_EMOJIS)
-                        .setShardsTotal(shardsTotal)
-                        .build();
-                this.shardManager.setPresence(OnlineStatus.IDLE, Activity.playing("Starting up..."));
-                this.shardManager.addEventListener(new EventsBasic());
-                this.shardManager.addEventListener(new EventsCommands());
-                this.shardManager.addEventListener(new EventsButtons());
+        this.gms = new GMS(this);
+        this.gms.reloadGuilds(true);
 
-                reloadShards();
+        this.musicManager = new MusicManager(this);
+        this.musicManager.reloadPlayers();
 
-                this.taskShardsReload = new TaskShardsReload(this);
-                this.taskShardsReload.start();
-
-                this.gms = new GMS(this);
-
-                this.taskMusicManager = new TaskMusicManager();
-
-                this.gms.reloadGuilds(true);
-
-                this.taskMusicManager.start();
-
-                this.musicManager = new MusicManager(this);
-
-                Console.defaultMessage(
-                        "*****************************************\n"
-                                + "Application ID: " + this.shardManager.retrieveApplicationInfo().getJDA().getSelfUser().getApplicationId() + "\n"
-                                + "Username: " + this.shardManager.retrieveApplicationInfo().getJDA().getSelfUser().getName() + "#" + shardManager.retrieveApplicationInfo().getJDA().getSelfUser().getDiscriminator() + "\n"
-                                + "Public mode: " + this.getPublicMode() + "\n"
-                                + "Shards: " + this.shardManager.getShardsRunning() + " + " + shardManager.getShardsQueued() + " = " + shardManager.getShardsTotal() + "\n"
-                                + "*****************************************");
-            } else {
-                Console.defaultMessage("Please enter a valid shards count");
-            }
-        } catch(LoginException e) {
-            Console.defaultMessage("Check your bot token");
-            TimeUnit.SECONDS.sleep(3);
-            System.exit(-2);
-        } catch(ArrayIndexOutOfBoundsException | NumberFormatException e) {
-            Console.defaultMessage("Check your start arguments\n" +
-                    "Start arguments: <token (String)> [<shardsCount (int)> <publicMode (boolean)> <verbose (boolean)> <bowOwnerId (String)> <spotifyClientId (String)> <spotifyClientSecret (String)>]");
-            TimeUnit.SECONDS.sleep(3);
-            System.exit(-1);
-        }
+        Console.defaultMessage(
+                "*****************************************\n"
+                        + "Application ID: " + this.shardManager.retrieveApplicationInfo().getJDA().getSelfUser().getApplicationId() + "\n"
+                        + "Username: " + this.shardManager.retrieveApplicationInfo().getJDA().getSelfUser().getName() + "#" + shardManager.retrieveApplicationInfo().getJDA().getSelfUser().getDiscriminator() + "\n"
+                        + "Public mode: " + this.getPublicMode() + "\n"
+                        + "Shards: " + this.shardManager.getShardsRunning() + " + " + shardManager.getShardsQueued() + " = " + shardManager.getShardsTotal() + "\n"
+                        + "*****************************************");
     }
 
     public void shutdown() {
@@ -450,6 +386,42 @@ public class MusicBot {
     // STATIC
 
     public static void main(String[] args) throws Exception {
-        instance = new MusicBot();
+        System.out.println("MusicBot by jandie1505 (https://github.com/jandie1505/MusicBot)");
+
+        int waitTime = 3;
+        Map<String, String> startArguments = new HashMap<>();
+        try {
+            for (String arg : args) {
+                if (arg.startsWith("-")) {
+                    arg = arg.replace("-", "");
+                    try {
+                        String[] argument = arg.split("=");
+                        startArguments.put(argument[0], argument[1]);
+                    } catch (Exception e) {
+                        System.out.println("Incorrect start argument: " + arg);
+                        waitTime = 10;
+                    }
+                } else {
+                    System.out.println("Wrong start argument format: " + arg);
+                    waitTime = 10;
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error with start arguments. Starting with default arguments...");
+            waitTime = 30;
+        }
+
+        boolean defaultConfigValues = false;
+        defaultConfigValues = Boolean.parseBoolean(startArguments.get("defaultConfigValues"));
+        if (defaultConfigValues) {
+            System.out.println("defaultConfigValues option enabled");
+        }
+
+        System.out.println("Starting server in " + waitTime + " seconds...");
+        try {
+            TimeUnit.SECONDS.sleep(waitTime);
+        } catch (Exception ignored) {}
+
+        new MusicBot();
     }
 }
