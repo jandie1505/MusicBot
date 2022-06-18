@@ -27,20 +27,24 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class MusicBot {
-    private static Console console;
-    private static ShardManager shardManager;
-    private static int shardsTotal = 1;
-    private static boolean publicMode;
-    private static boolean shardAutoMode = true;
-    private static String bowOwner = "";
-    private static TaskShardsReload taskShardsReload;
-    private static TaskGMSReload taskGMSReload;
-    private static TaskGMSReloadComplete taskGMSReloadComplete;
-    private static TaskMusicManager taskMusicManager;
+    //STATIC
+    private static MusicBot instance;
 
-    public static void main(String[] args) throws Exception {
-        console = new Console();
-        console.start();
+    // INSTANCE
+    private Console console;
+    private ShardManager shardManager;
+    private int shardsTotal = 1;
+    private boolean publicMode;
+    private boolean shardAutoMode = true;
+    private String bowOwner = "";
+    private TaskShardsReload taskShardsReload;
+    private TaskGMSReload taskGMSReload;
+    private TaskGMSReloadComplete taskGMSReloadComplete;
+    private TaskMusicManager taskMusicManager;
+
+    public MusicBot() {
+        this.console = new Console();
+        this.console.start();
 
         if(args.length >= 4) {
             if(args[3].equalsIgnoreCase("true")) {
@@ -96,40 +100,40 @@ public class MusicBot {
             TimeUnit.SECONDS.sleep(3);
 
             if(shardsTotal > 0) {
-                shardManager = DefaultShardManagerBuilder
+                this.shardManager = DefaultShardManagerBuilder
                         .createDefault(args[0], GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.DIRECT_MESSAGES, GatewayIntent.GUILD_INVITES, GatewayIntent.GUILD_EMOJIS)
                         .setShardsTotal(shardsTotal)
                         .build();
-                shardManager.setPresence(OnlineStatus.IDLE, Activity.playing("Starting up..."));
-                shardManager.addEventListener(new EventsBasic());
-                shardManager.addEventListener(new EventsCommands());
-                shardManager.addEventListener(new EventsButtons());
+                this.shardManager.setPresence(OnlineStatus.IDLE, Activity.playing("Starting up..."));
+                this.shardManager.addEventListener(new EventsBasic());
+                this.shardManager.addEventListener(new EventsCommands());
+                this.shardManager.addEventListener(new EventsButtons());
 
                 reloadShards();
 
-                taskShardsReload = new TaskShardsReload();
-                taskShardsReload.start();
+                this.taskShardsReload = new TaskShardsReload();
+                this.taskShardsReload.start();
 
                 GMS.init();
 
-                taskGMSReload = new TaskGMSReload();
-                taskGMSReloadComplete = new TaskGMSReloadComplete();
-                taskMusicManager = new TaskMusicManager();
+                this.taskGMSReload = new TaskGMSReload();
+                this.taskGMSReloadComplete = new TaskGMSReloadComplete();
+                this.taskMusicManager = new TaskMusicManager();
 
                 GMS.reloadGuilds(true);
 
-                taskGMSReload.start();
-                taskGMSReloadComplete.start();
-                taskMusicManager.start();
+                this.taskGMSReload.start();
+                this.taskGMSReloadComplete.start();
+                this.taskMusicManager.start();
 
                 MusicManager.init();
 
                 Console.defaultMessage(
                         "*****************************************\n"
-                                + "Application ID: " + shardManager.retrieveApplicationInfo().getJDA().getSelfUser().getApplicationId() + "\n"
-                                + "Username: " + shardManager.retrieveApplicationInfo().getJDA().getSelfUser().getName() + "#" + shardManager.retrieveApplicationInfo().getJDA().getSelfUser().getDiscriminator() + "\n"
-                                + "Public mode: " + getPublicMode() + "\n"
-                                + "Shards: " + shardManager.getShardsRunning() + " + " + shardManager.getShardsQueued() + " = " + shardManager.getShardsTotal() + "\n"
+                                + "Application ID: " + this.shardManager.retrieveApplicationInfo().getJDA().getSelfUser().getApplicationId() + "\n"
+                                + "Username: " + this.shardManager.retrieveApplicationInfo().getJDA().getSelfUser().getName() + "#" + shardManager.retrieveApplicationInfo().getJDA().getSelfUser().getDiscriminator() + "\n"
+                                + "Public mode: " + this.getPublicMode() + "\n"
+                                + "Shards: " + this.shardManager.getShardsRunning() + " + " + shardManager.getShardsQueued() + " = " + shardManager.getShardsTotal() + "\n"
                                 + "*****************************************");
             } else {
                 Console.defaultMessage("Please enter a valid shards count");
@@ -146,12 +150,12 @@ public class MusicBot {
         }
     }
 
-    public static void shutdown() {
+    public void shutdown() {
         System.out.println("*****************\n" +
                 "* SHUTTING DOWN *\n" +
                 "*****************\n");
         try {
-            shardManager.shutdown();
+            this.shardManager.shutdown();
             TimeUnit.SECONDS.sleep(1);
         } catch(InterruptedException e) {
             e.printStackTrace();
@@ -160,118 +164,97 @@ public class MusicBot {
     }
 
     // SHARD MANAGER
-    public static void startShard(int shardId) {
+    public void startShard(int shardId) {
         if(shardId >= 0) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    shardManager.start(shardId);
-                    Console.messageShardManager("Started new shard with id " + shardId);
-                }
+            new Thread(() -> {
+                shardManager.start(shardId);
+                Console.messageShardManager("Started new shard with id " + shardId);
             }).start();
         }
     }
 
-    public static void stopShard(int shardId) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                for(JDA jda : shardManager.getShards()) {
-                    if(jda.getShardInfo().getShardId() == shardId) {
-                        shardManager.shutdown(shardId);
-                        Console.messageShardManager("Stopped and removed shard with id " + shardId);
-                    }
+    public void stopShard(int shardId) {
+        new Thread(() -> {
+            for(JDA jda : shardManager.getShards()) {
+                if(jda.getShardInfo().getShardId() == shardId) {
+                    shardManager.shutdown(shardId);
+                    Console.messageShardManager("Stopped and removed shard with id " + shardId);
                 }
             }
         }).start();
     }
 
-    public static void restartShard(int shardId) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                for(JDA jda : shardManager.getShards()) {
-                    if(jda.getShardInfo().getShardId() == shardId) {
-                        shardManager.restart(shardId);
-                        Console.messageShardManager("Restarted shard with id " + shardId);
-                    }
+    public void restartShard(int shardId) {
+        new Thread(() -> {
+            for(JDA jda : shardManager.getShards()) {
+                if(jda.getShardInfo().getShardId() == shardId) {
+                    shardManager.restart(shardId);
+                    Console.messageShardManager("Restarted shard with id " + shardId);
                 }
             }
         }).start();
     }
 
-    public static void startShards() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                List<Integer> activeIds = new ArrayList<>();
-                for(JDA jda : shardManager.getShards()) {
-                    activeIds.add(jda.getShardInfo().getShardId());
-                }
-                Collections.sort(activeIds);
-                for(int i = 0; i < shardManager.getShardsTotal(); i++) {
-                    if(!activeIds.contains(i)) {
-                        shardManager.start(i);
-                    }
-                }
-                Console.messageShardManager("Started all shards");
+    public void startShards() {
+        new Thread(() -> {
+            List<Integer> activeIds = new ArrayList<>();
+            for(JDA jda : shardManager.getShards()) {
+                activeIds.add(jda.getShardInfo().getShardId());
             }
+            Collections.sort(activeIds);
+            for(int i = 0; i < shardManager.getShardsTotal(); i++) {
+                if(!activeIds.contains(i)) {
+                    shardManager.start(i);
+                }
+            }
+            Console.messageShardManager("Started all shards");
         }).start();
     }
 
-    public static void stopShards() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                for(JDA jda : MusicBot.shardManager.getShards()) {
-                    shardManager.shutdown(jda.getShardInfo().getShardId());
-                }
-                Console.messageShardManager("Stopped and remove all shards");
+    public void stopShards() {
+        new Thread(() -> {
+            for(JDA jda : shardManager.getShards()) {
+                shardManager.shutdown(jda.getShardInfo().getShardId());
             }
+            Console.messageShardManager("Stopped and remove all shards");
         }).start();
     }
 
-    public static void restartShards() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                startShards();
-                Console.messageShardManager("Restarted all shards");
-            }
+    public void restartShards() {
+        new Thread(() -> {
+            startShards();
+            Console.messageShardManager("Restarted all shards");
         }).start();
     }
 
-    public static void setShardAutoMode(boolean mode) {
-        shardAutoMode = mode;
+    public void setShardAutoMode(boolean mode) {
+        this.shardAutoMode = mode;
     }
 
-    public static boolean getShardAutoMode() {
-        return shardAutoMode;
+    public boolean getShardAutoMode() {
+        return this.shardAutoMode;
     }
 
-    public static void reloadShards() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                if(shardManager.getShardsRunning() < shardManager.getShardsTotal()) {
-                    if(getShardAutoMode()) {
-                        Console.messageShardManager("Only " + shardManager.getShardsRunning() + " of " + shardManager.getShardsTotal() + " are online. Auto restarting...");
-                        startShards();
-                    } else {
-                        Console.messageShardManager("[WARN] Only " + shardManager.getShardsRunning() + " of " + shardManager.getShardsTotal() + " are online");
-                    }
-                }
-
-                if(completeOnline()) {
-                    shardManager.setPresence(OnlineStatus.ONLINE, Activity.playing("/play, /help"));
+    public void reloadShards() {
+        new Thread(() -> {
+            if(shardManager.getShardsRunning() < shardManager.getShardsTotal()) {
+                if(getShardAutoMode()) {
+                    Console.messageShardManager("Only " + shardManager.getShardsRunning() + " of " + shardManager.getShardsTotal() + " are online. Auto restarting...");
+                    startShards();
                 } else {
-                    shardManager.setPresence(OnlineStatus.IDLE, Activity.playing("Limited functionality"));
+                    Console.messageShardManager("[WARN] Only " + shardManager.getShardsRunning() + " of " + shardManager.getShardsTotal() + " are online");
                 }
+            }
+
+            if(completeOnline()) {
+                shardManager.setPresence(OnlineStatus.ONLINE, Activity.playing("/play, /help"));
+            } else {
+                shardManager.setPresence(OnlineStatus.IDLE, Activity.playing("Limited functionality"));
             }
         }).start();
     }
 
-    public static boolean completeOnline() {
+    public boolean completeOnline() {
         boolean status = true;
         for(JDA jda : shardManager.getStatuses().keySet()) {
             if(jda.getStatus() != JDA.Status.CONNECTED) {
@@ -282,7 +265,7 @@ public class MusicBot {
     }
 
     // UPSERT COMMANDS
-    public static void upsertCommands(boolean reloadall) {
+    public void upsertCommands(boolean reloadall) {
         shardManager.retrieveApplicationInfo().getJDA().retrieveCommands().queue(commands -> {
             JDA jda = shardManager.retrieveApplicationInfo().getJDA();
 
@@ -437,19 +420,25 @@ public class MusicBot {
     }
 
     // GETTER METHODS
-    public static ShardManager getShardManager() {
+    public ShardManager getShardManager() {
         return shardManager;
     }
 
-    public static boolean getPublicMode() {
+    public boolean getPublicMode() {
         return publicMode;
     }
 
-    public static String getBowOwner() {
+    public String getBowOwner() {
         return bowOwner;
     }
 
-    public static Console getConsole() {
+    public Console getConsole() {
         return console;
+    }
+
+    // STATIC
+
+    public static void main(String[] args) throws Exception {
+        instance = new MusicBot();
     }
 }
