@@ -112,7 +112,7 @@ public class MusicBot {
 
                 reloadShards();
 
-                this.taskShardsReload = new TaskShardsReload();
+                this.taskShardsReload = new TaskShardsReload(this);
                 this.taskShardsReload.start();
 
                 this.gms = new GMS(this);

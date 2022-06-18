@@ -6,20 +6,20 @@ import java.util.concurrent.TimeUnit;
 
 public class TaskShardsReload implements Runnable {
 
-    private MusicBot musicBot;
+    private final MusicBot musicBot;
     private Thread thread;
 
     public TaskShardsReload(MusicBot musicBot) {
-        thread = new Thread(this);
+        this.musicBot = musicBot;
     }
 
     @Override
     public void run() {
         System.out.println("TaskShardsReload started");
-        while(!thread.isInterrupted()) {
+        while(thread == Thread.currentThread() && !thread.isInterrupted() && musicBot.isOperational()) {
             try {
                 TimeUnit.SECONDS.sleep(300);
-                MusicBot.reloadShards();
+                musicBot.reloadShards();
             } catch(Exception e) {
                 e.printStackTrace();
                 System.out.println("TaskShardsReload Error");
@@ -29,12 +29,14 @@ public class TaskShardsReload implements Runnable {
     }
 
     public void start() {
-        if(!thread.isAlive()) {
+        if(this.thread == null || !this.thread.isAlive()) {
+            this.thread = new Thread(this);
+            this.thread.setName("MUSICBOT-TASK-SHARDSRELOAD-" + this);
             thread.start();
         }
     }
 
     public void stop() {
-        thread.interrupt();
+        this.thread.interrupt();
     }
 }
