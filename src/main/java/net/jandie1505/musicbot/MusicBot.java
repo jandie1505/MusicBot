@@ -33,6 +33,7 @@ public class MusicBot {
     // INSTANCE
     private Console console;
     private ShardManager shardManager;
+    private final DatabaseManager databaseManager;
     private final GMS gms;
     private int shardsTotal = 1;
     private boolean publicMode;
@@ -47,6 +48,7 @@ public class MusicBot {
         this.console = new Console();
         this.console.start();
 
+        this.databaseManager = new DatabaseManager(this);
         this.gms = new GMS(this);
 
         if(args.length >= 4) {
@@ -425,6 +427,10 @@ public class MusicBot {
     // GETTER METHODS
     public ShardManager getShardManager() {
         return shardManager;
+    }
+
+    public DatabaseManager getDatabaseManager() {
+        return this.databaseManager;
     }
 
     public GMS getGMS() {

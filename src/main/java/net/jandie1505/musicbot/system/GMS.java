@@ -29,13 +29,13 @@ public class GMS {
 
     public void reloadGuilds(boolean completeReload) {
         Console.messageGMS("Checking database guilds...");
-        for(String guildId : DatabaseManager.getRegisteredGuilds()) {
+        for(String guildId : this.musicBot.getDatabaseManager().getRegisteredGuilds()) {
             Guild g = this.musicBot.getShardManager().getGuildById(guildId);
             if(g == null) {
                 if(!this.musicBot.completeOnline()) {
                     Console.messageGMS("Guild " + guildId + " will not be deleted because not all shards are online", true);
                 } else {
-                    DatabaseManager.deleteGuild(guildId);
+                    this.musicBot.getDatabaseManager().deleteGuild(guildId);
                     Console.messageGMS("Deleted guild " + guildId + " because it's null", true);
                 }
             }
@@ -46,7 +46,7 @@ public class GMS {
                 if(completeReload) {
                     setupGuild(g);
                 } else {
-                    if(!DatabaseManager.getRegisteredGuilds().contains(g.getId())) {
+                    if(!this.musicBot.getDatabaseManager().getRegisteredGuilds().contains(g.getId())) {
                         setupGuild(g);
                         Console.messageGMS("Added guild " + g.getId() + " to database", true);
                     }
@@ -61,7 +61,7 @@ public class GMS {
         if(g != null) {
             g.leave().queue();
         }
-        DatabaseManager.deleteGuild(guildId);
+        this.musicBot.getDatabaseManager().deleteGuild(guildId);
         Console.messageDB("Left guild " + guildId, true);
     }
 
@@ -87,13 +87,13 @@ public class GMS {
                 Console.messageDB("Left guild " + guildId, true);
             }));
         }
-        DatabaseManager.deleteGuild(guildId);
+        this.musicBot.getDatabaseManager().deleteGuild(guildId);
     }
 
     public void setupGuild(Guild g) {
         if(g != null) {
             String guildId = g .getId();
-            if(!this.musicBot.getPublicMode() && !DatabaseManager.isGuildWhitelisted(g.getId())) {
+            if(!this.musicBot.getPublicMode() && !this.musicBot.getDatabaseManager().isGuildWhitelisted(g.getId())) {
                 this.leaveGuild(g.getId());
                 Console.messageGMS("Removed bot from guild " + guildId + " because it is not whitelisted");
             } else {
@@ -111,7 +111,7 @@ public class GMS {
                     this.leaveGuild(g.getId(), "Missing permissions");
                     Console.messageGMS("Removed bot from guild " + guildId + " because of missing permissions");
                 } else {
-                    DatabaseManager.registerGuild(g.getId());
+                    this.musicBot.getDatabaseManager().registerGuild(g.getId());
                     setupCommands(g);
                     reloadDJRoles(g.getId());
                     Console.messageGMS("Guild " + g.getId() + " was set up");
@@ -259,10 +259,10 @@ public class GMS {
     // DJ Roles
     public void addDJRole(String guildId, String roleId) {
         try {
-            JSONArray moderatorRoles = new JSONArray(DatabaseManager.getDJRoles(guildId));
+            JSONArray moderatorRoles = new JSONArray(this.musicBot.getDatabaseManager().getDJRoles(guildId));
             if(!moderatorRoles.toList().contains(roleId)) {
                 moderatorRoles.put(roleId);
-                DatabaseManager.setDJRoles(guildId, moderatorRoles.toString());
+                this.musicBot.getDatabaseManager().setDJRoles(guildId, moderatorRoles.toString());
                 Console.messageGMS("Added moderator role " + roleId + " on guild " + guildId);
             }
         } catch(Exception ignored) {}
@@ -270,10 +270,10 @@ public class GMS {
 
     public void removeDJRole(String guildId, String roleId) {
         try {
-            JSONArray moderatorRoles = new JSONArray(DatabaseManager.getDJRoles(guildId));
+            JSONArray moderatorRoles = new JSONArray(this.musicBot.getDatabaseManager().getDJRoles(guildId));
             if(moderatorRoles.toList().contains(roleId)) {
                 moderatorRoles.remove(moderatorRoles.toList().indexOf(roleId));
-                DatabaseManager.setDJRoles(guildId, moderatorRoles.toString());
+                this.musicBot.getDatabaseManager().setDJRoles(guildId, moderatorRoles.toString());
                 Console.messageGMS("Removed moderator role " + roleId + " on guild " + guildId);
             }
         } catch(Exception ignored) {}
@@ -281,9 +281,9 @@ public class GMS {
 
     public void clearDJRoles(String guildId) {
         try {
-            JSONArray moderatorRoles = new JSONArray(DatabaseManager.getDJRoles(guildId));
+            JSONArray moderatorRoles = new JSONArray(this.musicBot.getDatabaseManager().getDJRoles(guildId));
             moderatorRoles.clear();
-            DatabaseManager.setDJRoles(guildId, moderatorRoles.toString());
+            this.musicBot.getDatabaseManager().setDJRoles(guildId, moderatorRoles.toString());
             Console.messageGMS("Cleared moderator roles on guild " + guildId);
         } catch(Exception ignored) {}
     }
@@ -292,7 +292,7 @@ public class GMS {
         List<String> returnList = new ArrayList<>();
 
         try {
-            JSONArray moderatorRoles = new JSONArray(DatabaseManager.getDJRoles(guildId));
+            JSONArray moderatorRoles = new JSONArray(this.musicBot.getDatabaseManager().getDJRoles(guildId));
             for(Object roleIdObject : moderatorRoles) {
                 String roleId = (String) roleIdObject;
                 returnList.add(roleId);
@@ -329,7 +329,7 @@ public class GMS {
         /*if(m != null) {
             if(memberHasDJPermissions(m)) {
                 return true;
-            } else if(DatabaseManager.getRestrictToRoles(m.getGuild().getId()) >= 1) {
+            } else if(this.musicBot.getDatabaseManager().getRestrictToRoles(m.getGuild().getId()) >= 1) {
                 return true;
             }
         }
@@ -343,7 +343,7 @@ public class GMS {
             return true;
         } else if(m.hasPermission(Permission.MANAGE_CHANNEL) || m.hasPermission(Permission.MANAGE_SERVER)) {
             return true;
-        } else if(DatabaseManager.getRestrictToRoles(m.getGuild().getId()) >= 2) {
+        } else if(this.musicBot.getDatabaseManager().getRestrictToRoles(m.getGuild().getId()) >= 2) {
             return true;
         } else {
             for(String roleId : this.getDJRoles(m.getGuild().getId())) {
@@ -368,33 +368,33 @@ public class GMS {
     // BLACKLIST
     public boolean isBlacklisted(Guild g, String link) {
         if(g != null) {
-            return !DatabaseManager.getGlobalBlacklist().contains(link) || !DatabaseManager.getBlacklist(g.getId()).contains(link);
+            return !this.musicBot.getDatabaseManager().getGlobalBlacklist().contains(link) || !this.musicBot.getDatabaseManager().getBlacklist(g.getId()).contains(link);
         } else {
             return false;
         }
     }
     public boolean isBlacklisted(Guild g, Member m, AudioTrack audioTrack) {
         if(g != null) {
-            if(DatabaseManager.getGlobalBlacklist().contains(audioTrack.getInfo().uri) || DatabaseManager.getGlobalBlacklist().contains(audioTrack.getIdentifier())) {
+            if(this.musicBot.getDatabaseManager().getGlobalBlacklist().contains(audioTrack.getInfo().uri) || this.musicBot.getDatabaseManager().getGlobalBlacklist().contains(audioTrack.getIdentifier())) {
                 return true;
             }
-            if(DatabaseManager.getGlobalArtistBlacklist().contains(audioTrack.getInfo().author)) {
+            if(this.musicBot.getDatabaseManager().getGlobalArtistBlacklist().contains(audioTrack.getInfo().author)) {
                 return true;
             }
-            for(String string : DatabaseManager.getGlobalKeywordBlacklist()) {
+            for(String string : this.musicBot.getDatabaseManager().getGlobalKeywordBlacklist()) {
                 if(audioTrack.getInfo().title.contains(string)) {
                     return true;
                 }
             }
 
             if(this.memberHasAdminPermissions(m)) {
-                if(DatabaseManager.getBlacklist(g.getId()).contains(audioTrack.getInfo().uri) || DatabaseManager.getBlacklist(g.getId()).contains(audioTrack.getIdentifier())) {
+                if(this.musicBot.getDatabaseManager().getBlacklist(g.getId()).contains(audioTrack.getInfo().uri) || this.musicBot.getDatabaseManager().getBlacklist(g.getId()).contains(audioTrack.getIdentifier())) {
                     return true;
                 }
-                if(DatabaseManager.getArtistBlacklist(g.getId()).contains(audioTrack.getInfo().author)) {
+                if(this.musicBot.getDatabaseManager().getArtistBlacklist(g.getId()).contains(audioTrack.getInfo().author)) {
                     return true;
                 }
-                for(String string : DatabaseManager.getKeywordBlacklist(g.getId())) {
+                for(String string : this.musicBot.getDatabaseManager().getKeywordBlacklist(g.getId())) {
                     if(audioTrack.getInfo().title.contains(string)) {
                         return true;
                     }
