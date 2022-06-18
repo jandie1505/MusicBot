@@ -42,7 +42,7 @@ public class MusicBot {
     private final int shardsTotal;
 
     public MusicBot(String token, int shardsCount, boolean disableShardsCheck, boolean ignoreConfigFile) throws LoginException, SQLException, IOException, ClassNotFoundException {
-        this.console = new Console();
+        this.console = new Console(this);
         this.console.start();
 
         this.configManager = new ConfigManager(this);
