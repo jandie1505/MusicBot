@@ -7,6 +7,8 @@ public class BotConfig {
     private boolean publicMode;
     private String botOwner;
     private boolean disableShardsCheck;
+    private String spotifyClientId;
+    private String spotifyClientSecret;
 
     public BotConfig() {
         this.token = "";
@@ -14,6 +16,8 @@ public class BotConfig {
         this.publicMode = false;
         this.botOwner = "";
         this.disableShardsCheck = false;
+        this.spotifyClientId = "";
+        this.spotifyClientSecret = "";
     }
 
 
@@ -59,5 +63,21 @@ public class BotConfig {
 
     public void setDisableShardsCheck(boolean disableShardsCheck) {
         this.disableShardsCheck = disableShardsCheck;
+    }
+
+    public String getSpotifyClientId() {
+        return spotifyClientId;
+    }
+
+    public void setSpotifyClientId(String spotifyClientId) {
+        this.spotifyClientId = spotifyClientId;
+    }
+
+    public String getSpotifyClientSecret() {
+        return spotifyClientSecret;
+    }
+
+    public void setSpotifyClientSecret(String spotifyClientSecret) {
+        this.spotifyClientSecret = spotifyClientSecret;
     }
 }

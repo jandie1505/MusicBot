@@ -14,10 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SpotifySearchHandler {
-    private static String clientId = "";
-    private static String clientSecret = "";
-
-    public static List<AudioTrack> search(String playlistlink) {
+    public static List<AudioTrack> search(String playlistlink, String clientId, String clientSecret) {
         List<AudioTrack> returnList = new ArrayList<>();
 
         if(((clientSecret != null) && (!clientSecret.equals("")) && (clientId != null ) && (!clientId.equals("")))) {
@@ -61,13 +58,5 @@ public class SpotifySearchHandler {
         }
 
         return returnList;
-    }
-
-    public static void setClientId(String id) {
-        clientId = id;
-    }
-
-    public static void setClientSecret(String secret) {
-        clientSecret = secret;
     }
 }

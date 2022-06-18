@@ -59,6 +59,18 @@ public class ConfigManager {
         } catch (JSONException | IllegalArgumentException e) {
 
         }
+
+        try {
+            this.config.setSpotifyClientId(jsonConfig.getString("spotifyClientId"));
+        } catch (JSONException | IllegalArgumentException e) {
+
+        }
+
+        try {
+            this.config.setSpotifyClientSecret(jsonConfig.getString("spotifyClientSecret"));
+        } catch (JSONException | IllegalArgumentException e) {
+
+        }
     }
 
     public void saveConfig(File file) throws IOException {
@@ -68,6 +80,8 @@ public class ConfigManager {
         jsonConfig.put("shardsCount", this.config.getShardsCount());
         jsonConfig.put("publicMode", this.config.isPublicMode());
         jsonConfig.put("botOwner", this.config.getBotOwner());
+        jsonConfig.put("spotifyClientId", this.config.getSpotifyClientId());
+        jsonConfig.put("spotifyClientSecret", this.config.getSpotifyClientSecret());
 
         FileWriter writer = new FileWriter(file);
         writer.write(jsonConfig.toString(4));
