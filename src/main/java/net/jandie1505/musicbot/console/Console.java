@@ -1,5 +1,7 @@
 package net.jandie1505.musicbot.console;
 
+import net.jandie1505.musicbot.MusicBot;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
@@ -10,37 +12,36 @@ public class Console implements Runnable {
     private static boolean DBMLogging;
 
     // NOT STATIC
+    private final MusicBot musicBot;
     private Thread thread;
 
-    public Console() {
-        thread = new Thread(this);
+    public Console(MusicBot musicBot) {
+        this.musicBot = musicBot;
     }
 
     @Override
     public void run() {
         System.out.println("Console started");
-        while(!thread.isInterrupted()) {
+        while(thread == Thread.currentThread() && !thread.isInterrupted() && musicBot.isOperational()) {
             try {
                 Scanner scan = new Scanner(System.in);
-                System.out.println(Commands.command(scan.nextLine()));
+                System.out.println(Commands.command(musicBot, scan.nextLine()));
             } catch(Exception ignored) {}
         }
         System.out.println("Console stopped");
     }
 
     public void start() {
-        if(!thread.isAlive()) {
+        if(this.thread == null || !thread.isAlive()) {
+            this.thread = new Thread(this);
+            this.thread.setName("MUSICBOT-CONSOLE-" + this);
             thread.start();
         }
     }
 
-    /*
     public void stop() {
-        thread.interrupt();
+        this.thread.interrupt();
     }
-     */
-
-
 
     // STATIC
     public static void messageShardManager(String msg) {
