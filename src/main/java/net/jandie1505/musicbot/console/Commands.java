@@ -53,6 +53,8 @@ public class Commands {
                         returnString = verboseCommand(musicBot, cmd);
                     } else if(cmd[0].equalsIgnoreCase("help")) {
                         returnString = helpCommand(cmd);
+                    } else if(cmd[0].equalsIgnoreCase("config")) {
+                        returnString = configCommand(musicBot, cmd);
                     }
                     else {
                         returnString = "Unknown command. Use help for a list of available commands.";
@@ -346,14 +348,6 @@ public class Commands {
                 musicBot.startShard(Integer.parseInt(cmd[2]));
             } else if(cmd[1].equalsIgnoreCase("stop")) {
                 musicBot.stopShard(Integer.parseInt(cmd[2]));
-            } else if(cmd[1].equalsIgnoreCase("disableshardscheck <true/false>")) {
-                if(cmd[2].equalsIgnoreCase("true")) {
-                    musicBot.getConfigManager().getConfig().setDisableShardsCheck(true);
-                    returnString = "SENT ENABLE DISABLE SHARDS CHECK COMMAND";
-                } else {
-                    musicBot.getConfigManager().getConfig().setDisableShardsCheck(false);
-                    returnString = "SENT DISABLE DISABLE SHARDS CHECK COMMAND";
-                }
             }
         } else {
             returnString = "shards list\n" +
@@ -555,6 +549,57 @@ public class Commands {
         }
 
         return returnString;
+    }
+
+    private static String configCommand(MusicBot musicBot, String[] cmd) {
+        if(cmd.length >= 2) {
+            if((cmd.length == 2 || cmd.length == 3) && cmd[1].equalsIgnoreCase("list")) {
+                String token;
+                String spotifyClientSecret;
+
+                if(cmd.length == 3 && cmd[2].equalsIgnoreCase("showhiddenoptions")) {
+                    token = musicBot.getConfigManager().getConfig().getToken();
+                    spotifyClientSecret = musicBot.getConfigManager().getConfig().getSpotifyClientSecret();
+                } else {
+                    token = "-hidden-";
+                    spotifyClientSecret = "-hidden-";
+                }
+
+                return "CONFIG OPTIONS:\n" +
+                        "token: " + token + "\n" +
+                        "publicMode: " + musicBot.getConfigManager().getConfig().isPublicMode() + "\n" +
+                        "shardsCount: " + musicBot.getConfigManager().getConfig().getShardsCount() + "\n" +
+                        "botOwner: " + musicBot.getConfigManager().getConfig().getBotOwner() + "\n" +
+                        "disableShardsCheck: " + musicBot.getConfigManager().getConfig().isDisableShardsCheck() + "\n" +
+                        "spotifyClientId: " + musicBot.getConfigManager().getConfig().getSpotifyClientId() + "\n" +
+                        "spotifyClientSecret: " + spotifyClientSecret + "\n";
+            } else if(cmd.length == 4 && cmd[1].equalsIgnoreCase("set")) {
+                if(cmd[2].equalsIgnoreCase("publicMode")) {
+                    musicBot.getConfigManager().getConfig().setPublicMode(Boolean.parseBoolean(cmd[3]));
+                    return "Updated value publicMode to " + Boolean.parseBoolean(cmd[3]);
+                } else if(cmd[2].equalsIgnoreCase("botOwner")) {
+                    musicBot.getConfigManager().getConfig().setBotOwner(cmd[3]);
+                    return "Updated botOwner to " + cmd[3];
+                } else if(cmd[2].equalsIgnoreCase("disableShardsCheck")) {
+                    musicBot.getConfigManager().getConfig().setDisableShardsCheck(Boolean.parseBoolean(cmd[3]));
+                    return "Updated value disableShardsCheck to " + Boolean.parseBoolean(cmd[3]);
+                } else if(cmd[2].equalsIgnoreCase("spotifyClientId")) {
+                    musicBot.getConfigManager().getConfig().setSpotifyClientId(cmd[3]);
+                    return "Updated spotifyClientId to " + cmd[3];
+                } else if(cmd[2].equalsIgnoreCase("spotifyClientSecret")) {
+                    musicBot.getConfigManager().getConfig().setSpotifyClientSecret(cmd[3]);
+                    return "Updated spotifyClientSecret";
+                } else {
+                    return "This config option can't be changed via config command or does not exist";
+                }
+            } else {
+                return "Run command without arguments for help";
+            }
+        } else {
+            return "CONFIG COMMAND USAGE:\n" +
+                    "config list\n" +
+                    "config set <option> <value>";
+        }
     }
 
     private static String helpCommand(String[] cmd) {
