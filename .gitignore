@@ -2,3 +2,4 @@
 *.class
 /out/
 /target/
+/config.json

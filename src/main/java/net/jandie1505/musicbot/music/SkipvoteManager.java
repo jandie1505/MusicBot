@@ -12,9 +12,9 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class SkipvoteManager implements Runnable {
-    private static List<SkipvoteManager> objectList = new ArrayList<>();
-    private MusicPlayer musicPlayer;
-    private List<Member> memberList;
+    private static final List<SkipvoteManager> objectList = new ArrayList<>();
+    private final MusicPlayer musicPlayer;
+    private final List<Member> memberList;
     private int timer;
     private double membercount;
     private double votecount;
@@ -32,7 +32,7 @@ public class SkipvoteManager implements Runnable {
 
     @Override
     public void run() {
-        Guild g = MusicBot.getShardManager().getGuildById(MusicManager.getGuildIdFromMusicPlayer(musicPlayer));
+        Guild g = musicPlayer.getMusicManager().getMusicBot().getShardManager().getGuildById(musicPlayer.getMusicManager().getGuildIdFromMusicPlayer(musicPlayer));
         while(!thread.isInterrupted()) {
             try {
                 if(g != null && musicPlayer != null && g.getSelfMember().getVoiceState().inAudioChannel()) {

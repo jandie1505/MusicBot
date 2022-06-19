@@ -209,7 +209,7 @@ public class MusicManager {
         if(musicPlayers.containsKey(guildId)) {
             return musicPlayers.get(guildId);
         } else {
-            MusicPlayer musicPlayer = new MusicPlayer();
+            MusicPlayer musicPlayer = new MusicPlayer(this);
             musicPlayers.put(guildId, musicPlayer);
             return musicPlayer;
         }

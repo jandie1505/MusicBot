@@ -12,6 +12,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.jandie1505.musicbot.system.GMS;
+import net.jandie1505.musicbot.system.MusicManager;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class MusicPlayer {
+    private final MusicManager musicManager;
     private AudioPlayerManager playerManager;
     private AudioPlayer player;
     private AudioPlayerSendHandler playerSendHandler;
@@ -27,7 +29,8 @@ public class MusicPlayer {
     private List<AudioTrack> queue;
     private SkipvoteManager skipvoteManager;
 
-    public MusicPlayer() {
+    public MusicPlayer(MusicManager musicManager) {
+        this.musicManager = musicManager;
         playerManager = new DefaultAudioPlayerManager();
         AudioSourceManagers.registerRemoteSources(playerManager);
         player = playerManager.createPlayer();
@@ -70,7 +73,7 @@ public class MusicPlayer {
         playerManager.loadItem(source, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack audioTrack) {
-                if(!GMS.isBlacklisted(event.getGuild(), event.getMember(), audioTrack)) {
+                if(!musicManager.getMusicBot().getGMS().isBlacklisted(event.getGuild(), event.getMember(), audioTrack)) {
                     queue.add(audioTrack);
                     EmbedBuilder embedBuilder = new EmbedBuilder()
                             .setDescription("Added " + audioTrack.getInfo().title + " [" + audioTrack.getInfo().author + "] to queue")
@@ -91,7 +94,7 @@ public class MusicPlayer {
             public void playlistLoaded(AudioPlaylist audioPlaylist) {
                 boolean blacklisted = false;
                 for(AudioTrack track : audioPlaylist.getTracks()) {
-                    if(!GMS.isBlacklisted(event.getGuild(), event.getMember(), track)) {
+                    if(!musicManager.getMusicBot().getGMS().isBlacklisted(event.getGuild(), event.getMember(), track)) {
                         queue.add(track);
                     } else {
                         blacklisted = true;
@@ -261,7 +264,7 @@ public class MusicPlayer {
         playerManager.loadItem(source, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack audioTrack) {
-                if(!GMS.isBlacklisted(event.getGuild(), event.getMember(), audioTrack)) {
+                if(!musicManager.getMusicBot().getGMS().isBlacklisted(event.getGuild(), event.getMember(), audioTrack)) {
                     play(audioTrack);
                     EmbedBuilder embedBuilder = new EmbedBuilder()
                             .setDescription("Playing " + audioTrack.getInfo().title + " [" + audioTrack.getInfo().author + "] now")
@@ -320,6 +323,10 @@ public class MusicPlayer {
     }
 
     // GETTER
+    public MusicManager getMusicManager() {
+        return this.musicManager;
+    }
+
     public AudioPlayerSendHandler getAudioSendHandler() {
         return playerSendHandler;
     }

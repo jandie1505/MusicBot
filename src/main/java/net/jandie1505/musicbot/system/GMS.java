@@ -101,7 +101,7 @@ public class GMS {
     public void setupGuild(Guild g) {
         if(g != null) {
             String guildId = g .getId();
-            if(!this.musicBot.getPublicMode() && !this.musicBot.getDatabaseManager().isGuildWhitelisted(g.getId())) {
+            if(!this.musicBot.getConfigManager().getConfig().isPublicMode() && !this.musicBot.getDatabaseManager().isGuildWhitelisted(g.getId())) {
                 this.leaveGuild(g.getId());
                 Console.messageGMS("Removed bot from guild " + guildId + " because it is not whitelisted");
             } else {

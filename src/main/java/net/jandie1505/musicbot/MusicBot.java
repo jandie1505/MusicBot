@@ -21,6 +21,7 @@ import net.jandie1505.musicbot.system.DatabaseManager;
 import net.jandie1505.musicbot.system.GMS;
 import net.jandie1505.musicbot.system.MusicManager;
 import net.jandie1505.musicbot.tasks.TaskShardsReload;
+import org.json.JSONException;
 
 import javax.security.auth.login.LoginException;
 import java.io.File;
@@ -56,10 +57,11 @@ public class MusicBot {
 
                 if(!configFile.exists()) {
                     configFile.createNewFile();
+                    this.configManager.saveConfig(configFile);
                 }
 
                 this.configManager.loadConfig(configFile);
-            } catch (IOException e) {
+            } catch (IOException | JSONException e) {
 
             }
         }
