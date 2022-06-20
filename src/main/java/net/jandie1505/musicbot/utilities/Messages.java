@@ -154,6 +154,33 @@ public class Messages {
         }
     }
 
+    public static MessageBuilder getHelpMessage() {
+        return new MessageBuilder()
+                .setEmbeds(
+                        new EmbedBuilder()
+                                .setTitle("MusicBot Help")
+                                .setDescription("MusicBot by jandie1505")
+                                .addField("For users:", "/play <song name / link> - Add a specific song to queue\n" +
+                                        "/skip - Skipvote a specific song\n" +
+                                        "/nowplaying - Get the song that is currently playing\n" +
+                                        "/queue - Show the queue\n" +
+                                        "/queue <index> - Show the queue from a certain index (\"Queue pages\")\n" +
+                                        "/search <song name> - Search for a specific song and list the result\n", false)
+                                .addField("For DJs:", "/stop and /pause - Pause the player\n" +
+                                        "/play - Resume the player\n" +
+                                        "/leave - Disconnect the bot\n" +
+                                        "/forceskip - Skip a track\n" +
+                                        "/movetrack <from> <to> -Move a specific track in queue\n" +
+                                        "/remove <index> - Remove a specific song from queue\n" +
+                                        "/clear - Clear the queue\n" +
+                                        "/shuffle - Shuffles the queue\n" +
+                                        "/volume <0-200> - Change the volume\n" +
+                                        "/playnow <song name / link> - Plays a specific song immediately\n", false)
+                                .addField("For Admins:", "/mbsettings - Change settings of the bot", false)
+                                .build()
+                );
+    }
+
     // UTILITY
     public static String formatTime(long millis) {
         return String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(millis), TimeUnit.MILLISECONDS.toMinutes(millis) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis)), TimeUnit.MILLISECONDS.toSeconds(millis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis)));

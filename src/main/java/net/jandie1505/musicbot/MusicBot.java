@@ -1,5 +1,6 @@
 package net.jandie1505.musicbot;
 
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
@@ -13,21 +14,31 @@ import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
 import net.dv8tion.jda.api.sharding.ShardManager;
 import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 import net.jandie1505.musicbot.config.ConfigManager;
+import net.jandie1505.musicbot.console.Commands;
 import net.jandie1505.musicbot.console.Console;
 import net.jandie1505.musicbot.eventlisteners.EventsBasic;
 import net.jandie1505.musicbot.eventlisteners.EventsButtons;
 import net.jandie1505.musicbot.eventlisteners.EventsCommands;
+import net.jandie1505.musicbot.slashcommands.BotOwnerPermissionRequest;
+import net.jandie1505.musicbot.slashcommands.UserPermissionRequest;
 import net.jandie1505.musicbot.system.DatabaseManager;
 import net.jandie1505.musicbot.system.GMS;
 import net.jandie1505.musicbot.system.MusicManager;
 import net.jandie1505.musicbot.tasks.TaskShardsReload;
+import net.jandie1505.musicbot.utilities.Messages;
+import net.jandie1505.slashcommandapi.SlashCommandHandler;
+import net.jandie1505.slashcommandapi.command.SlashCommandBuilder;
+import net.jandie1505.slashcommandapi.utilities.DefaultPermissionRequests;
+import net.jandie1505.slashcommandapi.utilities.DefaultSlashCommandExecutors;
 import org.json.JSONException;
 
 import javax.security.auth.login.LoginException;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class MusicBot {
@@ -217,6 +228,48 @@ public class MusicBot {
             }
         }
         return (shardManager.getShardsRunning() == shardManager.getShardsTotal()) && status;
+    }
+
+    public SlashCommandHandler upsertCommands() {
+        SlashCommandHandler slashCommandHandler = new SlashCommandHandler();
+
+        slashCommandHandler.registerSlashCommand(
+                "cmd",
+                new SlashCommandBuilder()
+                        .executes(interaction -> {
+                            interaction.deferReply().queue();
+                            interaction.getHook().sendMessage(Commands.command(this, interaction.getOption("cmd").getAsString()));
+                            // Logger is planned
+                        })
+                        .executesMissingOptions(DefaultSlashCommandExecutors.missingOptionsExecutor())
+                        .withPermissionRequest(new BotOwnerPermissionRequest(this))
+                        .requireOption("cmd", OptionType.STRING)
+                        .build()
+        );
+
+        slashCommandHandler.registerSlashCommand(
+                "help",
+                new SlashCommandBuilder()
+                        .executes(interaction -> {
+                            interaction.reply(Messages.getHelpMessage().build()).queue();
+                        })
+                        .withPermissionRequest(DefaultPermissionRequests.publicCommand())
+                        .build()
+        );
+
+        slashCommandHandler.registerSlashCommand(
+                "play",
+                new SlashCommandBuilder()
+                        .executes(interaction -> {
+
+                        })
+                        .executesNoPermission(DefaultSlashCommandExecutors.noPermissionExecutor())
+                        .withPermissionRequest(new UserPermissionRequest(this))
+                        .requireGuild(true)
+                        .build()
+        );
+
+        return slashCommandHandler;
     }
 
     // UPSERT COMMANDS
