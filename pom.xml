@@ -29,7 +29,7 @@
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>5.0.0-alpha.12</version>
+            <version>5.0.0-alpha.19</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
@@ -39,12 +39,12 @@
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
-            <version>3.36.0.3</version>
+            <version>3.39.3.0</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.2.11</version>
+            <version>1.2.8</version>
         </dependency>
         <dependency>
             <groupId>org.json</groupId>
@@ -64,7 +64,7 @@
         <dependency>
             <groupId>se.michaelthelin.spotify</groupId>
             <artifactId>spotify-web-api-java</artifactId>
-            <version>7.1.0</version>
+            <version>7.2.0</version>
         </dependency>
         <dependency>
             <groupId>com.github.jandie1505</groupId>

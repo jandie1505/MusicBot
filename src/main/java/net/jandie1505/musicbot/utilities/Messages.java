@@ -2,19 +2,21 @@ package net.jandie1505.musicbot.utilities;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.Component;
+import net.dv8tion.jda.api.interactions.components.ItemComponent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.jandie1505.musicbot.MusicBot;
 
 import java.awt.*;
 import java.util.concurrent.TimeUnit;
 
 public class Messages {
-    public static MessageBuilder nowplayingMessage(MusicBot musicBot, Guild g, boolean showbuttons) {
+    public static MessageCreateBuilder nowplayingMessage(MusicBot musicBot, Guild g, boolean showbuttons) {
         if(musicBot.getMusicManager().getPlayingTrack(g) != null) {
-            MessageBuilder messageBuilder = new MessageBuilder();
+            MessageCreateBuilder messageBuilder = new MessageCreateBuilder();
             AudioTrack audioTrack = musicBot.getMusicManager().getPlayingTrack(g);
             String description = "";
             if(musicBot.getMusicManager().isPaused(g)) {
@@ -35,13 +37,13 @@ public class Messages {
 
             if(showbuttons) {
                 if(musicBot.getMusicManager().isPaused(g)) {
-                    messageBuilder.setActionRows(ActionRow.of(
+                    messageBuilder.addComponents(ActionRow.of(
                             Button.primary("playbutton", "▶"),
                             Button.primary("nowplayingskipbutton", "⏭"),
                             Button.secondary("refreshbutton", "\uD83D\uDD04")
                     ));
                 } else if(!musicBot.getMusicManager().isPaused(g)) {
-                    messageBuilder.setActionRows(ActionRow.of(
+                    messageBuilder.addComponents(ActionRow.of(
                             Button.primary("pausebutton", "⏸"),
                             Button.primary("nowplayingskipbutton", "⏭"),
                             Button.secondary("refreshbutton", "\uD83D\uDD04")
@@ -63,7 +65,7 @@ public class Messages {
 
             return messageBuilder;
         } else {
-            MessageBuilder messageBuilder = new MessageBuilder();
+            MessageCreateBuilder messageBuilder = new MessageCreateBuilder();
             String channelString = "";
             if(g.getSelfMember().getVoiceState().inAudioChannel()) {
                 channelString = g.getSelfMember().getVoiceState().getChannel().getName();
@@ -75,7 +77,7 @@ public class Messages {
                     .setDescription(":stop_button: ▬▬▬▬▬▬▬▬▬▬ `--:--:--/--:--:--` \nAuthor: ---\nChannel: " + channelString);
             messageBuilder.setEmbeds(noMusicPlaying.build());
 
-            messageBuilder.setActionRows(ActionRow.of(
+            messageBuilder.setComponents(ActionRow.of(
                     Button.secondary("refreshbutton", "\uD83D\uDD04")
             ));
 
@@ -83,9 +85,9 @@ public class Messages {
         }
     }
 
-    public static MessageBuilder getQueueMessage(MusicBot musicBot, Guild g, int indexOption) {
+    public static MessageCreateBuilder getQueueMessage(MusicBot musicBot, Guild g, int indexOption) {
         if(!musicBot.getMusicManager().getQueue(g).isEmpty()) {
-            MessageBuilder messageBuilder = new MessageBuilder();
+            MessageCreateBuilder messageBuilder = new MessageCreateBuilder();
             if(indexOption != 0) {
                 String queue = "";
                 int index = 0;
@@ -137,14 +139,14 @@ public class Messages {
                         .addField("Queue:", queue, false);
                 messageBuilder.setEmbeds(queueFull.build());
 
-                messageBuilder.setActionRows(ActionRow.of(
+                messageBuilder.setComponents(ActionRow.of(
                         Button.primary("queuenext", "➡")
                 ));
 
                 return messageBuilder;
             }
         } else {
-            MessageBuilder messageBuilder = new MessageBuilder();
+            MessageCreateBuilder messageBuilder = new MessageCreateBuilder();
             EmbedBuilder queueEmpty = new EmbedBuilder()
                     .setDescription("The queue is empty")
                     .setColor(Color.RED);
@@ -154,8 +156,8 @@ public class Messages {
         }
     }
 
-    public static MessageBuilder getHelpMessage() {
-        return new MessageBuilder()
+    public static MessageCreateBuilder getHelpMessage() {
+        return new MessageCreateBuilder()
                 .setEmbeds(
                         new EmbedBuilder()
                                 .setTitle("MusicBot Help")
