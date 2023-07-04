@@ -27,11 +27,19 @@ public class Console implements Runnable {
 
         while(thread == Thread.currentThread() && !thread.isInterrupted() && musicBot.isOperational()) {
 
+            String command = MusicBot.LINE_READER.readLine("MusicBot ==> ");
+
             try {
 
-                MusicBot.LINE_READER.printAbove(Commands.command(this.musicBot, MusicBot.LINE_READER.readLine("MusicBot ==> ")));
+                String reply = Commands.command(this.musicBot, command);
+
+                MusicBot.LOGGER.debug("Issued console command " + command + " with response " + reply);
+                MusicBot.LINE_READER.printAbove(reply);
 
             } catch(Exception e) {
+
+                MusicBot.LOGGER.debug("Issued console command " + command + " threw an exception", e);
+                MusicBot.LINE_READER.printAbove("Error while executing command " + command + " [" + e.toString() + "]");
 
             }
 
