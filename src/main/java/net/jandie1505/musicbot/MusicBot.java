@@ -1,6 +1,5 @@
 package net.jandie1505.musicbot;
 
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
@@ -30,20 +29,41 @@ import net.jandie1505.slashcommandapi.SlashCommandHandler;
 import net.jandie1505.slashcommandapi.command.SlashCommandBuilder;
 import net.jandie1505.slashcommandapi.utilities.DefaultPermissionRequests;
 import net.jandie1505.slashcommandapi.utilities.DefaultSlashCommandExecutors;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
 import org.json.JSONException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.security.auth.login.LoginException;
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class MusicBot {
     //STATIC
+    public static final Terminal TERMINAL;
+    public static final LineReader LINE_READER;
+    public static final Logger LOGGER;
     private static MusicBot instance;
+
+    static {
+        try {
+            TERMINAL = TerminalBuilder.builder()
+                    .system(true)
+                    .build();
+            LINE_READER = LineReaderBuilder.builder()
+                    .terminal(TERMINAL)
+                    .build();
+            LOGGER = LoggerFactory.getLogger(MusicBot.class);
+        } catch (IOException e) {
+            throw new RuntimeException(e.toString());
+        }
+    }
 
     // INSTANCE
     private final Console console;
@@ -115,7 +135,7 @@ public class MusicBot {
         this.musicManager = new MusicManager(this);
         this.musicManager.reloadPlayers();
 
-        Console.defaultMessage(
+        MusicBot.LINE_READER.printAbove(
                 "*****************************************\n"
                         + "Application ID: " + this.shardManager.retrieveApplicationInfo().getJDA().getSelfUser().getApplicationId() + "\n"
                         + "Username: " + this.shardManager.retrieveApplicationInfo().getJDA().getSelfUser().getName() + "#" + shardManager.retrieveApplicationInfo().getJDA().getSelfUser().getDiscriminator() + "\n"
@@ -125,7 +145,7 @@ public class MusicBot {
     }
 
     public void shutdown() {
-        System.out.println("*****************\n" +
+        MusicBot.LINE_READER.printAbove("*****************\n" +
                 "* SHUTTING DOWN *\n" +
                 "*****************\n");
         try {
@@ -142,7 +162,7 @@ public class MusicBot {
         if(shardId >= 0) {
             new Thread(() -> {
                 shardManager.start(shardId);
-                Console.messageShardManager("Started new shard with id " + shardId);
+                this.shardManagerInfo("Started new shard with id " + shardId);
             }).start();
         }
     }
@@ -152,7 +172,7 @@ public class MusicBot {
             for(JDA jda : shardManager.getShards()) {
                 if(jda.getShardInfo().getShardId() == shardId) {
                     shardManager.shutdown(shardId);
-                    Console.messageShardManager("Stopped and removed shard with id " + shardId);
+                    this.shardManagerInfo("Stopped and removed shard with id " + shardId);
                 }
             }
         }).start();
@@ -163,7 +183,7 @@ public class MusicBot {
             for(JDA jda : shardManager.getShards()) {
                 if(jda.getShardInfo().getShardId() == shardId) {
                     shardManager.restart(shardId);
-                    Console.messageShardManager("Restarted shard with id " + shardId);
+                    this.shardManagerInfo("Restarted shard with id " + shardId);
                 }
             }
         }).start();
@@ -181,7 +201,7 @@ public class MusicBot {
                     shardManager.start(i);
                 }
             }
-            Console.messageShardManager("Started all shards");
+            this.shardManagerInfo("Started all shards");
         }).start();
     }
 
@@ -190,14 +210,14 @@ public class MusicBot {
             for(JDA jda : shardManager.getShards()) {
                 shardManager.shutdown(jda.getShardInfo().getShardId());
             }
-            Console.messageShardManager("Stopped and remove all shards");
+            this.shardManagerInfo("Stopped and remove all shards");
         }).start();
     }
 
     public void restartShards() {
         new Thread(() -> {
             startShards();
-            Console.messageShardManager("Restarted all shards");
+            this.shardManagerInfo("Restarted all shards");
         }).start();
     }
 
@@ -205,10 +225,10 @@ public class MusicBot {
         new Thread(() -> {
             if(shardManager.getShardsRunning() < shardManager.getShardsTotal()) {
                 if(!this.getConfigManager().getConfig().isDisableShardsCheck()) {
-                    Console.messageShardManager("Only " + shardManager.getShardsRunning() + " of " + shardManager.getShardsTotal() + " are online. Auto restarting...");
+                    this.shardManagerInfo("Only " + shardManager.getShardsRunning() + " of " + shardManager.getShardsTotal() + " are online. Auto restarting...");
                     startShards();
                 } else {
-                    Console.messageShardManager("[WARN] Only " + shardManager.getShardsRunning() + " of " + shardManager.getShardsTotal() + " are online");
+                    this.shardManagerWarning("Only " + shardManager.getShardsRunning() + " of " + shardManager.getShardsTotal() + " are online");
                 }
             }
 
@@ -287,114 +307,114 @@ public class MusicBot {
                 CommandData cmdCommand = new CommandDataImpl("cmd", "cmd")
                         .addOptions(new OptionData(OptionType.STRING, "cmd", "cmd").setRequired(true));
                 jda.upsertCommand(cmdCommand).queue();
-                Console.timestampMessage("Registered command cmd");
+                MusicBot.LOGGER.info("Registered command cmd");
             }
             if(!cmdNameList.contains("invite") || reloadall) {
                 CommandData inviteCommand = new CommandDataImpl("invite", "Invite MusicBot to your server");
                 jda.upsertCommand(inviteCommand).queue();
-                Console.timestampMessage("Registered command invite");
+                MusicBot.LOGGER.info("Registered command invite");
             }
             if(!cmdNameList.contains("help") || reloadall) {
                 CommandData commandData = new CommandDataImpl("help", "Get help and information about MusicBot");
                 jda.upsertCommand(commandData).queue();
-                Console.timestampMessage("Registered command help");
+                MusicBot.LOGGER.info("Registered command help");
             }
             if(!cmdNameList.contains("nowplaying") || reloadall) {
                 CommandData nowplayingCommand = new CommandDataImpl("nowplaying", "Shows information about the song which is currently playing");
                 jda.upsertCommand(nowplayingCommand).queue();
-                Console.timestampMessage("Registered command nowplaying");
+                MusicBot.LOGGER.info("Registered command nowplaying");
             }
             if(!cmdNameList.contains("queue") || reloadall) {
                 CommandData queueCommand = new CommandDataImpl("queue", "Shows the current queue")
                         .addOptions(new OptionData(OptionType.INTEGER, "index", "Search for queue indexes"));
                 jda.upsertCommand(queueCommand).queue();
-                Console.timestampMessage("Registered command queue");
+                MusicBot.LOGGER.info("Registered command queue");
             }
             if(!cmdNameList.contains("play") || reloadall) {
                 CommandData playCommand = new CommandDataImpl("play", "Play a song")
                         .addOptions(new OptionData(OptionType.STRING, "song", "The song link / song name / playlist link you want to play"));
                 jda.upsertCommand(playCommand).queue();
-                Console.timestampMessage("Registered command play");
+                MusicBot.LOGGER.info("Registered command play");
             }
             if(!cmdNameList.contains("add") || reloadall) {
                 CommandData addCommand = new CommandDataImpl("add", "Add a song to queue without starting to play")
                         .addOptions(new OptionData(OptionType.STRING, "song", "The song link / song name / playlist link you want to add").setRequired(true));
                 jda.upsertCommand(addCommand).queue();
-                Console.timestampMessage("Registered command add");
+                MusicBot.LOGGER.info("Registered command add");
             }
             if(!cmdNameList.contains("pause") || reloadall) {
                 CommandData pauseCommand = new CommandDataImpl("pause", "Stop playing music");
                 jda.upsertCommand(pauseCommand).queue();
-                Console.timestampMessage("Registered command pause");
+                MusicBot.LOGGER.info("Registered command pause");
             }
             if(!cmdNameList.contains("remove") || reloadall) {
                 CommandData removeCommand = new CommandDataImpl("remove", "Remove a specific song from the queue")
                         .addOptions(new OptionData(OptionType.INTEGER, "index", "The index of the song you want to remove").setRequired(true));
                 jda.upsertCommand(removeCommand).queue();
-                Console.timestampMessage("Registered command remove");
+                MusicBot.LOGGER.info("Registered command remove");
             }
             if(!cmdNameList.contains("clear") || reloadall) {
                 CommandData clearCommand = new CommandDataImpl("clear", "Clear the queue");
                 jda.upsertCommand(clearCommand).queue();
-                Console.timestampMessage("Registered command clear");
+                MusicBot.LOGGER.info("Registered command clear");
             }
             if(!cmdNameList.contains("search") || reloadall) {
                 CommandData searchCommand = new CommandDataImpl("search", "YTSearchHandler youtube")
                         .addOptions(new OptionData(OptionType.STRING, "query", "The text you want to search for").setRequired(true));
                 jda.upsertCommand(searchCommand).queue();
-                Console.timestampMessage("Registered command search");
+                MusicBot.LOGGER.info("Registered command search");
             }
             if(!cmdNameList.contains("shuffle") || reloadall) {
                 CommandData shuffleCommand = new CommandDataImpl("shuffle", "Shuffle the queue");
                 jda.upsertCommand(shuffleCommand).queue();
-                Console.timestampMessage("Registered command shuffle");
+                MusicBot.LOGGER.info("Registered command shuffle");
             }
             if(!cmdNameList.contains("skip") || reloadall) {
                 CommandData skipCommand = new CommandDataImpl("skip", "Skip a song")
                         .addOptions(new OptionData(OptionType.INTEGER, "position", "Skip to a specific queue position"));
                 jda.upsertCommand(skipCommand).queue();
-                Console.timestampMessage("Registered command skip");
+                MusicBot.LOGGER.info("Registered command skip");
             }
             if(!cmdNameList.contains("removeuser") || reloadall) {
                 CommandData removeUserCommand = new CommandDataImpl("removeuser", "Removes all songs by a specific member")
                         .addOptions(new OptionData(OptionType.USER, "member", "The member you want to remove the music from").setRequired(true));
                 jda.upsertCommand(removeUserCommand).queue();
-                Console.timestampMessage("Registered command removeuser");
+                MusicBot.LOGGER.info("Registered command removeuser");
             }
             if(!cmdNameList.contains("forceskip") || reloadall) {
                 CommandData forceskipCommand = new CommandDataImpl("forceskip", "Force skip a song")
                         .addOptions(new OptionData(OptionType.INTEGER, "position", "Skip to a specific queue position"));
                 jda.upsertCommand(forceskipCommand).queue();
-                Console.timestampMessage("Registered command forceskip");
+                MusicBot.LOGGER.info("Registered command forceskip");
             }
             if(!cmdNameList.contains("movetrack") || reloadall) {
                 CommandData movetrackCommand = new CommandDataImpl("movetrack", "Move a specific track in queue")
                         .addOptions(new OptionData(OptionType.INTEGER, "from", "The track you want to move").setRequired(true))
                         .addOptions(new OptionData(OptionType.INTEGER, "to", "The queue position you want to move the track to").setRequired(true));
                 jda.upsertCommand(movetrackCommand).queue();
-                Console.timestampMessage("Registered command movetrack");
+                MusicBot.LOGGER.info("Registered command movetrack");
             }
             if(!cmdNameList.contains("playnow") || reloadall) {
                 CommandData playnowCommand = new CommandDataImpl("playnow", "Stop the current song and play the specified song immediately")
                         .addOptions(new OptionData(OptionType.STRING, "song", "The song you want to play").setRequired(true));
                 jda.upsertCommand(playnowCommand).queue();
-                Console.timestampMessage("Registered command playnow");
+                MusicBot.LOGGER.info("Registered command playnow");
             }
             if(!cmdNameList.contains("stop") || reloadall) {
                 CommandData stopCommand = new CommandDataImpl("stop", "Stop playing music");
                 jda.upsertCommand(stopCommand).queue();
-                Console.timestampMessage("Registered command stop");
+                MusicBot.LOGGER.info("Registered command stop");
             }
             if(!cmdNameList.contains("volume") || reloadall) {
                 CommandData volumeCommand = new CommandDataImpl("volume", "Change the volume")
                         .addOptions(new OptionData(OptionType.INTEGER, "volume", "Change the volume to this value"));
                 jda.upsertCommand(volumeCommand).queue();
-                Console.timestampMessage("Registered command volume");
+                MusicBot.LOGGER.info("Registered command volume");
             }
             if(!cmdNameList.contains("leave") || reloadall) {
                 CommandData leaveCommand = new CommandDataImpl("leave", "Leave the voice channel");
                 jda.upsertCommand(leaveCommand).queue();
-                Console.timestampMessage("Registered command leave");
+                MusicBot.LOGGER.info("Registered command leave");
             }
             if(!cmdNameList.contains("mbsettings") || reloadall) {
                 SubcommandData mbsettingsInfoCommand = new SubcommandData("info", "See an overview of all settings");
@@ -420,10 +440,10 @@ public class MusicBot {
                         .addSubcommands(mbsettingsKeywordBlacklistCommand)
                         .addSubcommands(mbsettingsArtistBlacklistCommand);
                 jda.upsertCommand(mbsettingsCommand).queue();
-                Console.timestampMessage("Registered command mbsettings");
+                MusicBot.LOGGER.info("Registered command mbsettings");
             }
 
-            Console.messageShardManager("Command setup (Mode: " + reloadall + ")");
+            MusicBot.LOGGER.info("Command setup completed (reloadall=" + reloadall + ")");
         });
     }
 
@@ -456,6 +476,16 @@ public class MusicBot {
 
     public boolean isOperational() {
         return true;
+    }
+
+    // LOGS
+
+    private void shardManagerInfo(String message) {
+        MusicBot.LOGGER.info(message);
+    }
+
+    private void shardManagerWarning(String message) {
+        MusicBot.LOGGER.warn(message);
     }
 
     // STATIC

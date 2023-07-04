@@ -36,19 +36,19 @@ public class GMS {
     }
 
     public void reloadGuilds(boolean completeReload) {
-        Console.messageGMS("Checking database guilds...");
+        this.logInfo("Checking database guilds...");
         for(String guildId : this.musicBot.getDatabaseManager().getRegisteredGuilds()) {
             Guild g = this.musicBot.getShardManager().getGuildById(guildId);
             if(g == null) {
                 if(!this.musicBot.completeOnline()) {
-                    Console.messageGMS("Guild " + guildId + " will not be deleted because not all shards are online", true);
+                    this.logInfo("Guild " + guildId + " will not be deleted because not all shards are online");
                 } else {
                     this.musicBot.getDatabaseManager().deleteGuild(guildId);
-                    Console.messageGMS("Deleted guild " + guildId + " because it's null", true);
+                    this.logInfo("Deleted guild " + guildId + " because it's null");
                 }
             }
         }
-        Console.messageGMS("Checking discord guilds...");
+        this.logInfo("Checking discord guilds...");
         for(Guild g : this.musicBot.getShardManager().getGuilds()) {
             if(g != null) {
                 if(completeReload) {
@@ -56,12 +56,12 @@ public class GMS {
                 } else {
                     if(!this.musicBot.getDatabaseManager().getRegisteredGuilds().contains(g.getId())) {
                         setupGuild(g);
-                        Console.messageGMS("Added guild " + g.getId() + " to database", true);
+                        this.logInfo("Added guild " + g.getId() + " to database");
                     }
                 }
             }
         }
-        Console.messageGMS("Reloaded guilds");
+        this.logInfo("Reloaded guilds");
     }
 
     public void leaveGuild(String guildId) {
@@ -70,7 +70,7 @@ public class GMS {
             g.leave().queue();
         }
         this.musicBot.getDatabaseManager().deleteGuild(guildId);
-        Console.messageDB("Left guild " + guildId, true);
+        this.logInfo("Left guild " + guildId);
     }
 
     public void leaveGuild(String guildId, String reason) {
@@ -85,14 +85,14 @@ public class GMS {
                             .setColor(Color.RED);
                     privateChannel.sendMessage("Left your server " + g.getName() + " (" + g.getId() + ")").setEmbeds(botLeftGuildMessage.build()).queue();
                     g.leave().queue();
-                    Console.messageDB("Left guild " + guildId + " for reason " + reason, true);
+                    this.logInfo("Left guild " + guildId + " for reason " + reason);
                 }, new ErrorHandler().handle(ErrorResponse.CANNOT_SEND_TO_USER, e -> {
                     g.leave().queue();
-                    Console.messageDB("Left guild " + guildId + " for reason " + reason, true);
+                    this.logInfo("Left guild " + guildId + " for reason " + reason);
                 }));
             }, new ErrorHandler().handle(ErrorResponse.UNKNOWN_MEMBER, e -> {
                 g.leave().queue();
-                Console.messageDB("Left guild " + guildId, true);
+                this.logInfo("Left guild " + guildId);
             }));
         }
         this.musicBot.getDatabaseManager().deleteGuild(guildId);
@@ -103,7 +103,7 @@ public class GMS {
             String guildId = g .getId();
             if(!this.musicBot.getConfigManager().getConfig().isPublicMode() && !this.musicBot.getDatabaseManager().isGuildWhitelisted(g.getId())) {
                 this.leaveGuild(g.getId());
-                Console.messageGMS("Removed bot from guild " + guildId + " because it is not whitelisted");
+                this.logDebug("Removed bot from guild " + guildId + " because it is not whitelisted");
             } else {
                 if(!g.getSelfMember().hasPermission(Permission.CREATE_INSTANT_INVITE)
                         || !g.getSelfMember().hasPermission(Permission.NICKNAME_CHANGE)
@@ -117,12 +117,12 @@ public class GMS {
                         || !g.getSelfMember().hasPermission(Permission.VOICE_SPEAK)
                         || !g.getSelfMember().hasPermission(Permission.VOICE_USE_VAD)) {
                     this.leaveGuild(g.getId(), "Missing permissions");
-                    Console.messageGMS("Removed bot from guild " + guildId + " because of missing permissions");
+                    this.logDebug("Removed bot from guild " + guildId + " because of missing permissions");
                 } else {
                     this.musicBot.getDatabaseManager().registerGuild(g.getId());
                     setupCommands(g);
                     reloadDJRoles(g.getId());
-                    Console.messageGMS("Guild " + g.getId() + " was set up");
+                    this.logDebug("Guild " + g.getId() + " was set up");
                 }
             }
         }
@@ -137,7 +137,7 @@ public class GMS {
                     for(Command cmd : commands) {
                         cmd.delete().queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
                             leaveGuild(g.getId(), "Missing permissions for slash commands");
-                            Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
+                            this.logDebug("Left guild " + guildId + " for missing slash command permissions");
                         }));
                     }
 
@@ -182,70 +182,70 @@ public class GMS {
 
                     g.upsertCommand(nowplayingCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
                         leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
+                        this.logDebug("Left guild " + guildId + " for missing slash command permissions");
                     }));
                     g.upsertCommand(queueCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
                         leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
+                        this.logDebug("Left guild " + guildId + " for missing slash command permissions");
                     }));
                     g.upsertCommand(playCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
                         leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
+                        this.logDebug("Left guild " + guildId + " for missing slash command permissions");
                     }));
                     g.upsertCommand(removeCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
                         leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
+                        this.logDebug("Left guild " + guildId + " for missing slash command permissions");
                     }));
                     g.upsertCommand(searchCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
                         leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
+                        this.logDebug("Left guild " + guildId + " for missing slash command permissions");
                     }));
                     g.upsertCommand(shuffleCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
                         leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
+                        this.logDebug("Left guild " + guildId + " for missing slash command permissions");
                     }));
                     g.upsertCommand(skipCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
                         leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
+                        this.logDebug("Left guild " + guildId + " for missing slash command permissions");
                     }));
                     g.upsertCommand(removeUserCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
                         leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
+                        this.logDebug("Left guild " + guildId + " for missing slash command permissions");
                     }));
                     g.upsertCommand(forceskipCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
                         leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
+                        this.logDebug("Left guild " + guildId + " for missing slash command permissions");
                     }));
                     g.upsertCommand(movetrackCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
                         leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
+                        this.logDebug("Left guild " + guildId + " for missing slash command permissions");
                     }));
                     g.upsertCommand(playnowCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
                         leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
+                        this.logDebug("Left guild " + guildId + " for missing slash command permissions");
                     }));
                     g.upsertCommand(stopCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
                         leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
+                        this.logDebug("Left guild " + guildId + " for missing slash command permissions");
                     }));
                     g.upsertCommand(volumeCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
                         leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
+                        this.logDebug("Left guild " + guildId + " for missing slash command permissions");
                     }));
                     g.upsertCommand(leaveCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
                         leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
+                        this.logDebug("Left guild " + guildId + " for missing slash command permissions");
                     }));
                     g.upsertCommand(mbsettingsCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
                         leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
+                        this.logDebug("Left guild " + guildId + " for missing slash command permissions");
                     }));
 
-                    Console.messageGMS("Reloaded commands on guild " + g.getId());
+                    this.logDebug("Reloaded commands on guild " + g.getId());
                 } catch(PermissionException ignored) {}
             }, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
                 leaveGuild(g.getId(), "Missing permissions for slash commands");
-                Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
+                this.logDebug("Left guild " + guildId + " for missing slash command permissions");
             }));
         }
 
@@ -271,7 +271,7 @@ public class GMS {
             if(!moderatorRoles.toList().contains(roleId)) {
                 moderatorRoles.put(roleId);
                 this.musicBot.getDatabaseManager().setDJRoles(guildId, moderatorRoles.toString());
-                Console.messageGMS("Added moderator role " + roleId + " on guild " + guildId);
+                this.logDebug("Added moderator role " + roleId + " on guild " + guildId);
             }
         } catch(Exception ignored) {}
     }
@@ -282,7 +282,7 @@ public class GMS {
             if(moderatorRoles.toList().contains(roleId)) {
                 moderatorRoles.remove(moderatorRoles.toList().indexOf(roleId));
                 this.musicBot.getDatabaseManager().setDJRoles(guildId, moderatorRoles.toString());
-                Console.messageGMS("Removed moderator role " + roleId + " on guild " + guildId);
+                this.logDebug("Removed moderator role " + roleId + " on guild " + guildId);
             }
         } catch(Exception ignored) {}
     }
@@ -292,7 +292,7 @@ public class GMS {
             JSONArray moderatorRoles = new JSONArray(this.musicBot.getDatabaseManager().getDJRoles(guildId));
             moderatorRoles.clear();
             this.musicBot.getDatabaseManager().setDJRoles(guildId, moderatorRoles.toString());
-            Console.messageGMS("Cleared moderator roles on guild " + guildId);
+            this.logDebug("Cleared moderator roles on guild " + guildId);
         } catch(Exception ignored) {}
     }
 
@@ -320,7 +320,7 @@ public class GMS {
                         removeDJRole(guildId, roleId);
                     }
                 }
-                Console.messageGMS("Reloaded moderator roles on guild " + guildId);
+                this.logDebug("Reloaded moderator roles on guild " + guildId);
             }
         } catch(Exception ignored) {}
     }
@@ -413,6 +413,14 @@ public class GMS {
         } else {
             return false;
         }
+    }
+
+    private void logInfo(String message) {
+        MusicBot.LOGGER.info(message);
+    }
+
+    private void logDebug(String message) {
+        MusicBot.LOGGER.debug(message);
     }
 
     public MusicBot getMusicBot() {

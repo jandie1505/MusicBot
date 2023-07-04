@@ -20,12 +20,12 @@ public class EventsBasic extends ListenerAdapter {
     @Override
     public void onReady(ReadyEvent event) {
         this.musicBot.upsertCommands(false);
-        Console.messageShardManager("Shard " + event.getJDA().getShardInfo().getShardId() + " ready");
+        MusicBot.LOGGER.info("Shard " + event.getJDA().getShardInfo().getShardId() + " ready");
     }
 
     @Override
     public void onShutdown(ShutdownEvent event) {
-        Console.messageShardManager("Shard " + event.getJDA().getShardInfo().getShardId() + " stopped");
+        MusicBot.LOGGER.info("Shard " + event.getJDA().getShardInfo().getShardId() + " stopped");
     }
 
     @Override

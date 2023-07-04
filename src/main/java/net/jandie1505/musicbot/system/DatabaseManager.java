@@ -25,10 +25,11 @@ public class DatabaseManager {
         createGuildsTable();
         createGuildWhitelistTable();
         createMusicBlacklistTable();
-        Console.messageDB("Database successfully initialized");
+
+        MusicBot.LOGGER.info("Database successfully initialized");
     }
 
-    private void connect() throws SQLException, IOException, ClassNotFoundException {
+    private void connect() throws SQLException, IOException {
         databaseFile = new File(".", "database.sqlite");
         if(!databaseFile.exists()) {
             databaseFile.createNewFile();
@@ -36,7 +37,8 @@ public class DatabaseManager {
 
         String url = "jdbc:sqlite:" + databaseFile.getPath();
         connection = DriverManager.getConnection(url);
-        Console.messageDB("Connected to database");
+
+        MusicBot.LOGGER.info("Database successfully initialized");
     }
 
     // CREATE TABLES
@@ -52,9 +54,10 @@ public class DatabaseManager {
                     ");";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.execute();
-            Console.messageDB("Set up table guilds");
+
+            MusicBot.LOGGER.debug("Set up guilds table");
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -66,9 +69,9 @@ public class DatabaseManager {
                     ")";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.execute();
-            Console.messageDB("Set up table guild_whitelist");
+            this.debugDatabaseLog("Set up table guild_whitelist");
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -95,11 +98,11 @@ public class DatabaseManager {
             statement.execute();
             statement2.execute();
             statement3.execute();
-            Console.messageDB("Set up table music_blacklist");
-            Console.messageDB("Set up table keyword_blacklist");
-            Console.messageDB("Set up table artist_blacklist");
+            this.debugDatabaseLog("Set up table music_blacklist");
+            this.debugDatabaseLog("Set up table keyword_blacklist");
+            this.debugDatabaseLog("Set up table artist_blacklist");
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -116,7 +119,7 @@ public class DatabaseManager {
                 returnList.add(rs.getString("guildId"));
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
 
 
@@ -136,9 +139,9 @@ public class DatabaseManager {
                 statement2.setString(1, guildId);
                 statement2.execute();
             }
-            Console.messageDB("Registered guild " + guildId);
+            this.debugDatabaseLog("Registered guild " + guildId);
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -149,9 +152,9 @@ public class DatabaseManager {
             statement.setString(1, guildId);
             statement.execute();
 
-            Console.messageDB("Deleted guild " + guildId);
+            this.debugDatabaseLog("Deleted guild " + guildId);
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -167,7 +170,7 @@ public class DatabaseManager {
                 returnString = rs.getString("DJRoles");
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
 
         return returnString;
@@ -180,9 +183,9 @@ public class DatabaseManager {
             statement.setString(1, DJRoles);
             statement.setString(2, guildId);
             statement.execute();
-            Console.messageDB("Updated moderatorRoles on guild " + guildId);
+            this.debugDatabaseLog("Updated moderatorRoles on guild " + guildId);
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -196,7 +199,7 @@ public class DatabaseManager {
                 return rs.getInt("restrictToRoles");
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
         return 0;
     }
@@ -208,9 +211,9 @@ public class DatabaseManager {
             statement.setInt(1, state);
             statement.setString(2, guildId);
             statement.execute();
-            Console.messageDB("Updated restrictToRoles on guild " + guildId);
+            this.debugDatabaseLog("Updated restrictToRoles on guild " + guildId);
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -224,7 +227,7 @@ public class DatabaseManager {
                 return rs.getBoolean("ephemeralState");
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
         return false;
     }
@@ -236,9 +239,9 @@ public class DatabaseManager {
             statement.setBoolean(1, state);
             statement.setString(2, guildId);
             statement.execute();
-            Console.messageDB("Updated ephemeralState on guild " + guildId);
+            this.debugDatabaseLog("Updated ephemeralState on guild " + guildId);
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -255,10 +258,10 @@ public class DatabaseManager {
                 PreparedStatement statement2 = connection.prepareStatement(sql2);
                 statement2.setString(1, guildId);
                 statement2.execute();
-                Console.messageDB("Added guild " + guildId + " to guild whitelist");
+                this.debugDatabaseLog("Added guild " + guildId + " to guild whitelist");
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -273,10 +276,10 @@ public class DatabaseManager {
                 PreparedStatement statement2 = connection.prepareStatement(sql2);
                 statement2.setString(1, guildId);
                 statement2.execute();
-                Console.messageDB("Deleted guild " + guildId + " from guild whitelist");
+                this.debugDatabaseLog("Deleted guild " + guildId + " from guild whitelist");
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -291,7 +294,7 @@ public class DatabaseManager {
                 returnList.add(rs.getString("guildId"));
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
 
         return returnList;
@@ -302,9 +305,9 @@ public class DatabaseManager {
             String sql = "DELETE FROM guild_whitelist;";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.execute();
-            Console.messageDB("Cleared guild_whitelist");
+            this.debugDatabaseLog("Cleared guild_whitelist");
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -318,7 +321,7 @@ public class DatabaseManager {
                 return true;
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
         return false;
     }
@@ -336,10 +339,10 @@ public class DatabaseManager {
                 PreparedStatement statement2 = connection.prepareStatement(sql2);
                 statement2.setString(1, link);
                 statement2.execute();
-                Console.messageDB("Added link to global blacklist");
+                this.debugDatabaseLog("Added link to global blacklist");
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -354,10 +357,10 @@ public class DatabaseManager {
                 PreparedStatement statement2 = connection.prepareStatement(sql2);
                 statement2.setString(1, link);
                 statement2.execute();
-                Console.messageDB("Removed link from global blacklist");
+                this.debugDatabaseLog("Removed link from global blacklist");
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -372,7 +375,7 @@ public class DatabaseManager {
                 returnList.add(rs.getString("link"));
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
 
         return returnList;
@@ -383,9 +386,9 @@ public class DatabaseManager {
             String sql = "DELETE FROM music_blacklist WHERE guildId IS NULL;";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.execute();
-            Console.messageDB("Cleared global blacklist");
+            this.debugDatabaseLog("Cleared global blacklist");
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -404,10 +407,10 @@ public class DatabaseManager {
                 statement2.setString(1, guildId);
                 statement2.setString(2, link);
                 statement2.execute();
-                Console.messageDB("Added link to blacklist of guild " + guildId);
+                this.debugDatabaseLog("Added link to blacklist of guild " + guildId);
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -424,10 +427,10 @@ public class DatabaseManager {
                 statement2.setString(1, guildId);
                 statement2.setString(2, link);
                 statement2.execute();
-                Console.messageDB("Removed link from blacklist of guild " + guildId);
+                this.debugDatabaseLog("Removed link from blacklist of guild " + guildId);
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -443,7 +446,7 @@ public class DatabaseManager {
                 returnList.add(rs.getString("link"));
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
 
         return returnList;
@@ -455,9 +458,9 @@ public class DatabaseManager {
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setString(1, guildId);
             statement.execute();
-            Console.messageDB("Cleared blacklist of guild " + guildId);
+            this.debugDatabaseLog("Cleared blacklist of guild " + guildId);
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -474,10 +477,10 @@ public class DatabaseManager {
                 PreparedStatement statement2 = connection.prepareStatement(sql2);
                 statement2.setString(1, keyword);
                 statement2.execute();
-                Console.messageDB("Added keyword to global keyword blacklist");
+                this.debugDatabaseLog("Added keyword to global keyword blacklist");
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -492,10 +495,10 @@ public class DatabaseManager {
                 PreparedStatement statement2 = connection.prepareStatement(sql2);
                 statement2.setString(1, keyword);
                 statement2.execute();
-                Console.messageDB("Removed keyword from global keyword blacklist");
+                this.debugDatabaseLog("Removed keyword from global keyword blacklist");
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -510,7 +513,7 @@ public class DatabaseManager {
                 returnList.add(rs.getString("keyword"));
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
 
         return returnList;
@@ -521,9 +524,9 @@ public class DatabaseManager {
             String sql = "DELETE FROM keyword_blacklist WHERE guildId IS NULL;";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.execute();
-            Console.messageDB("Cleared global keyword blacklist");
+            this.debugDatabaseLog("Cleared global keyword blacklist");
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -542,10 +545,10 @@ public class DatabaseManager {
                 statement2.setString(1, guildId);
                 statement2.setString(2, keyword);
                 statement2.execute();
-                Console.messageDB("Added keyword to keyword blacklist of guild " + guildId);
+                this.debugDatabaseLog("Added keyword to keyword blacklist of guild " + guildId);
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -562,10 +565,10 @@ public class DatabaseManager {
                 statement2.setString(1, guildId);
                 statement2.setString(2, keyword);
                 statement2.execute();
-                Console.messageDB("Removed keyword from keyword blacklist of guild " + guildId);
+                this.debugDatabaseLog("Removed keyword from keyword blacklist of guild " + guildId);
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -581,7 +584,7 @@ public class DatabaseManager {
                 returnList.add(rs.getString("keyword"));
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
 
         return returnList;
@@ -593,9 +596,9 @@ public class DatabaseManager {
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setString(1, guildId);
             statement.execute();
-            Console.messageDB("Cleared keyword blacklist of guild " + guildId);
+            this.debugDatabaseLog("Cleared keyword blacklist of guild " + guildId);
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -612,10 +615,10 @@ public class DatabaseManager {
                 PreparedStatement statement2 = connection.prepareStatement(sql2);
                 statement2.setString(1, artist);
                 statement2.execute();
-                Console.messageDB("Added artist to global artist blacklist");
+                this.debugDatabaseLog("Added artist to global artist blacklist");
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -630,10 +633,10 @@ public class DatabaseManager {
                 PreparedStatement statement2 = connection.prepareStatement(sql2);
                 statement2.setString(1, artist);
                 statement2.execute();
-                Console.messageDB("Removed artist from global artist blacklist");
+                this.debugDatabaseLog("Removed artist from global artist blacklist");
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -648,7 +651,7 @@ public class DatabaseManager {
                 returnList.add(rs.getString("artist"));
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
 
         return returnList;
@@ -659,9 +662,9 @@ public class DatabaseManager {
             String sql = "DELETE FROM artist_blacklist WHERE guildId IS NULL;";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.execute();
-            Console.messageDB("Cleared global artist blacklist");
+            this.debugDatabaseLog("Cleared global artist blacklist");
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -680,10 +683,10 @@ public class DatabaseManager {
                 statement2.setString(1, guildId);
                 statement2.setString(2, artist);
                 statement2.execute();
-                Console.messageDB("Added artist to artist blacklist of guild " + guildId);
+                this.debugDatabaseLog("Added artist to artist blacklist of guild " + guildId);
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -700,10 +703,10 @@ public class DatabaseManager {
                 statement2.setString(1, guildId);
                 statement2.setString(2, artist);
                 statement2.execute();
-                Console.messageDB("Removed artist from artist blacklist of guild " + guildId);
+                this.debugDatabaseLog("Removed artist from artist blacklist of guild " + guildId);
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
     }
 
@@ -719,7 +722,7 @@ public class DatabaseManager {
                 returnList.add(rs.getString("artist"));
             }
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
 
         return returnList;
@@ -731,9 +734,17 @@ public class DatabaseManager {
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setString(1, guildId);
             statement.execute();
-            Console.messageDB("Cleared artist blacklist of guild " + guildId);
+            this.debugDatabaseLog("Cleared artist blacklist of guild " + guildId);
         } catch(Exception e) {
-            System.out.println("Database error: " + e.getMessage());
+            this.logDatabaseError(e);
         }
+    }
+
+    private void debugDatabaseLog(String message) {
+        MusicBot.LOGGER.debug(message);
+    }
+
+    private void logDatabaseError(Exception e) {
+        MusicBot.LOGGER.error("Database error", e);
     }
 }

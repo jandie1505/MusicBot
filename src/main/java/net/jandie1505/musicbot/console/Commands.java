@@ -50,7 +50,7 @@ public class Commands {
                     } else if(cmd[0].equalsIgnoreCase("shard") || cmd[0].equalsIgnoreCase("shards")) {
                         returnString = shardsCommand(musicBot, cmd);
                     } else if(cmd[0].equalsIgnoreCase("verbose")) {
-                        returnString = verboseCommand(musicBot, cmd);
+                        //returnString = verboseCommand(musicBot, cmd);
                     } else if(cmd[0].equalsIgnoreCase("help")) {
                         returnString = helpCommand(cmd);
                     } else if(cmd[0].equalsIgnoreCase("config")) {
@@ -66,7 +66,7 @@ public class Commands {
                     } else if(cmd[0].equalsIgnoreCase("shard") || cmd[0].equalsIgnoreCase("shards")) {
                          returnString = shardsCommand(musicBot, cmd);
                     } else if(cmd[0].equalsIgnoreCase("verbose")) {
-                        returnString = verboseCommand(musicBot, cmd);
+                        //returnString = verboseCommand(musicBot, cmd);
                     } else if(cmd[0].equalsIgnoreCase("blacklist")) {
                         returnString = blacklistCommand(musicBot, cmd);
                     } else if(cmd[0].equalsIgnoreCase("keywordblacklist")) {
@@ -359,6 +359,7 @@ public class Commands {
         return returnString;
     }
 
+    /*
     private static String verboseCommand(MusicBot musicBot, String[] cmd) {
         String returnString = "";
         if(cmd.length >= 2) {
@@ -390,6 +391,7 @@ public class Commands {
         }
         return returnString;
     }
+     */
 
     private static String blacklistCommand(MusicBot musicBot, String[] cmd) {
         String returnString = "";

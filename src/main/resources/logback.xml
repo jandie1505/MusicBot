@@ -1,14 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <appender name="Simple" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <!-- Pattern -->
-            <pattern>
-                %nopex[%d{HH:mm:ss}] [%level] [%logger{0}]: %msg%n%ex
-            </pattern>
+    <appender name="CONSOLE" class="net.jandie1505.musicbot.console.CustomAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%level]: %msg%n</pattern>
         </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
     </appender>
-    <root level="INFO">
-        <appender-ref ref="Simple"/>
+
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>log.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%logger] [%level] [%thread]: %msg%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
+    </appender>
+
+    <logger name="org.jline" level="DEBUG"/>
+
+    <root level="DEBUG">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
     </root>
 </configuration>
