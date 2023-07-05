@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.sharding.ShardManager;
 import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 import net.jandie1505.musicbot.config.ConfigManager;
 import net.jandie1505.musicbot.console.Console;
+import net.jandie1505.musicbot.console.commands.GuildCommand;
 import net.jandie1505.musicbot.console.commands.ShardsCommand;
 import net.jandie1505.musicbot.database.DatabaseManager;
 import net.jandie1505.musicbot.eventlisteners.EventsBasic;
@@ -81,6 +82,7 @@ public class MusicBot {
 
         this.console = new Console(this);
         this.console.registerCommand("shards", new ShardsCommand(this));
+        this.console.registerCommand("guild", new GuildCommand(this));
         this.console.start();
         MusicBot.LOGGER.debug("Console initialization completed");
 
