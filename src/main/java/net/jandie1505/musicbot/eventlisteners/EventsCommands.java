@@ -11,7 +11,7 @@ import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.jandie1505.musicbot.MusicBot;
-import net.jandie1505.musicbot.console.Commands;
+import net.jandie1505.musicbot.database.GuildData;
 import net.jandie1505.musicbot.utilities.Messages;
 import net.jandie1505.musicbot.utilities.SpotifySearchHandler;
 import net.jandie1505.musicbot.utilities.YTSearchHandler;
@@ -66,7 +66,7 @@ public class EventsCommands extends ListenerAdapter {
             } else if(event.getName().equalsIgnoreCase("skip")) {
                 this.skipCommand(event);
             } else if(event.getName().equalsIgnoreCase("mbsettings")) {
-                this.mbsettingsCommand(event);
+                //this.mbsettingsCommand(event);
             }
         }
         if(event.getName().equalsIgnoreCase("cmd")) {
@@ -79,14 +79,14 @@ public class EventsCommands extends ListenerAdapter {
     // COMMANDS
     private void nowplayingCommand(SlashCommandInteractionEvent event) {
         if(this.musicBot.getGMS().memberHasUserPermissions(event.getMember())) {
-            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
             event.getHook().sendMessage(Messages.nowplayingMessage(musicBot, event.getGuild(), this.musicBot.getGMS().memberHasDJPermissions(event.getMember())).build()).queue();
         }
     }
 
     private void queueCommand(SlashCommandInteractionEvent event) {
         if(this.musicBot.getGMS().memberHasUserPermissions(event.getMember())) {
-            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
             if(!this.musicBot.getMusicManager().getQueue(event.getGuild()).isEmpty()) {
                 if(event.getOption("index") != null) {
                     int queueIndex = (int) event.getOption("index").getAsLong();
@@ -141,7 +141,7 @@ public class EventsCommands extends ListenerAdapter {
 
     private void playCommand(SlashCommandInteractionEvent event) {
         if(this.musicBot.getGMS().memberHasUserPermissions(event.getMember())) {
-            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
             if(!this.musicBot.getMusicManager().isConnected(event.getGuild())) {
                 if(event.getMember().getVoiceState().inAudioChannel()) {
                     if(this.musicBot.getMusicManager().connect(event.getMember().getVoiceState().getChannel())) {
@@ -170,7 +170,7 @@ public class EventsCommands extends ListenerAdapter {
 
     private void addCommand(SlashCommandInteractionEvent event) {
         if(this.musicBot.getGMS().memberHasUserPermissions(event.getMember())) {
-            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
             if(this.musicBot.getMusicManager().isConnected(event.getGuild())) {
                 if(event.getOption("song") != null) {
                     this.musicBot.getMusicManager().add(event.getGuild(), event.getOption("song").getAsString(), event, false);
@@ -188,7 +188,7 @@ public class EventsCommands extends ListenerAdapter {
 
     private void stopCommand(SlashCommandInteractionEvent event) {
         if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
-            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
             if(this.musicBot.getMusicManager().isConnected(event.getGuild())) {
                 if(!this.musicBot.getMusicManager().isPaused(event.getGuild())) {
                     this.musicBot.getMusicManager().setPause(event.getGuild(), true, new AudioEventListener() {
@@ -219,7 +219,7 @@ public class EventsCommands extends ListenerAdapter {
 
     private void leaveCommand(SlashCommandInteractionEvent event) {
         if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
-            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
             if(this.musicBot.getMusicManager().isConnected(event.getGuild())) {
                 this.musicBot.getMusicManager().clear(event.getGuild());
                 this.musicBot.getMusicManager().stop(event.getGuild());
@@ -241,7 +241,7 @@ public class EventsCommands extends ListenerAdapter {
 
     private void forceskipCommand(SlashCommandInteractionEvent event) {
         if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
-            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
             if(this.musicBot.getMusicManager().isConnected(event.getGuild())) {
                 if(event.getOption("position") != null) {
                     if(this.musicBot.getMusicManager().getPlayingTrack(event.getGuild()) != null) {
@@ -283,7 +283,7 @@ public class EventsCommands extends ListenerAdapter {
 
     private void removeCommand(SlashCommandInteractionEvent event) {
         if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
-            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
             if(this.musicBot.getMusicManager().isConnected(event.getGuild())) {
                 if(event.getOption("index") != null) {
                     int index = (int) event.getOption("index").getAsLong();
@@ -313,7 +313,7 @@ public class EventsCommands extends ListenerAdapter {
 
     private void clearCommand(SlashCommandInteractionEvent event) {
         if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
-            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
             if(this.musicBot.getMusicManager().isConnected(event.getGuild())) {
                 this.musicBot.getMusicManager().clear(event.getGuild());
                 EmbedBuilder embedBuilder = new EmbedBuilder()
@@ -328,7 +328,7 @@ public class EventsCommands extends ListenerAdapter {
 
     private void movetrackCommand(SlashCommandInteractionEvent event) {
         if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
-            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
             if(this.musicBot.getMusicManager().isConnected(event.getGuild())) {
                 if(event.getOption("from") != null && event.getOption("to") != null) {
                     int from = (int) event.getOption("from").getAsLong();
@@ -362,7 +362,7 @@ public class EventsCommands extends ListenerAdapter {
 
     private void shuffleCommand(SlashCommandInteractionEvent event) {
         if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
-            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
             if(this.musicBot.getMusicManager().isConnected(event.getGuild())) {
                 if(!this.musicBot.getMusicManager().getQueue(event.getGuild()).isEmpty()) {
                     this.musicBot.getMusicManager().shuffle(event.getGuild());
@@ -384,7 +384,7 @@ public class EventsCommands extends ListenerAdapter {
 
     private void playnowCommand(SlashCommandInteractionEvent event) {
         if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
-            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
             if(event.getOption("song") != null) {
                 if(!this.musicBot.getMusicManager().isConnected(event.getGuild())) {
                     if(event.getMember().getVoiceState().inAudioChannel()) {
@@ -410,7 +410,7 @@ public class EventsCommands extends ListenerAdapter {
 
     private void searchCommand(SlashCommandInteractionEvent event) {
         if(this.musicBot.getGMS().memberHasUserPermissions(event.getMember())) {
-            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
             if(event.getOption("query") != null) {
                 List<AudioTrack> trackList = YTSearchHandler.search(event.getOption("query").getAsString());
                 String returnString = "";
@@ -437,7 +437,7 @@ public class EventsCommands extends ListenerAdapter {
 
     private void volumeCommand(SlashCommandInteractionEvent event) {
         if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
-            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
             if(System.getProperty("os.arch").equalsIgnoreCase("amd64")) {
                 if(this.musicBot.getMusicManager().isConnected(event.getGuild())) {
                     if(event.getOption("volume") != null) {
@@ -516,7 +516,7 @@ public class EventsCommands extends ListenerAdapter {
 
     private void skipCommand(SlashCommandInteractionEvent event) {
         if(this.musicBot.getGMS().memberHasUserPermissions(event.getMember())) {
-            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
             if(this.musicBot.getMusicManager().isConnected(event.getGuild())) {
                 if(this.musicBot.getMusicManager().getSkipvotes(event.getGuild()).contains(event.getMember())) {
                     this.musicBot.getMusicManager().removeSkipvote(event.getGuild(), event.getMember());
@@ -537,11 +537,12 @@ public class EventsCommands extends ListenerAdapter {
         }
     }
 
+    /*
     private void mbsettingsCommand(SlashCommandInteractionEvent event) {
         if(this.musicBot.getGMS().memberHasAdminPermissions(event.getMember())) {
             if(event.getSubcommandName() != null) {
                 if(event.getSubcommandName().equalsIgnoreCase("info")) {
-                    event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+                    event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
                     String djroles = "";
                     for(String DJRoleId : this.musicBot.getGMS().getDJRoles(event.getGuild().getId())) {
                         Role role = event.getGuild().getRoleById(DJRoleId);
@@ -553,13 +554,13 @@ public class EventsCommands extends ListenerAdapter {
                             .setTitle("MusicBot Settings")
                             .setDescription("MusicBot by jandie1505")
                             .addField("DJ Roles:", djroles, false)
-                            .addField("Ephemeral replies:", String.valueOf(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())), false)
+                            .addField("Ephemeral replies:", String.valueOf(this.getEphemeralState(event.getGuild().getIdLong())), false)
                             .addField("Blacklisted tracks:", String.valueOf(this.musicBot.getDatabaseManager().getBlacklist(event.getGuild().getId()).size()) + " blacklisted tracks\n" + String.valueOf(this.musicBot.getDatabaseManager().getGlobalBlacklist().size()) + " global blacklisted tracks", false);
                     event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                 } else if(event.getSubcommandName().equalsIgnoreCase("djrole")) {
                     if(event.getOption("action") != null) {
                         if(event.getOption("action").getAsString().equalsIgnoreCase("add")) {
-                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+                            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
                             this.musicBot.getGMS().reloadDJRoles(event.getGuild().getId());
                             if(event.getOption("role") != null) {
                                 this.musicBot.getGMS().addDJRole(event.getGuild().getId(), event.getOption("role").getAsRole().getId());
@@ -574,7 +575,7 @@ public class EventsCommands extends ListenerAdapter {
                                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                             }
                         } else if(event.getOption("action").getAsString().equalsIgnoreCase("remove")) {
-                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+                            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
                             this.musicBot.getGMS().reloadDJRoles(event.getGuild().getId());
                             if(event.getOption("role") != null) {
                                 this.musicBot.getGMS().removeDJRole(event.getGuild().getId(), event.getOption("role").getAsRole().getId());
@@ -589,7 +590,7 @@ public class EventsCommands extends ListenerAdapter {
                                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                             }
                         } else if(event.getOption("action").getAsString().equalsIgnoreCase("clear")) {
-                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+                            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
                             this.musicBot.getGMS().clearDJRoles(event.getGuild().getId());
                             EmbedBuilder embedBuilder = new EmbedBuilder()
                                     .setDescription(":white_check_mark:  Cleared DJ Roles")
@@ -599,7 +600,7 @@ public class EventsCommands extends ListenerAdapter {
                     }
                 } else if(event.getSubcommandName().equalsIgnoreCase("ephemeral")) {
                     if(event.getOption("state") != null) {
-                        event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+                        event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
                         this.musicBot.getDatabaseManager().setEphemeralState(event.getGuild().getId(), event.getOption("state").getAsBoolean());
                         EmbedBuilder embedBuilder = new EmbedBuilder()
                                 .setDescription(":white_check_mark:  Set ephemeral state to " + event.getOption("state").getAsBoolean())
@@ -609,7 +610,7 @@ public class EventsCommands extends ListenerAdapter {
                 } else if(event.getSubcommandName().equalsIgnoreCase("blacklist")) {
                     if(event.getOption("action") != null) {
                         if(event.getOption("action").getAsString().equalsIgnoreCase("add")) {
-                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+                            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
                             if(event.getOption("link") != null) {
                                 if(!this.musicBot.getDatabaseManager().getBlacklist(event.getGuild().getId()).contains(event.getOption("link").getAsString())) {
                                     this.musicBot.getDatabaseManager().addToBlacklist(event.getGuild().getId(), event.getOption("link").getAsString());
@@ -630,7 +631,7 @@ public class EventsCommands extends ListenerAdapter {
                                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                             }
                         } else if(event.getOption("action").getAsString().equalsIgnoreCase("remove")) {
-                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+                            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
                             if(event.getOption("link") != null) {
                                 if(this.musicBot.getDatabaseManager().getBlacklist(event.getGuild().getId()).contains(event.getOption("link").getAsString())) {
                                     this.musicBot.getDatabaseManager().deleteFromBlacklist(event.getGuild().getId(), event.getOption("link").getAsString());
@@ -651,14 +652,14 @@ public class EventsCommands extends ListenerAdapter {
                                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                             }
                         } else if(event.getOption("action").getAsString().equalsIgnoreCase("clear")) {
-                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+                            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
                             this.musicBot.getDatabaseManager().clearBlacklist(event.getGuild().getId());
                             EmbedBuilder embedBuilder = new EmbedBuilder()
                                     .setDescription(":white_check_mark:  Cleared blacklist")
                                     .setColor(Color.GREEN);
                             event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                         } else if(event.getOption("action").getAsString().equalsIgnoreCase("list")) {
-                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+                            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
                             String blacklist = "";
                             int index = 0;
                             for(String string : this.musicBot.getDatabaseManager().getBlacklist(event.getGuild().getId())) {
@@ -680,7 +681,7 @@ public class EventsCommands extends ListenerAdapter {
                 } else if(event.getSubcommandName().equalsIgnoreCase("keywordblacklist")) {
                     if(event.getOption("action") != null) {
                         if(event.getOption("action").getAsString().equalsIgnoreCase("add")) {
-                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+                            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
                             if(event.getOption("keyword") != null) {
                                 if(!this.musicBot.getDatabaseManager().getKeywordBlacklist(event.getGuild().getId()).contains(event.getOption("keyword").getAsString())) {
                                     this.musicBot.getDatabaseManager().addToBlacklist(event.getGuild().getId(), event.getOption("keyword").getAsString());
@@ -701,7 +702,7 @@ public class EventsCommands extends ListenerAdapter {
                                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                             }
                         } else if(event.getOption("action").getAsString().equalsIgnoreCase("remove")) {
-                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+                            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
                             if(event.getOption("keyword") != null) {
                                 if(this.musicBot.getDatabaseManager().getKeywordBlacklist(event.getGuild().getId()).contains(event.getOption("keyword").getAsString())) {
                                     this.musicBot.getDatabaseManager().deleteFromBlacklist(event.getGuild().getId(), event.getOption("keyword").getAsString());
@@ -722,14 +723,14 @@ public class EventsCommands extends ListenerAdapter {
                                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                             }
                         } else if(event.getOption("action").getAsString().equalsIgnoreCase("clear")) {
-                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+                            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
                             this.musicBot.getDatabaseManager().clearBlacklist(event.getGuild().getId());
                             EmbedBuilder embedBuilder = new EmbedBuilder()
                                     .setDescription(":white_check_mark:  Cleared keyword blacklist")
                                     .setColor(Color.GREEN);
                             event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                         } else if(event.getOption("action").getAsString().equalsIgnoreCase("list")) {
-                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+                            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
                             String blacklist = "";
                             int index = 0;
                             for(String string : this.musicBot.getDatabaseManager().getKeywordBlacklist(event.getGuild().getId())) {
@@ -751,7 +752,7 @@ public class EventsCommands extends ListenerAdapter {
                 } else if(event.getSubcommandName().equalsIgnoreCase("artistblacklist")) {
                     if(event.getOption("action") != null) {
                         if(event.getOption("action").getAsString().equalsIgnoreCase("add")) {
-                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+                            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
                             if(event.getOption("artist") != null) {
                                 if(!this.musicBot.getDatabaseManager().getArtistBlacklist(event.getGuild().getId()).contains(event.getOption("artist").getAsString())) {
                                     this.musicBot.getDatabaseManager().addToBlacklist(event.getGuild().getId(), event.getOption("artist").getAsString());
@@ -772,7 +773,7 @@ public class EventsCommands extends ListenerAdapter {
                                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                             }
                         } else if(event.getOption("action").getAsString().equalsIgnoreCase("remove")) {
-                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+                            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
                             if(event.getOption("artist") != null) {
                                 if(this.musicBot.getDatabaseManager().getArtistBlacklist(event.getGuild().getId()).contains(event.getOption("artist").getAsString())) {
                                     this.musicBot.getDatabaseManager().deleteFromBlacklist(event.getGuild().getId(), event.getOption("artist").getAsString());
@@ -793,14 +794,14 @@ public class EventsCommands extends ListenerAdapter {
                                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                             }
                         } else if(event.getOption("action").getAsString().equalsIgnoreCase("clear")) {
-                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+                            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
                             this.musicBot.getDatabaseManager().clearBlacklist(event.getGuild().getId());
                             EmbedBuilder embedBuilder = new EmbedBuilder()
                                     .setDescription(":white_check_mark:  Cleared artist blacklist")
                                     .setColor(Color.GREEN);
                             event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                         } else if(event.getOption("action").getAsString().equalsIgnoreCase("list")) {
-                            event.deferReply(this.musicBot.getDatabaseManager().getEphemeralState(event.getGuild().getId())).queue();
+                            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
                             String blacklist = "";
                             int index = 0;
                             for(String string : this.musicBot.getDatabaseManager().getArtistBlacklist(event.getGuild().getId())) {
@@ -824,11 +825,13 @@ public class EventsCommands extends ListenerAdapter {
         }
     }
 
+     */
+
     private void cmdCommand(SlashCommandInteractionEvent event) {
         if(event.getMember().getId().equals(this.musicBot.getConfigManager().getConfig().getBotOwner())) {
             event.deferReply(true).queue();
             if(event.getOption("cmd") != null) {
-                String response = Commands.command(musicBot, event.getOption("cmd").getAsString());
+                String response = this.musicBot.getConsole().runCommand(event.getOption("cmd").getAsString());
                 EmbedBuilder embedBuilder = new EmbedBuilder()
                         .addField("Command response:", response, false);
                 event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
@@ -1014,5 +1017,10 @@ public class EventsCommands extends ListenerAdapter {
                         "/volume <0-200> - Change the volume\n" +
                         "/playnow <song name / link> - Plays a specific song immediately\n", false)
                 .addField("For Admins:", "/mbsettings - Change settings of the bot", false);
+    }
+
+    public boolean getEphemeralState(long guildId) {
+        GuildData guildData = this.musicBot.getDatabaseManager().getGuild(guildId);
+        return guildData.isEphemeralState();
     }
 }

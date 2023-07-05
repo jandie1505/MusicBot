@@ -13,7 +13,7 @@ public class Console implements Runnable {
     private final Map<String, CommandExecutor> commands;
     private Thread thread;
 
-    public Console(MusicBot musicBot) throws IOException {
+    public Console(MusicBot musicBot) {
         this.musicBot = musicBot;
         this.commands = Collections.synchronizedMap(new HashMap<>());
     }
@@ -29,23 +29,7 @@ public class Console implements Runnable {
 
             try {
 
-                String[] split = commandString.split(" ");
-                String command = split[0];
-                String[] arguments = new String[split.length - 1];
-
-                for (int i = 1; i < split.length; i++) {
-                    arguments[i - 1] = split[i];
-                }
-
-                CommandExecutor commandExecutor = this.commands.get(command);
-
-                String reply;
-
-                if (commandExecutor != null) {
-                    reply = commandExecutor.onCommand(command, arguments);
-                } else {
-                    reply = "Unknown command. Type help to see available commands.";
-                }
+                String reply = this.runCommand(commandString);
 
                 MusicBot.LOGGER.debug("Issued console command " + commandString + " with response " + reply);
                 MusicBot.LINE_READER.printAbove(reply);
@@ -72,6 +56,27 @@ public class Console implements Runnable {
 
     public void stop() {
         this.thread.interrupt();
+    }
+
+    public String runCommand(String commandString) {
+
+        String[] split = commandString.split(" ");
+        String command = split[0];
+        String[] arguments = new String[split.length - 1];
+
+        for (int i = 1; i < split.length; i++) {
+            arguments[i - 1] = split[i];
+        }
+
+        CommandExecutor commandExecutor = this.commands.get(command);
+
+        String reply;
+
+        if (commandExecutor != null) {
+            return commandExecutor.onCommand(command, arguments);
+        } else {
+            return  "Unknown command. Type help to see available commands.";
+        }
     }
 
     public void registerCommand(String command, CommandExecutor commandExecutor) {

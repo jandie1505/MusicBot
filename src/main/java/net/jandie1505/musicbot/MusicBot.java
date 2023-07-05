@@ -13,15 +13,14 @@ import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
 import net.dv8tion.jda.api.sharding.ShardManager;
 import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 import net.jandie1505.musicbot.config.ConfigManager;
-import net.jandie1505.musicbot.console.Commands;
 import net.jandie1505.musicbot.console.Console;
 import net.jandie1505.musicbot.console.commands.ShardsCommand;
+import net.jandie1505.musicbot.database.DatabaseManager;
 import net.jandie1505.musicbot.eventlisteners.EventsBasic;
 import net.jandie1505.musicbot.eventlisteners.EventsButtons;
 import net.jandie1505.musicbot.eventlisteners.EventsCommands;
 import net.jandie1505.musicbot.slashcommands.BotOwnerPermissionRequest;
 import net.jandie1505.musicbot.slashcommands.UserPermissionRequest;
-import net.jandie1505.musicbot.database.DatabaseManager;
 import net.jandie1505.musicbot.system.GMS;
 import net.jandie1505.musicbot.system.MusicManager;
 import net.jandie1505.musicbot.tasks.TaskShardsReload;
@@ -272,7 +271,7 @@ public class MusicBot {
                 new SlashCommandBuilder()
                         .executes(interaction -> {
                             interaction.deferReply().queue();
-                            interaction.getHook().sendMessage(Commands.command(this, interaction.getOption("cmd").getAsString()));
+                            interaction.getHook().sendMessage(this.console.runCommand(interaction.getOption("cmd").getAsString()));
                             // Logger is planned
                         })
                         .executesMissingOptions(DefaultSlashCommandExecutors.missingOptionsExecutor())

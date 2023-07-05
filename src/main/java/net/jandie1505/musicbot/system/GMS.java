@@ -1,37 +1,18 @@
 package net.jandie1505.musicbot.system;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Invite;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.exceptions.ErrorHandler;
-import net.dv8tion.jda.api.exceptions.ErrorResponseException;
-import net.dv8tion.jda.api.exceptions.PermissionException;
-import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.jandie1505.musicbot.MusicBot;
-import net.jandie1505.musicbot.tasks.TaskGMSReload;
-import net.jandie1505.musicbot.tasks.TaskGMSReloadComplete;
-import org.json.JSONArray;
-
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
+import net.jandie1505.musicbot.database.GuildData;
 
 public class GMS {
     private final MusicBot musicBot;
-    private final TaskGMSReload taskGMSReload;
-    private final TaskGMSReloadComplete taskGMSReloadComplete;
     
     public GMS(MusicBot musicBot) {
         this.musicBot = musicBot;
-        this.taskGMSReload = new TaskGMSReload(this);
-        this.taskGMSReloadComplete = new TaskGMSReloadComplete(this);
-
-        this.taskGMSReload.start();
-        this.taskGMSReloadComplete.start();
     }
 
     public void setupGuild(Guild g) {
@@ -40,14 +21,14 @@ public class GMS {
             return;
         }
 
-        if (!this.musicBot.getConfigManager().getConfig().isPublicMode() && !this.musicBot.getDatabaseManager().isGuildWhitelisted(g.getId())) {
+        if (!this.musicBot.getConfigManager().getConfig().isPublicMode() && !this.musicBot.getDatabaseManager().isGuildWhitelisted(g.getIdLong())) {
             return;
         }
 
         if(g != null) {
             String guildId = g .getId();
-            if(!this.musicBot.getConfigManager().getConfig().isPublicMode() && !this.musicBot.getDatabaseManager().isGuildWhitelisted(g.getId())) {
-                this.leaveGuild(g.getId());
+            if(!this.musicBot.getConfigManager().getConfig().isPublicMode() && !this.musicBot.getDatabaseManager().isGuildWhitelisted(g.getIdLong())) {
+                g.leave().queue();
                 this.logDebug("Removed bot from guild " + guildId + " because it is not whitelisted");
             } else {
                 if(!g.getSelfMember().hasPermission(Permission.CREATE_INSTANT_INVITE)
@@ -61,12 +42,9 @@ public class GMS {
                         || !g.getSelfMember().hasPermission(Permission.VOICE_CONNECT)
                         || !g.getSelfMember().hasPermission(Permission.VOICE_SPEAK)
                         || !g.getSelfMember().hasPermission(Permission.VOICE_USE_VAD)) {
-                    this.leaveGuild(g.getId());
+                    g.leave().queue();
                     this.logDebug("Removed bot from guild " + guildId + " because of missing permissions");
                 } else {
-                    this.musicBot.getDatabaseManager().registerGuild(g.getId());
-                    setupCommands(g);
-                    reloadDJRoles(g.getId());
                     this.logDebug("Guild " + g.getId() + " was set up");
                 }
             }
@@ -197,67 +175,6 @@ public class GMS {
          */
     }
 
-    // DJ Roles
-    public void addDJRole(String guildId, String roleId) {
-        try {
-            JSONArray moderatorRoles = new JSONArray(this.musicBot.getDatabaseManager().getDJRoles(guildId));
-            if(!moderatorRoles.toList().contains(roleId)) {
-                moderatorRoles.put(roleId);
-                this.musicBot.getDatabaseManager().setDJRoles(guildId, moderatorRoles.toString());
-                this.logDebug("Added moderator role " + roleId + " on guild " + guildId);
-            }
-        } catch(Exception ignored) {}
-    }
-
-    public void removeDJRole(String guildId, String roleId) {
-        try {
-            JSONArray moderatorRoles = new JSONArray(this.musicBot.getDatabaseManager().getDJRoles(guildId));
-            if(moderatorRoles.toList().contains(roleId)) {
-                moderatorRoles.remove(moderatorRoles.toList().indexOf(roleId));
-                this.musicBot.getDatabaseManager().setDJRoles(guildId, moderatorRoles.toString());
-                this.logDebug("Removed moderator role " + roleId + " on guild " + guildId);
-            }
-        } catch(Exception ignored) {}
-    }
-
-    public void clearDJRoles(String guildId) {
-        try {
-            JSONArray moderatorRoles = new JSONArray(this.musicBot.getDatabaseManager().getDJRoles(guildId));
-            moderatorRoles.clear();
-            this.musicBot.getDatabaseManager().setDJRoles(guildId, moderatorRoles.toString());
-            this.logDebug("Cleared moderator roles on guild " + guildId);
-        } catch(Exception ignored) {}
-    }
-
-    public List<String> getDJRoles(String guildId) {
-        List<String> returnList = new ArrayList<>();
-
-        try {
-            JSONArray moderatorRoles = new JSONArray(this.musicBot.getDatabaseManager().getDJRoles(guildId));
-            for(Object roleIdObject : moderatorRoles) {
-                String roleId = (String) roleIdObject;
-                returnList.add(roleId);
-            }
-        } catch(Exception ignored) {}
-
-        return returnList;
-    }
-
-    public void reloadDJRoles(String guildId) {
-        try {
-            Guild g = this.musicBot.getShardManager().getGuildById(guildId);
-            if(g != null) {
-                for(String roleId : getDJRoles(guildId)) {
-                    Role role = g.getRoleById(roleId);
-                    if(role == null) {
-                        removeDJRole(guildId, roleId);
-                    }
-                }
-                this.logDebug("Reloaded moderator roles on guild " + guildId);
-            }
-        } catch(Exception ignored) {}
-    }
-
     // PERMISSIONS
     /*
     RestrictToRoles States:
@@ -266,53 +183,76 @@ public class GMS {
     2 = Normal users have DJ permissions
      */
     public boolean memberHasUserPermissions(Member m) {
-        return true;
-        /*if(m != null) {
-            if(memberHasDJPermissions(m)) {
-                return true;
-            } else if(this.musicBot.getDatabaseManager().getRestrictToRoles(m.getGuild().getId()) >= 1) {
+
+        if (memberHasAdminPermissions(m)) {
+            return true;
+        }
+
+        if (memberHasDJPermissions(m)) {
+            return true;
+        }
+
+        GuildData guildData = this.musicBot.getDatabaseManager().getGuild(m.getGuild().getIdLong());
+
+        if (guildData.getRestrictToRoles() >= 1) {
+            return true;
+        }
+
+        for (long roleId : guildData.getDjRoles()) {
+            Role role = m.getGuild().getRoleById(roleId);
+
+            if (role == null) {
+                continue;
+            }
+
+            if (m.getRoles().contains(role)) {
                 return true;
             }
-        }
-        return false;
 
-         */
+        }
+
+        return false;
     }
 
     public boolean memberHasDJPermissions(Member m) {
-        if(memberHasAdminPermissions(m)) {
+
+        if (memberHasUserPermissions(m)) {
             return true;
-        } else if(m.hasPermission(Permission.MANAGE_CHANNEL) || m.hasPermission(Permission.MANAGE_SERVER)) {
-            return true;
-        } else if(this.musicBot.getDatabaseManager().getRestrictToRoles(m.getGuild().getId()) >= 2) {
-            return true;
-        } else {
-            for(String roleId : this.getDJRoles(m.getGuild().getId())) {
-                Role role = this.musicBot.getShardManager().getRoleById(roleId);
-                if(role != null) {
-                    if(m.getRoles().contains(role)) {
-                        return true;
-                    }
-                }
-            }
         }
+
+        if (m.hasPermission(Permission.MANAGE_CHANNEL) || m.hasPermission(Permission.MANAGE_SERVER)) {
+            return true;
+        }
+
+        GuildData guildData = this.musicBot.getDatabaseManager().getGuild(m.getGuild().getIdLong());
+
+        if (guildData.getRestrictToRoles() >= 2) {
+            return true;
+        }
+
+        for (long roleId : guildData.getDjRoles()) {
+            Role role = m.getGuild().getRoleById(roleId);
+
+            if (role == null) {
+                continue;
+            }
+
+            if (m.getRoles().contains(role)) {
+                return true;
+            }
+
+        }
+
         return false;
     }
 
     public boolean memberHasAdminPermissions(Member m) {
-        if(m.hasPermission(Permission.ADMINISTRATOR)) {
-            return true;
-        }
-        return false;
+        return m.hasPermission(Permission.ADMINISTRATOR);
     }
 
     // BLACKLIST
     public boolean isBlacklisted(Guild g, String link) {
-        if(g != null) {
-            return !this.musicBot.getDatabaseManager().getGlobalBlacklist().contains(link) || !this.musicBot.getDatabaseManager().getBlacklist(g.getId()).contains(link);
-        } else {
-            return false;
-        }
+        return false;
     }
     public boolean isBlacklisted(Guild g, Member m, AudioTrack audioTrack) {
         return false;
