@@ -24,33 +24,12 @@ public class GuildData {
     }
 
     public GuildData(ResultSet rs) throws SQLException {
-
-        JSONArray djRolesArray;
-
-        try {
-            djRolesArray = new JSONArray(rs.getString("djRoles"));
-        } catch (JSONException e) {
-            djRolesArray = new JSONArray();
-        }
-
-        List<Long> djRoles = new ArrayList<>();
-
-        for (int i = 0; i < djRolesArray.length(); i++) {
-
-            long roleId = djRolesArray.optLong(i, -1);
-
-            if (roleId < 0) {
-                continue;
-            }
-
-            djRoles.add(roleId);
-
-        }
-
         this.guildId = rs.getLong("guildId");
-        this.djRoles = new ArrayList<>(djRoles);
+        this.djRoles = new ArrayList<>();
         this.restrictToRoles = rs.getInt("restrictToRoles");
         this.ephemeralState = rs.getBoolean("ephemeralState");
+
+        this.setDJRolesFromJSONArray(rs.getString("djRoles"));
     }
 
     public long getGuildId() {
@@ -88,5 +67,33 @@ public class GuildData {
         statement.setBoolean(4, this.ephemeralState);
 
         return statement;
+    }
+
+    public void setDJRolesFromJSONArray(String jsonString) {
+
+        JSONArray djRolesArray;
+
+        try {
+            djRolesArray = new JSONArray(jsonString);
+        } catch (JSONException e) {
+            djRolesArray = new JSONArray();
+        }
+
+        List<Long> djRoles = new ArrayList<>();
+
+        for (int i = 0; i < djRolesArray.length(); i++) {
+
+            long roleId = djRolesArray.optLong(i, -1);
+
+            if (roleId < 0) {
+                continue;
+            }
+
+            djRoles.add(roleId);
+
+        }
+
+        this.djRoles.clear();
+        this.djRoles.addAll(djRoles);
     }
 }
