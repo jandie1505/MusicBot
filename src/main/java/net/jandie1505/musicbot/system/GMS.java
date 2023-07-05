@@ -34,70 +34,16 @@ public class GMS {
         this.taskGMSReloadComplete.start();
     }
 
-    public void reloadGuilds(boolean completeReload) {
-        this.logInfo("Checking database guilds...");
-        for(String guildId : this.musicBot.getDatabaseManager().getRegisteredGuilds()) {
-            Guild g = this.musicBot.getShardManager().getGuildById(guildId);
-            if(g == null) {
-                if(!this.musicBot.completeOnline()) {
-                    this.logInfo("Guild " + guildId + " will not be deleted because not all shards are online");
-                } else {
-                    this.musicBot.getDatabaseManager().deleteGuild(guildId);
-                    this.logInfo("Deleted guild " + guildId + " because it's null");
-                }
-            }
-        }
-        this.logInfo("Checking discord guilds...");
-        for(Guild g : this.musicBot.getShardManager().getGuilds()) {
-            if(g != null) {
-                if(completeReload) {
-                    setupGuild(g);
-                } else {
-                    if(!this.musicBot.getDatabaseManager().getRegisteredGuilds().contains(g.getId())) {
-                        setupGuild(g);
-                        this.logInfo("Added guild " + g.getId() + " to database");
-                    }
-                }
-            }
-        }
-        this.logInfo("Reloaded guilds");
-    }
-
-    public void leaveGuild(String guildId) {
-        Guild g = this.musicBot.getShardManager().getGuildById(guildId);
-        if(g != null) {
-            g.leave().queue();
-        }
-        this.musicBot.getDatabaseManager().deleteGuild(guildId);
-        this.logInfo("Left guild " + guildId);
-    }
-
-    public void leaveGuild(String guildId, String reason) {
-        Guild g = this.musicBot.getShardManager().getGuildById(guildId);
-        if(g != null) {
-            g.retrieveOwner().queue(member -> {
-                member.getUser().openPrivateChannel().queue(privateChannel -> {
-                    EmbedBuilder botLeftGuildMessage = new EmbedBuilder()
-                            .setTitle("Left your server")
-                            .addField("Name (ID):", g.getName() + " (" + g.getId() + ")", false)
-                            .addField("Reason:", reason, false)
-                            .setColor(Color.RED);
-                    privateChannel.sendMessage("Left your server " + g.getName() + " (" + g.getId() + ")").setEmbeds(botLeftGuildMessage.build()).queue();
-                    g.leave().queue();
-                    this.logInfo("Left guild " + guildId + " for reason " + reason);
-                }, new ErrorHandler().handle(ErrorResponse.CANNOT_SEND_TO_USER, e -> {
-                    g.leave().queue();
-                    this.logInfo("Left guild " + guildId + " for reason " + reason);
-                }));
-            }, new ErrorHandler().handle(ErrorResponse.UNKNOWN_MEMBER, e -> {
-                g.leave().queue();
-                this.logInfo("Left guild " + guildId);
-            }));
-        }
-        this.musicBot.getDatabaseManager().deleteGuild(guildId);
-    }
-
     public void setupGuild(Guild g) {
+
+        if (g == null) {
+            return;
+        }
+
+        if (!this.musicBot.getConfigManager().getConfig().isPublicMode() && !this.musicBot.getDatabaseManager().isGuildWhitelisted(g.getId())) {
+            return;
+        }
+
         if(g != null) {
             String guildId = g .getId();
             if(!this.musicBot.getConfigManager().getConfig().isPublicMode() && !this.musicBot.getDatabaseManager().isGuildWhitelisted(g.getId())) {
@@ -115,7 +61,7 @@ public class GMS {
                         || !g.getSelfMember().hasPermission(Permission.VOICE_CONNECT)
                         || !g.getSelfMember().hasPermission(Permission.VOICE_SPEAK)
                         || !g.getSelfMember().hasPermission(Permission.VOICE_USE_VAD)) {
-                    this.leaveGuild(g.getId(), "Missing permissions");
+                    this.leaveGuild(g.getId());
                     this.logDebug("Removed bot from guild " + guildId + " because of missing permissions");
                 } else {
                     this.musicBot.getDatabaseManager().registerGuild(g.getId());
@@ -251,18 +197,6 @@ public class GMS {
          */
     }
 
-    public Invite createGuildInvite(Guild g) {
-        try {
-            if(g != null) {
-                return g.getTextChannels().get(0).createInvite().complete();
-            } else {
-                return null;
-            }
-        } catch(PermissionException | ErrorResponseException e) {
-            return null;
-        }
-    }
-
     // DJ Roles
     public void addDJRole(String guildId, String roleId) {
         try {
@@ -381,37 +315,7 @@ public class GMS {
         }
     }
     public boolean isBlacklisted(Guild g, Member m, AudioTrack audioTrack) {
-        if(g != null) {
-            if(this.musicBot.getDatabaseManager().getGlobalBlacklist().contains(audioTrack.getInfo().uri) || this.musicBot.getDatabaseManager().getGlobalBlacklist().contains(audioTrack.getIdentifier())) {
-                return true;
-            }
-            if(this.musicBot.getDatabaseManager().getGlobalArtistBlacklist().contains(audioTrack.getInfo().author)) {
-                return true;
-            }
-            for(String string : this.musicBot.getDatabaseManager().getGlobalKeywordBlacklist()) {
-                if(audioTrack.getInfo().title.contains(string)) {
-                    return true;
-                }
-            }
-
-            if(this.memberHasAdminPermissions(m)) {
-                if(this.musicBot.getDatabaseManager().getBlacklist(g.getId()).contains(audioTrack.getInfo().uri) || this.musicBot.getDatabaseManager().getBlacklist(g.getId()).contains(audioTrack.getIdentifier())) {
-                    return true;
-                }
-                if(this.musicBot.getDatabaseManager().getArtistBlacklist(g.getId()).contains(audioTrack.getInfo().author)) {
-                    return true;
-                }
-                for(String string : this.musicBot.getDatabaseManager().getKeywordBlacklist(g.getId())) {
-                    if(audioTrack.getInfo().title.contains(string)) {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        } else {
-            return false;
-        }
+        return false;
     }
 
     private void logInfo(String message) {

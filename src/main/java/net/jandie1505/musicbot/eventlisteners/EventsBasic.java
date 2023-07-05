@@ -35,7 +35,7 @@ public class EventsBasic extends ListenerAdapter {
 
     @Override
     public void onGuildLeave(GuildLeaveEvent event) {
-        this.musicBot.getGMS().leaveGuild(event.getGuild().getId());
+        this.musicBot.getDatabaseManager().deleteGuild(event.getGuild().getIdLong());
     }
 
     @Override

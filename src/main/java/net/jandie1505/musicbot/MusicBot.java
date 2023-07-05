@@ -15,12 +15,13 @@ import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 import net.jandie1505.musicbot.config.ConfigManager;
 import net.jandie1505.musicbot.console.Commands;
 import net.jandie1505.musicbot.console.Console;
+import net.jandie1505.musicbot.console.commands.ShardsCommand;
 import net.jandie1505.musicbot.eventlisteners.EventsBasic;
 import net.jandie1505.musicbot.eventlisteners.EventsButtons;
 import net.jandie1505.musicbot.eventlisteners.EventsCommands;
 import net.jandie1505.musicbot.slashcommands.BotOwnerPermissionRequest;
 import net.jandie1505.musicbot.slashcommands.UserPermissionRequest;
-import net.jandie1505.musicbot.system.DatabaseManager;
+import net.jandie1505.musicbot.database.DatabaseManager;
 import net.jandie1505.musicbot.system.GMS;
 import net.jandie1505.musicbot.system.MusicManager;
 import net.jandie1505.musicbot.tasks.TaskShardsReload;
@@ -76,8 +77,15 @@ public class MusicBot {
     private final int shardsTotal;
 
     public MusicBot(String token, int shardsCount, boolean disableShardsCheck, boolean ignoreConfigFile) throws LoginException, SQLException, IOException, ClassNotFoundException {
+
+        // CONSOLE
+
         this.console = new Console(this);
+        this.console.registerCommand("shards", new ShardsCommand(this));
         this.console.start();
+        MusicBot.LOGGER.debug("Console initialization completed");
+
+        // CONFIG
 
         this.configManager = new ConfigManager(this);
         this.configManager.getConfig().setDisableShardsCheck(disableShardsCheck);
@@ -96,8 +104,15 @@ public class MusicBot {
 
             }
         }
+        MusicBot.LOGGER.debug("ConfigManager initialization completed");
+
+        // DATABASE
 
         this.databaseManager = new DatabaseManager(this);
+        this.databaseManager.start();
+        MusicBot.LOGGER.debug("DatabaseManager initialization completed");
+
+        // SHARD MANAGER
 
         if(shardsCount > 1) {
             this.shardsTotal = shardsCount;
@@ -111,7 +126,7 @@ public class MusicBot {
             }
         }
 
-        if(token == null || !token.equalsIgnoreCase("")) {
+        if (token == null || !token.equalsIgnoreCase("")) {
             token = this.configManager.getConfig().getToken();
         }
 
@@ -130,7 +145,6 @@ public class MusicBot {
         this.taskShardsReload.start();
 
         this.gms = new GMS(this);
-        this.gms.reloadGuilds(true);
 
         this.musicManager = new MusicManager(this);
         this.musicManager.reloadPlayers();
@@ -140,7 +154,7 @@ public class MusicBot {
                         + "Application ID: " + this.shardManager.retrieveApplicationInfo().getJDA().getSelfUser().getApplicationId() + "\n"
                         + "Username: " + this.shardManager.retrieveApplicationInfo().getJDA().getSelfUser().getName() + "#" + shardManager.retrieveApplicationInfo().getJDA().getSelfUser().getDiscriminator() + "\n"
                         + "Public mode: " + this.configManager.getConfig().isPublicMode() + "\n"
-                        + "Shards: " + this.shardManager.getShardsRunning() + " + " + shardManager.getShardsQueued() + " = " + shardManager.getShardsTotal() + "\n"
+                        + "Shards: " + this.shardManager.getShardsRunning() + " | " + shardManager.getShardsQueued() + " | " + shardManager.getShardsTotal() + "\n"
                         + "*****************************************");
     }
 

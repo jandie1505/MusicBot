@@ -1,23 +1,21 @@
 package net.jandie1505.musicbot.console;
 
 import net.jandie1505.musicbot.MusicBot;
-import org.jline.reader.LineReader;
-import org.jline.reader.LineReaderBuilder;
-import org.jline.terminal.Terminal;
-import org.jline.terminal.TerminalBuilder;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Scanner;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Console implements Runnable {
     // NOT STATIC
     private final MusicBot musicBot;
+    private final Map<String, CommandExecutor> commands;
     private Thread thread;
 
     public Console(MusicBot musicBot) throws IOException {
         this.musicBot = musicBot;
+        this.commands = Collections.synchronizedMap(new HashMap<>());
     }
 
     @Override
@@ -27,19 +25,35 @@ public class Console implements Runnable {
 
         while(thread == Thread.currentThread() && !thread.isInterrupted() && musicBot.isOperational()) {
 
-            String command = MusicBot.LINE_READER.readLine("MusicBot ==> ");
+            String commandString = MusicBot.LINE_READER.readLine("MusicBot ==> ");
 
             try {
 
-                String reply = Commands.command(this.musicBot, command);
+                String[] split = commandString.split(" ");
+                String command = split[0];
+                String[] arguments = new String[split.length - 1];
 
-                MusicBot.LOGGER.debug("Issued console command " + command + " with response " + reply);
+                for (int i = 1; i < split.length; i++) {
+                    arguments[i - 1] = split[i];
+                }
+
+                CommandExecutor commandExecutor = this.commands.get(command);
+
+                String reply;
+
+                if (commandExecutor != null) {
+                    reply = commandExecutor.onCommand(command, arguments);
+                } else {
+                    reply = "Unknown command. Type help to see available commands.";
+                }
+
+                MusicBot.LOGGER.debug("Issued console command " + commandString + " with response " + reply);
                 MusicBot.LINE_READER.printAbove(reply);
 
             } catch(Exception e) {
 
-                MusicBot.LOGGER.debug("Issued console command " + command + " threw an exception", e);
-                MusicBot.LINE_READER.printAbove("Error while executing command " + command + " [" + e.toString() + "]");
+                MusicBot.LOGGER.debug("Issued console command " + commandString + " threw an exception", e);
+                MusicBot.LINE_READER.printAbove("Error while executing command " + commandString + " [" + e.toString() + "]");
 
             }
 
@@ -58,5 +72,17 @@ public class Console implements Runnable {
 
     public void stop() {
         this.thread.interrupt();
+    }
+
+    public void registerCommand(String command, CommandExecutor commandExecutor) {
+        this.commands.put(command, commandExecutor);
+    }
+
+    public void removeCommand(String command) {
+        this.commands.remove(command);
+    }
+
+    public Map<String, CommandExecutor> getCommands() {
+        return Map.copyOf(this.commands);
     }
 }
