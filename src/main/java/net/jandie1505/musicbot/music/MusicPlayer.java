@@ -11,7 +11,6 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.jandie1505.musicbot.system.GMS;
 import net.jandie1505.musicbot.system.MusicManager;
 
 import java.awt.*;

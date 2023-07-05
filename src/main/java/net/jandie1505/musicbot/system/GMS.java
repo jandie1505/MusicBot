@@ -12,7 +12,6 @@ import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.exceptions.PermissionException;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.jandie1505.musicbot.MusicBot;
-import net.jandie1505.musicbot.console.Console;
 import net.jandie1505.musicbot.tasks.TaskGMSReload;
 import net.jandie1505.musicbot.tasks.TaskGMSReloadComplete;
 import org.json.JSONArray;
