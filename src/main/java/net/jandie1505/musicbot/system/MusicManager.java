@@ -9,7 +9,6 @@ import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.jandie1505.musicbot.MusicBot;
 import net.jandie1505.musicbot.music.MusicPlayer;
-import net.jandie1505.musicbot.tasks.TaskMusicManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,17 +18,13 @@ import java.util.Map;
 public class MusicManager {
 
     private final MusicBot musicBot;
-    private final TaskMusicManager taskMusicManager;
     private final Map<String, MusicPlayer> musicPlayers;
     private final Map<String, Integer> playerExpiration;
 
     public MusicManager(MusicBot musicBot) {
         this.musicBot = musicBot;
-        this.taskMusicManager = new TaskMusicManager(this);
         this.musicPlayers = new HashMap<>();
         this.playerExpiration = new HashMap<>();
-
-        this.taskMusicManager.start();
     }
 
     // CONNECTION
@@ -169,7 +164,7 @@ public class MusicManager {
 
 
     // PLAYER MANAGEMENT
-    public void reloadPlayers() {
+    public void reload() {
         for(String guildId : musicPlayers.keySet()) {
             Guild g = this.musicBot.getShardManager().getGuildById(guildId);
             if(g == null) {

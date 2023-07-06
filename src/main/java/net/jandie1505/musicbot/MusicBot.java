@@ -173,20 +173,21 @@ public class MusicBot {
 
         }, 1, TimeUnit.MINUTES);
 
-        // MANAGERS
+        // GMS
 
         this.gms = new GMS(this);
 
+        // MUSIC MANAGER
+
         this.musicManager = new MusicManager(this);
-        this.musicManager.reloadPlayers();
+
+        this.executorService.schedule(this.musicManager::reload, 1, TimeUnit.MINUTES);
 
     }
 
     public void shutdown() {
 
         MusicBot.LOGGER.info("Shutting down...");
-
-        this.executorService.shutdown();
 
         try {
 
@@ -198,11 +199,17 @@ public class MusicBot {
             MusicBot.LOGGER.error("Exception while shutting down", e);
         }
 
+        this.executorService.shutdownNow();
+
         this.console.stop();
 
         Thread shutdownThread = new Thread(() -> {
             try {
-                TimeUnit.SECONDS.sleep(10);
+                int timer = 10;
+                while (timer > 0) {
+                    TimeUnit.SECONDS.sleep(1);
+                    timer--;
+                }
                 MusicBot.LOGGER.warn("Enforcing JVM exit");
                 System.exit(0);
             } catch (InterruptedException e) {
