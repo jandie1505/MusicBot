@@ -2,8 +2,6 @@ package net.jandie1505.musicbot.music;
 
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.jandie1505.musicbot.MusicBot;
-import net.jandie1505.musicbot.system.MusicManager;
 
 import java.util.ArrayList;
 import java.util.LinkedList;

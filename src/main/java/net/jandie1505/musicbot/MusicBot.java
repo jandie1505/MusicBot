@@ -26,7 +26,7 @@ import net.jandie1505.musicbot.eventlisteners.EventsCommands;
 import net.jandie1505.musicbot.slashcommands.BotOwnerPermissionRequest;
 import net.jandie1505.musicbot.slashcommands.UserPermissionRequest;
 import net.jandie1505.musicbot.system.GMS;
-import net.jandie1505.musicbot.system.MusicManager;
+import net.jandie1505.musicbot.music.MusicManager;
 import net.jandie1505.musicbot.utilities.BotStatus;
 import net.jandie1505.musicbot.utilities.Messages;
 import net.jandie1505.slashcommandapi.SlashCommandHandler;

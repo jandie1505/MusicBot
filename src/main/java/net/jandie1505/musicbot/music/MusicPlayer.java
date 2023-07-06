@@ -1,9 +1,6 @@
 package net.jandie1505.musicbot.music;
 
-import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
-import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.player.*;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventListener;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
@@ -11,43 +8,49 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.jandie1505.musicbot.system.MusicManager;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
 
 public class MusicPlayer {
     private final MusicManager musicManager;
-    private AudioPlayerManager playerManager;
-    private AudioPlayer player;
-    private AudioPlayerSendHandler playerSendHandler;
-    private TrackScheduler trackScheduler;
-    private List<AudioTrack> queue;
+    private final AudioPlayerManager playerManager;
+    private final AudioPlayer player;
+    private final AudioPlayerSendHandler playerSendHandler;
+    private final TrackScheduler trackScheduler;
+    private final List<AudioTrack> queue;
     private SkipvoteManager skipvoteManager;
 
     public MusicPlayer(MusicManager musicManager) {
         this.musicManager = musicManager;
-        playerManager = new DefaultAudioPlayerManager();
-        AudioSourceManagers.registerRemoteSources(playerManager);
-        player = playerManager.createPlayer();
-        playerSendHandler = new AudioPlayerSendHandler(player);
-        trackScheduler = new TrackScheduler(this);
-        player.addListener(trackScheduler);
-        queue = new ArrayList<>();
+        this.playerManager = new DefaultAudioPlayerManager();
+        this.player = playerManager.createPlayer();
+        this.playerSendHandler = new AudioPlayerSendHandler(this.player);
+        this.trackScheduler = new TrackScheduler(this);
+        this.queue = Collections.synchronizedList(new ArrayList<>());
+
+        AudioSourceManagers.registerRemoteSources(this.playerManager);
+        this.player.addListener(this.trackScheduler);
     }
 
     // QUEUE
-    public void queue(String source, boolean startafterload) {
-        playerManager.loadItem(source, new AudioLoadResultHandler() {
+
+    public void enqueue(String source, boolean startafterload) {
+        this.playerManager.loadItem(source, new AudioLoadResultHandler() {
+
             @Override
             public void trackLoaded(AudioTrack audioTrack) {
+
                 queue.add(audioTrack);
+
                 if(startafterload) {
                     nextTrack();
                 }
+
             }
 
             @Override
@@ -57,6 +60,7 @@ public class MusicPlayer {
                     nextTrack();
                 }
             }
+
             @Override public void noMatches() {
 
             }
@@ -65,10 +69,11 @@ public class MusicPlayer {
             public void loadFailed(FriendlyException e) {
 
             }
+
         });
     }
 
-    public void queue(String source, SlashCommandInteractionEvent event, boolean startafterload) {
+    public void enqueue(String source, SlashCommandInteractionEvent event, boolean startafterload) {
         playerManager.loadItem(source, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack audioTrack) {

@@ -1,14 +1,12 @@
-package net.jandie1505.musicbot.system;
+package net.jandie1505.musicbot.music;
 
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventListener;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.jandie1505.musicbot.MusicBot;
-import net.jandie1505.musicbot.music.MusicPlayer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,72 +17,84 @@ public class MusicManager {
 
     private final MusicBot musicBot;
     private final Map<String, MusicPlayer> musicPlayers;
-    private final Map<String, Integer> playerExpiration;
 
     public MusicManager(MusicBot musicBot) {
         this.musicBot = musicBot;
         this.musicPlayers = new HashMap<>();
-        this.playerExpiration = new HashMap<>();
     }
 
     // CONNECTION
+
     public boolean connect(AudioChannel audioChannel) {
+
         try {
-            audioChannel.getGuild().getAudioManager().setSendingHandler(getMusicPlayer(audioChannel.getGuild().getId()).getAudioSendHandler());
+
+            audioChannel.getGuild().getAudioManager().setSendingHandler(this.getMusicPlayer(audioChannel.getGuild().getId()).getAudioSendHandler());
             audioChannel.getGuild().getAudioManager().openAudioConnection(audioChannel);
+
             return true;
+
         } catch(Exception e) {
             return false;
         }
+
     }
+
     public void disconnect(Guild g) {
+
         if(isConnected(g)) {
+
             g.getAudioManager().closeAudioConnection();
             removePlayer(g.getId());
+
         }
+
     }
 
     public boolean isConnected(Guild g) {
         return g.getSelfMember().getVoiceState().inAudioChannel();
     }
 
-    public void joinVoiceChannel(VoiceChannel voiceChannel) {
-        connect(voiceChannel);
-    }
-    public void leaveVoiceChannel(Guild g) {
-        disconnect(g);
+    // QUEUE
+
+    public void add(Guild g, String source, boolean startafterload) {
+        getMusicPlayer(g.getId()).enqueue(source, startafterload);
     }
 
-    // QUEUE
-    public void add(Guild g, String source, boolean startafterload) {
-        getMusicPlayer(g.getId()).queue(source, startafterload);
-    }
     public void add(Guild g, String source, SlashCommandInteractionEvent event, boolean startafterload) {
-        getMusicPlayer(g.getId()).queue(source, event, startafterload);
+        getMusicPlayer(g.getId()).enqueue(source, event, startafterload);
     }
+
     public void remove(Guild g, int index) {
         getMusicPlayer(g.getId()).removeTrack(index);
     }
+
     public void move(Guild g, int from, int to) {
         getMusicPlayer(g.getId()).moveTrack(from, to);
     }
+
     public void clear(Guild g) {
         getMusicPlayer(g.getId()).clearQueue();
     }
+
     public List<AudioTrack> getQueue(Guild g) {
         return getMusicPlayer(g.getId()).getQueue();
     }
+
     public void shuffle(Guild g) {
         getMusicPlayer(g.getId()).shuffle();
     }
 
     // PLAYER
+
     public void setPause(Guild g, boolean pause) {
         getMusicPlayer(g.getId()).setPause(pause);
     }
+
     public void setPause(Guild g, boolean pause, AudioEventListener listener) {
         getMusicPlayer(g.getId()).setPause(pause, listener);
     }
+
     public boolean isPaused(Guild g) {
         return getMusicPlayer(g.getId()).isPaused();
     }
@@ -100,12 +110,15 @@ public class MusicManager {
     public void next(Guild g) {
         getMusicPlayer(g.getId()).nextTrack();
     }
+
     public void next(Guild g, AudioEventListener listener) {
         getMusicPlayer(g.getId()).nextTrack(listener);
     }
+
     public void next(Guild g, int position) {
         getMusicPlayer(g.getId()).nextTrack(position);
     }
+
     public void next(Guild g, int position, AudioEventListener listener) {
         getMusicPlayer(g.getId()).nextTrack(position, listener);
     }
@@ -113,6 +126,7 @@ public class MusicManager {
     public void playnow(Guild g, String source) {
         getMusicPlayer(g.getId()).playnow(source);
     }
+
     public void playnow(Guild g, String source, SlashCommandInteractionEvent event) {
         getMusicPlayer(g.getId()).playnow(source, event);
     }
@@ -120,6 +134,7 @@ public class MusicManager {
     public void setVolume(Guild g, int volume) {
         getMusicPlayer(g.getId()).setVolume(volume);
     }
+
     public int getVolume(Guild g) {
         return getMusicPlayer(g.getId()).getVolume();
     }
@@ -162,71 +177,66 @@ public class MusicManager {
         return 0;
     }
 
-
     // PLAYER MANAGEMENT
+
     public void reload() {
-        for(String guildId : musicPlayers.keySet()) {
-            Guild g = this.musicBot.getShardManager().getGuildById(guildId);
-            if(g == null) {
-                removePlayer(guildId);
-            } else {
-                if(g.getSelfMember().getVoiceState().inAudioChannel()) {
-                    /*if(!playerExpiration.containsKey(guildId)) {
-                        playerExpiration.put(guildId, 900);
-                    }
-                    List<Member> memberList = g.getSelfMember().getVoiceState().getChannel().getMembers();
-                    memberList.remove(g.getSelfMember());
-                    if(memberList.isEmpty()) {
-                        if(playerExpiration.get(guildId) > 0) {
-                            playerExpiration.put(guildId, playerExpiration.get(guildId)-1);
-                        } else if(playerExpiration.get(guildId) == 0) {
-                            disconnect(g);
-                        }
-                    } else {
-                        playerExpiration.put(guildId, 900);
-                    }
-                     */
-                } else {
-                    removePlayer(guildId);
-                }
+
+        for (String guildId : musicPlayers.keySet()) {
+
+            if (this.musicBot.getShardManager() == null) {
+                this.removePlayer(guildId);
+                continue;
             }
-        }
-    }
 
-    public void playerExpiration() {
-        for(String guildId : musicPlayers.keySet()) {
-            MusicPlayer musicPlayer = musicPlayers.get(guildId);
+            Guild g = this.musicBot.getShardManager().getGuildById(guildId);
+
+            if (g == null) {
+                this.removePlayer(guildId);
+                continue;
+            }
 
         }
+
     }
 
     public MusicPlayer getMusicPlayer(String guildId) {
-        if(musicPlayers.containsKey(guildId)) {
-            return musicPlayers.get(guildId);
-        } else {
-            MusicPlayer musicPlayer = new MusicPlayer(this);
-            musicPlayers.put(guildId, musicPlayer);
-            return musicPlayer;
+
+        MusicPlayer musicPlayer = this.musicPlayers.get(guildId);
+
+        if (musicPlayer == null) {
+
+            musicPlayer = new MusicPlayer(this);
+            this.musicPlayers.put(guildId, musicPlayer);
+
         }
+
+        return musicPlayer;
     }
 
     public String getGuildIdFromMusicPlayer(MusicPlayer musicPlayer) {
-        for(String guildId : musicPlayers.keySet()) {
-            if(musicPlayers.get(guildId) == musicPlayer) {
+
+        for (String guildId : List.copyOf(this.musicPlayers.keySet())) {
+
+            if (this.musicPlayers.get(guildId) == musicPlayer) {
                 return guildId;
             }
+
         }
+
         return "";
     }
 
     public void removePlayer(String guildId) {
-        if(musicPlayers.containsKey(guildId)) {
-            musicPlayers.get(guildId).destroy();
+
+        MusicPlayer musicPlayer = this.musicPlayers.get(guildId);
+
+        if (musicPlayer == null) {
+            return;
         }
-        if(playerExpiration.containsKey(guildId)) {
-            playerExpiration.remove(guildId);
-        }
-        musicPlayers.remove(guildId);
+
+        musicPlayer.destroy();
+        this.musicPlayers.remove(guildId);
+
     }
 
     public MusicBot getMusicBot() {
