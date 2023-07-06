@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class MusicPlayer {
     private final MusicManager musicManager;
@@ -55,10 +56,13 @@ public class MusicPlayer {
 
             @Override
             public void playlistLoaded(AudioPlaylist audioPlaylist) {
+
                 queue.addAll(audioPlaylist.getTracks());
+
                 if(startafterload) {
                     nextTrack();
                 }
+
             }
 
             @Override public void noMatches() {
@@ -71,6 +75,60 @@ public class MusicPlayer {
             }
 
         });
+    }
+
+    public MusicEqueuedResponse enqueueWithResponse(String source, boolean startafterload) {
+        CountDownLatch latch = new CountDownLatch(1);
+        final MusicEqueuedResponse[] response = {null};
+
+        this.playerManager.loadItem(source, new AudioLoadResultHandler() {
+
+            @Override
+            public void trackLoaded(AudioTrack audioTrack) {
+
+                queue.add(audioTrack);
+
+                if(startafterload) {
+                    nextTrack();
+                }
+
+                response[0] = new MusicEqueuedResponse(audioTrack.getInfo().title);
+                latch.countDown();
+
+            }
+
+            @Override
+            public void playlistLoaded(AudioPlaylist audioPlaylist) {
+
+                queue.addAll(audioPlaylist.getTracks());
+
+                if(startafterload) {
+                    nextTrack();
+                }
+
+                response[0] = new MusicEqueuedResponse(audioPlaylist.getTracks().size());
+                latch.countDown();
+
+            }
+
+            @Override public void noMatches() {
+                latch.countDown();
+            }
+
+            @Override
+            public void loadFailed(FriendlyException e) {
+                latch.countDown();
+            }
+
+        });
+
+        try {
+            latch.await(1, TimeUnit.MINUTES);
+        } catch (InterruptedException ignored) {
+            // ignored
+        }
+
+        return response[0];
     }
 
     public void enqueue(String source, SlashCommandInteractionEvent event, boolean startafterload) {
