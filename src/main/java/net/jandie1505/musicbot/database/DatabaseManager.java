@@ -186,11 +186,11 @@ public class DatabaseManager {
         }
     }
 
-    public void removeGuildFromWhitelist(String guildId) {
+    public void removeGuildFromWhitelist(long guildId) {
         try {
             String sql2 = "DELETE FROM guild_whitelist WHERE guildId = ?;";
             PreparedStatement statement2 = connection.prepareStatement(sql2);
-            statement2.setString(1, guildId);
+            statement2.setLong(1, guildId);
             statement2.execute();
             this.debugDatabaseLog("Deleted guild " + guildId + " from guild whitelist");
         } catch(Exception e) {
@@ -232,7 +232,7 @@ public class DatabaseManager {
 
     // MUSIC BLACKLIST
 
-    public void addToMusicBlacklist(BlacklistEntry blacklistEntry) {
+    public void updateMusicBlacklistEntry(BlacklistEntry blacklistEntry) {
         try {
             blacklistEntry.getStatement(this.connection).execute();
             this.debugDatabaseLog("Added blacklist entry: " + blacklistEntry.getType() + " " + blacklistEntry.getGuildId() + " " + blacklistEntry.getContent());
@@ -241,7 +241,7 @@ public class DatabaseManager {
         }
     }
 
-    public void deleteFromMusicBlacklist(long id) {
+    public void deleteMusicBlacklistEntry(long id) {
         try {
             PreparedStatement statement = this.connection.prepareStatement(
                     "DELETE FROM music_blacklist WHERE id = ?;"
@@ -354,7 +354,7 @@ public class DatabaseManager {
             Guild guild = this.musicBot.getShardManager().getGuildById(blacklistEntry.getGuildId());
 
             if (guild == null) {
-                this.deleteFromMusicBlacklist(blacklistEntry.getId());
+                this.deleteMusicBlacklistEntry(blacklistEntry.getId());
                 continue;
             }
 

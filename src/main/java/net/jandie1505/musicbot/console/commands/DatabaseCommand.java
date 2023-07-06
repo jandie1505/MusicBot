@@ -2,6 +2,7 @@ package net.jandie1505.musicbot.console.commands;
 
 import net.jandie1505.musicbot.MusicBot;
 import net.jandie1505.musicbot.console.CommandExecutor;
+import net.jandie1505.musicbot.database.BlacklistEntry;
 import net.jandie1505.musicbot.database.GuildData;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -138,7 +139,148 @@ public class DatabaseCommand implements CommandExecutor {
 
                         }
                         default -> {
-                            return "Unknown subcommand. Run command without arguments for help.";
+                            return "Unknown subcommand. Run database guild without arguments for help.";
+                        }
+                    }
+
+                }
+                case "whitelist" -> {
+
+                    if (args.length < 2) {
+                        return "Database command help:\n" +
+                                "database whitelist add <guildId>\n" +
+                                "database whitelist remove <guildId>\n" +
+                                "database whitelist list";
+                    }
+
+                    switch (args[1]) {
+                        case "add" -> {
+
+                            if (args.length < 3) {
+                                return "Usage: database whitelist add <guildId>";
+                            }
+
+                            this.musicBot.getDatabaseManager().addGuildToWhitelist(Long.parseLong(args[2]));
+                            return "Guild " + Long.parseLong(args[2]) + " was added to whitelist";
+                        }
+
+                        case "remove" -> {
+
+                            if (args.length < 3) {
+                                return "Usage: database whitelist remove <guildId>";
+                            }
+
+                            this.musicBot.getDatabaseManager().removeGuildFromWhitelist(Long.parseLong(args[2]));
+                            return "Guild " + Long.parseLong(args[2]) + " was removed from whitelist";
+                        }
+                        case "list" -> {
+                            String output = "Whitelisted guilds:";
+
+                            for (long guildId : this.musicBot.getDatabaseManager().getGuildWhitelist()) {
+                                output = output + "\n" + guildId;
+                            }
+
+                            return output;
+                        }
+                        default -> {
+                            return "Unknown subcommand. Run database whitelist without arguments for help.";
+                        }
+                    }
+
+                }
+                case "music-blacklist" -> {
+
+                    if (args.length < 2) {
+                        return "Database command help:\n" +
+                                "database music-blacklist remove <id>\n" +
+                                "database music-blacklist clear <guildId>\n" +
+                                "database music-blacklist list-all\n" +
+                                "database music-blacklist list <guildId>\n" +
+                                "database music-blacklist info <id>\n" +
+                                "database music-blacklist update <id> guildId/type/content <value>\n" +
+                                "Use negative guildId value for global blacklist\n" +
+                                "Empty content values will be ignored";
+                    }
+
+                    switch (args[1]) {
+                        case "remove" -> {
+
+                            if (args.length < 3) {
+                                return "Usage: database music-blacklist remove <id>";
+                            }
+
+                            this.musicBot.getDatabaseManager().deleteMusicBlacklistEntry(Long.parseLong(args[2]));
+                            return "Music blacklist entry deleted (if it existed before)";
+                        }
+                        case "clear" -> {
+
+                            if (args.length < 3) {
+                                return "Usage: database music-blacklist remove <id>";
+                            }
+
+                            this.musicBot.getDatabaseManager().clearMusicBlacklist(Long.parseLong(args[2]));
+                            return "Cleared music blacklist for guild " + Long.parseLong(args[2]);
+                        }
+                        case "list-all" -> {
+                            String output = "| ID | GUILD ID | TYPE | CONTENT |";
+
+                            for (BlacklistEntry blacklistEntry : this.musicBot.getDatabaseManager().getMusicBlacklist()) {
+                                output = output + "\n|" + blacklistEntry.getId() + " | " + blacklistEntry.getGuildId() + " | " + blacklistEntry.getType() + " | " + blacklistEntry.getContent() + " |";
+                            }
+
+                            return output;
+                        }
+                        case "list" -> {
+
+                            if (args.length < 3) {
+                                return "Usage: database music-blacklist list <guildId>";
+                            }
+
+                            String output = "| ID | GUILD ID | TYPE | CONTENT |";
+
+                            for (BlacklistEntry blacklistEntry : this.musicBot.getDatabaseManager().getMusicBlacklist(Long.parseLong(args[2]))) {
+                                output = output + "\n|" + blacklistEntry.getId() + " | " + blacklistEntry.getGuildId() + " | " + blacklistEntry.getType() + " | " + blacklistEntry.getContent() + " |";
+                            }
+
+                            return output;
+                        }
+                        case "info" -> {
+
+                            if (args.length < 3) {
+                                return "Usage: database music-blacklist info <id>";
+                            }
+
+                            BlacklistEntry blacklistEntry = this.musicBot.getDatabaseManager().getMusicBlacklistEntry(Long.parseLong(args[2]));
+
+                            return "Blacklist entry information:\n" +
+                                    "id: " + blacklistEntry.getId() + "\n" +
+                                    "guildId: " + blacklistEntry.getGuildId() + "\n" +
+                                    "type: " + blacklistEntry.getType() + "\n" +
+                                    "content: " + blacklistEntry.getContent() + "\n";
+                        }
+                        case "update" -> {
+
+                            if (args.length < 5) {
+                                return "database music-blacklist update <id> guildId/type/content <value>";
+                            }
+
+                            BlacklistEntry blacklistEntry = this.musicBot.getDatabaseManager().getMusicBlacklistEntry(Long.parseLong(args[2]));
+
+                            switch (args[3]) {
+                                case "guildId" -> blacklistEntry.setGuildId(Long.parseLong(args[4]));
+                                case "type" -> blacklistEntry.setType(Integer.parseInt(args[4]));
+                                case "content" -> blacklistEntry.setContent(args[4]);
+                                default -> {
+                                    return "Unknown value";
+                                }
+                            }
+
+                            this.musicBot.getDatabaseManager().updateMusicBlacklistEntry(blacklistEntry);
+                            return "Updated value";
+
+                        }
+                        default -> {
+                            return "Unknown subcommand. Run database music-blacklist without arguments for help";
                         }
                     }
 
