@@ -19,7 +19,6 @@ public class DatabaseManager {
     private final MusicBot musicBot;
     private File databaseFile;
     private Connection connection;
-    private Thread thread;
 
     public DatabaseManager(MusicBot musicBot) throws IOException, SQLException, ClassNotFoundException {
         this.musicBot = musicBot;
@@ -154,6 +153,10 @@ public class DatabaseManager {
     }
 
     public void cleanupGuilds() {
+
+        if (this.musicBot.getShardManager() == null) {
+            return;
+        }
 
         if (!this.musicBot.completeOnline()) {
             return;
@@ -345,6 +348,10 @@ public class DatabaseManager {
 
     public void cleanupMusicBlacklist() {
 
+        if (this.musicBot.getShardManager() == null) {
+            return;
+        }
+
         for (BlacklistEntry blacklistEntry : this.getMusicBlacklist()) {
 
             if (blacklistEntry.getId() < 0) {
@@ -360,52 +367,6 @@ public class DatabaseManager {
 
         }
 
-    }
-
-    // THREAD
-
-    public void start() {
-
-        if (this.thread == null || !this.thread.isAlive()) {
-            return;
-        }
-
-        this.thread = new Thread(() -> {
-            this.debugDatabaseLog("Database cleanup thread started (" + this + ")");
-            int timer = 0;
-
-            while (!Thread.currentThread().isInterrupted() && thread == Thread.currentThread()) {
-                try {
-
-                    if (timer > 60) {
-
-                        if (this.musicBot.completeOnline()) {
-
-                            this.cleanupGuilds();
-                            this.cleanupMusicBlacklist();
-
-                        }
-
-                        timer = 0;
-                    } else {
-                        timer++;
-                    }
-
-                    TimeUnit.SECONDS.sleep(1);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-
-            this.debugDatabaseLog("Database cleanup thread stopped (" + this + ")");
-        });
-
-        this.thread.setName("MUSICBOT-DATABASE-CLEANUP-" + this);
-        this.thread.start();
-    }
-
-    public void stop() {
-        this.thread.interrupt();
     }
 
     // Logger

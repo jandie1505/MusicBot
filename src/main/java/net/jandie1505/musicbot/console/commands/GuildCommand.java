@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.jandie1505.musicbot.MusicBot;
 import net.jandie1505.musicbot.console.CommandExecutor;
+import net.jandie1505.musicbot.utilities.BotStatus;
 
 import java.util.List;
 
@@ -17,6 +18,10 @@ public class GuildCommand implements CommandExecutor {
     @Override
     public String onCommand(String command, String[] args) {
         try {
+
+            if (this.musicBot.getBotStatus() != BotStatus.ACTIVE) {
+                return "Command disabled because bot is not started";
+            }
 
             if (args.length == 0) {
                 return "Guild command help:\n" +
