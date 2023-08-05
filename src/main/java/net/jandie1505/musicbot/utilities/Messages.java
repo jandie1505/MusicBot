@@ -3,6 +3,7 @@ package net.jandie1505.musicbot.utilities;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.Component;
 import net.dv8tion.jda.api.interactions.components.ItemComponent;
@@ -38,15 +39,15 @@ public class Messages {
             if(showbuttons) {
                 if(musicBot.getMusicManager().isPaused(g)) {
                     messageBuilder.addComponents(ActionRow.of(
-                            Button.primary("playbutton", "▶"),
-                            Button.primary("nowplayingskipbutton", "⏭"),
-                            Button.secondary("refreshbutton", "\uD83D\uDD04")
+                            Button.primary("nowplaying_button_play", "▶"),
+                            Button.primary("nowplaying_button_skip", "⏭"),
+                            Button.secondary("nowplaying_button_refresh", "\uD83D\uDD04")
                     ));
                 } else if(!musicBot.getMusicManager().isPaused(g)) {
                     messageBuilder.addComponents(ActionRow.of(
-                            Button.primary("pausebutton", "⏸"),
-                            Button.primary("nowplayingskipbutton", "⏭"),
-                            Button.secondary("refreshbutton", "\uD83D\uDD04")
+                            Button.primary("nowplaying_button_play", "⏸"),
+                            Button.primary("nowplaying_button_skip", "⏭"),
+                            Button.secondary("nowplaying_button_refresh", "\uD83D\uDD04")
                     ));
                 }
             }
@@ -217,5 +218,19 @@ public class Messages {
             }
         }
         return progressbar;
+    }
+
+    public static MessageEmbed warningMessage(String message) {
+        return new EmbedBuilder()
+                .setDescription(":warning:  " + message)
+                .setColor(Color.RED)
+                .build();
+    }
+
+    public static MessageEmbed failMessage(String message) {
+        return new EmbedBuilder()
+                .setDescription(":x:  " + message)
+                .setColor(Color.RED)
+                .build();
     }
 }

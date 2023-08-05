@@ -23,16 +23,10 @@ import net.jandie1505.musicbot.database.DatabaseManager;
 import net.jandie1505.musicbot.eventlisteners.EventsBasic;
 import net.jandie1505.musicbot.eventlisteners.EventsButtons;
 import net.jandie1505.musicbot.eventlisteners.EventsCommands;
-import net.jandie1505.musicbot.slashcommands.BotOwnerPermissionRequest;
-import net.jandie1505.musicbot.slashcommands.UserPermissionRequest;
-import net.jandie1505.musicbot.system.GMS;
+import net.jandie1505.musicbot.eventlisteners.EventsCommandsOld;
 import net.jandie1505.musicbot.music.MusicManager;
+import net.jandie1505.musicbot.system.GMS;
 import net.jandie1505.musicbot.utilities.BotStatus;
-import net.jandie1505.musicbot.utilities.Messages;
-import net.jandie1505.slashcommandapi.SlashCommandHandler;
-import net.jandie1505.slashcommandapi.command.SlashCommandBuilder;
-import net.jandie1505.slashcommandapi.utilities.DefaultPermissionRequests;
-import net.jandie1505.slashcommandapi.utilities.DefaultSlashCommandExecutors;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.terminal.Terminal;
@@ -280,6 +274,7 @@ public class MusicBot {
         this.shardManager.setPresence(OnlineStatus.IDLE, Activity.playing("Starting up..."));
         this.shardManager.addEventListener(new EventsBasic(this));
         this.shardManager.addEventListener(new EventsCommands(this));
+        this.shardManager.addEventListener(new EventsCommandsOld(this));
         this.shardManager.addEventListener(new EventsButtons(this));
 
         MusicBot.LOGGER.info("Started ShardManager");
@@ -398,48 +393,6 @@ public class MusicBot {
             }
         }
         return (shardManager.getShardsRunning() == shardManager.getShardsTotal()) && status;
-    }
-
-    public SlashCommandHandler upsertCommands() {
-        SlashCommandHandler slashCommandHandler = new SlashCommandHandler();
-
-        slashCommandHandler.registerSlashCommand(
-                "cmd",
-                new SlashCommandBuilder()
-                        .executes(interaction -> {
-                            interaction.deferReply().queue();
-                            interaction.getHook().sendMessage(this.console.runCommand(interaction.getOption("cmd").getAsString()));
-                            // Logger is planned
-                        })
-                        .executesMissingOptions(DefaultSlashCommandExecutors.missingOptionsExecutor())
-                        .withPermissionRequest(new BotOwnerPermissionRequest(this))
-                        .requireOption("cmd", OptionType.STRING)
-                        .build()
-        );
-
-        slashCommandHandler.registerSlashCommand(
-                "help",
-                new SlashCommandBuilder()
-                        .executes(interaction -> {
-                            interaction.reply(Messages.getHelpMessage().build()).queue();
-                        })
-                        .withPermissionRequest(DefaultPermissionRequests.publicCommand())
-                        .build()
-        );
-
-        slashCommandHandler.registerSlashCommand(
-                "play",
-                new SlashCommandBuilder()
-                        .executes(interaction -> {
-
-                        })
-                        .executesNoPermission(DefaultSlashCommandExecutors.noPermissionExecutor())
-                        .withPermissionRequest(new UserPermissionRequest(this))
-                        .requireGuild(true)
-                        .build()
-        );
-
-        return slashCommandHandler;
     }
 
     // UPSERT COMMANDS

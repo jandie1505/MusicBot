@@ -16,7 +16,7 @@ import java.util.Map;
 public class MusicManager {
 
     private final MusicBot musicBot;
-    private final Map<String, MusicPlayer> musicPlayers;
+    private final Map<Long, MusicPlayer> musicPlayers;
 
     public MusicManager(MusicBot musicBot) {
         this.musicBot = musicBot;
@@ -29,7 +29,7 @@ public class MusicManager {
 
         try {
 
-            audioChannel.getGuild().getAudioManager().setSendingHandler(this.getMusicPlayer(audioChannel.getGuild().getId()).getAudioSendHandler());
+            audioChannel.getGuild().getAudioManager().setSendingHandler(this.getMusicPlayer(audioChannel.getGuild().getIdLong()).getAudioSendHandler());
             audioChannel.getGuild().getAudioManager().openAudioConnection(audioChannel);
 
             return true;
@@ -45,7 +45,7 @@ public class MusicManager {
         if(isConnected(g)) {
 
             g.getAudioManager().closeAudioConnection();
-            removePlayer(g.getId());
+            removePlayer(g.getIdLong());
 
         }
 
@@ -58,121 +58,121 @@ public class MusicManager {
     // QUEUE
 
     public void add(Guild g, String source, boolean startafterload) {
-        getMusicPlayer(g.getId()).enqueue(source, startafterload);
+        getMusicPlayer(g.getIdLong()).enqueue(source, startafterload);
     }
 
     public void add(Guild g, String source, SlashCommandInteractionEvent event, boolean startafterload) {
-        getMusicPlayer(g.getId()).enqueue(source, event, startafterload);
+        getMusicPlayer(g.getIdLong()).enqueue(source, event, startafterload);
     }
 
     public void remove(Guild g, int index) {
-        getMusicPlayer(g.getId()).removeTrack(index);
+        getMusicPlayer(g.getIdLong()).removeTrack(index);
     }
 
     public void move(Guild g, int from, int to) {
-        getMusicPlayer(g.getId()).moveTrack(from, to);
+        getMusicPlayer(g.getIdLong()).moveTrack(from, to);
     }
 
     public void clear(Guild g) {
-        getMusicPlayer(g.getId()).clearQueue();
+        getMusicPlayer(g.getIdLong()).clearQueue();
     }
 
     public List<AudioTrack> getQueue(Guild g) {
-        return getMusicPlayer(g.getId()).getQueue();
+        return getMusicPlayer(g.getIdLong()).getQueue();
     }
 
     public void shuffle(Guild g) {
-        getMusicPlayer(g.getId()).shuffle();
+        getMusicPlayer(g.getIdLong()).shuffle();
     }
 
     // PLAYER
 
     public void setPause(Guild g, boolean pause) {
-        getMusicPlayer(g.getId()).setPause(pause);
+        getMusicPlayer(g.getIdLong()).setPause(pause);
     }
 
     public void setPause(Guild g, boolean pause, AudioEventListener listener) {
-        getMusicPlayer(g.getId()).setPause(pause, listener);
+        getMusicPlayer(g.getIdLong()).setPause(pause, listener);
     }
 
     public boolean isPaused(Guild g) {
-        return getMusicPlayer(g.getId()).isPaused();
+        return getMusicPlayer(g.getIdLong()).isPaused();
     }
 
     public AudioTrack getPlayingTrack(Guild g) {
-        return getMusicPlayer(g.getId()).getPlayingTrack();
+        return getMusicPlayer(g.getIdLong()).getPlayingTrack();
     }
 
     public void stop(Guild g) {
-        getMusicPlayer(g.getId()).stop();
+        getMusicPlayer(g.getIdLong()).stop();
     }
 
     public void next(Guild g) {
-        getMusicPlayer(g.getId()).nextTrack();
+        getMusicPlayer(g.getIdLong()).nextTrack();
     }
 
     public void next(Guild g, AudioEventListener listener) {
-        getMusicPlayer(g.getId()).nextTrack(listener);
+        getMusicPlayer(g.getIdLong()).nextTrack(listener);
     }
 
     public void next(Guild g, int position) {
-        getMusicPlayer(g.getId()).nextTrack(position);
+        getMusicPlayer(g.getIdLong()).nextTrack(position);
     }
 
     public void next(Guild g, int position, AudioEventListener listener) {
-        getMusicPlayer(g.getId()).nextTrack(position, listener);
+        getMusicPlayer(g.getIdLong()).nextTrack(position, listener);
     }
 
     public void playnow(Guild g, String source) {
-        getMusicPlayer(g.getId()).playnow(source);
+        getMusicPlayer(g.getIdLong()).playnow(source);
     }
 
     public void playnow(Guild g, String source, SlashCommandInteractionEvent event) {
-        getMusicPlayer(g.getId()).playnow(source, event);
+        getMusicPlayer(g.getIdLong()).playnow(source, event);
     }
 
     public void setVolume(Guild g, int volume) {
-        getMusicPlayer(g.getId()).setVolume(volume);
+        getMusicPlayer(g.getIdLong()).setVolume(volume);
     }
 
     public int getVolume(Guild g) {
-        return getMusicPlayer(g.getId()).getVolume();
+        return getMusicPlayer(g.getIdLong()).getVolume();
     }
 
     // SKIPVOTES
     public void addSkipvote(Guild g, Member m) {
-        if (!getMusicPlayer(g.getId()).hasSkipvoteManaer()) {
-            getMusicPlayer(g.getId()).createSkipvoteManager();
+        if (!getMusicPlayer(g.getIdLong()).hasSkipvoteManaer()) {
+            getMusicPlayer(g.getIdLong()).createSkipvoteManager();
         }
-        getMusicPlayer(g.getId()).getSkipvoteManager().addSkipvote(m);
+        getMusicPlayer(g.getIdLong()).getSkipvoteManager().addSkipvote(m);
     }
 
     public void removeSkipvote(Guild g, Member m) {
-        if(getMusicPlayer(g.getId()).hasSkipvoteManaer()) {
-            getMusicPlayer(g.getId()).getSkipvoteManager().removeSkipvote(m);
+        if(getMusicPlayer(g.getIdLong()).hasSkipvoteManaer()) {
+            getMusicPlayer(g.getIdLong()).getSkipvoteManager().removeSkipvote(m);
         }
     }
 
     public List<Member> getSkipvotes(Guild g) {
         List<Member> returnList = new ArrayList<>();
 
-        if(getMusicPlayer(g.getId()).hasSkipvoteManaer()) {
-            returnList.addAll(getMusicPlayer(g.getId()).getSkipvoteManager().getSkipvotes());
+        if(getMusicPlayer(g.getIdLong()).hasSkipvoteManaer()) {
+            returnList.addAll(getMusicPlayer(g.getIdLong()).getSkipvoteManager().getSkipvotes());
         }
 
         return returnList;
     }
 
     public int getVoteCount(Guild g) {
-        if(getMusicPlayer(g.getId()).hasSkipvoteManaer()) {
-            return getMusicPlayer(g.getId()).getSkipvoteManager().getVoteCount();
+        if(getMusicPlayer(g.getIdLong()).hasSkipvoteManaer()) {
+            return getMusicPlayer(g.getIdLong()).getSkipvoteManager().getVoteCount();
         }
         return 0;
     }
 
     public int getRequiredVotes(Guild g) {
-        if(getMusicPlayer(g.getId()).hasSkipvoteManaer()) {
-            return getMusicPlayer(g.getId()).getSkipvoteManager().getRequiredVotes();
+        if(getMusicPlayer(g.getIdLong()).hasSkipvoteManaer()) {
+            return getMusicPlayer(g.getIdLong()).getSkipvoteManager().getRequiredVotes();
         }
         return 0;
     }
@@ -181,7 +181,7 @@ public class MusicManager {
 
     public void reload() {
 
-        for (String guildId : musicPlayers.keySet()) {
+        for (long guildId : musicPlayers.keySet()) {
 
             if (this.musicBot.getShardManager() == null) {
                 this.removePlayer(guildId);
@@ -199,7 +199,7 @@ public class MusicManager {
 
     }
 
-    public MusicPlayer getMusicPlayer(String guildId) {
+    public MusicPlayer getMusicPlayer(long guildId) {
 
         MusicPlayer musicPlayer = this.musicPlayers.get(guildId);
 
@@ -213,9 +213,9 @@ public class MusicManager {
         return musicPlayer;
     }
 
-    public String getGuildIdFromMusicPlayer(MusicPlayer musicPlayer) {
+    public long getGuildIdFromMusicPlayer(MusicPlayer musicPlayer) {
 
-        for (String guildId : List.copyOf(this.musicPlayers.keySet())) {
+        for (long guildId : List.copyOf(this.musicPlayers.keySet())) {
 
             if (this.musicPlayers.get(guildId) == musicPlayer) {
                 return guildId;
@@ -223,10 +223,10 @@ public class MusicManager {
 
         }
 
-        return "";
+        return -1;
     }
 
-    public void removePlayer(String guildId) {
+    public void removePlayer(long guildId) {
 
         MusicPlayer musicPlayer = this.musicPlayers.get(guildId);
 

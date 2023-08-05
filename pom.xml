@@ -67,11 +67,6 @@
             <version>8.0.0</version>
         </dependency>
         <dependency>
-            <groupId>com.github.jandie1505</groupId>
-            <artifactId>SlashCommandAPI</artifactId>
-            <version>v1.0.1</version>
-        </dependency>
-        <dependency>
             <groupId>org.jline</groupId>
             <artifactId>jline</artifactId>
             <version>3.23.0</version>
