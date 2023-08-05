@@ -1,18 +1,13 @@
 package net.jandie1505.musicbot.eventlisteners;
 
-import com.sedmelluq.discord.lavaplayer.player.event.AudioEvent;
-import com.sedmelluq.discord.lavaplayer.player.event.AudioEventListener;
-import com.sedmelluq.discord.lavaplayer.player.event.PlayerPauseEvent;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.jandie1505.musicbot.MusicBot;
 import net.jandie1505.musicbot.database.GuildData;
-import net.jandie1505.musicbot.music.MusicPlayer;
 import net.jandie1505.musicbot.utilities.Messages;
 import net.jandie1505.musicbot.utilities.SpotifySearchHandler;
 import net.jandie1505.musicbot.utilities.YTSearchHandler;
@@ -36,10 +31,6 @@ public class EventsCommandsOld extends ListenerAdapter {
         if(event.getMember() != null && event.getGuild() != null) {
             if(event.getName().equalsIgnoreCase("add")) {
                 this.addCommand(event);
-            } else if(event.getName().equalsIgnoreCase("forceskip")) {
-                this.forceskipCommand(event);
-            } else if(event.getName().equalsIgnoreCase("remove")) {
-                this.removeCommand(event);
             } else if(event.getName().equalsIgnoreCase("clear")) {
                 this.clearCommand(event);
             } else if(event.getName().equalsIgnoreCase("movetrack")) {
@@ -76,78 +67,6 @@ public class EventsCommandsOld extends ListenerAdapter {
                 } else {
                     EmbedBuilder embedBuilder = new EmbedBuilder()
                             .setDescription(":warning:  Song required")
-                            .setColor(Color.RED);
-                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                }
-            } else {
-                event.getHook().sendMessage("").addEmbeds(getNotConnectedErrorMessage().build()).queue();
-            }
-        }
-    }
-
-    private void forceskipCommand(SlashCommandInteractionEvent event) {
-        if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
-            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
-            if(this.musicBot.getMusicManager().isConnected(event.getGuild())) {
-                if(event.getOption("position") != null) {
-                    if(this.musicBot.getMusicManager().getPlayingTrack(event.getGuild()) != null) {
-                        String previousSong = "";
-                        previousSong = this.musicBot.getMusicManager().getPlayingTrack(event.getGuild()).getInfo().title;
-                        int position = (int) event.getOption("position").getAsLong();
-                        this.musicBot.getMusicManager().next(event.getGuild(), position);
-                        EmbedBuilder embedBuilder = new EmbedBuilder()
-                                .setDescription(":track_next:  Skipped " + previousSong)
-                                .setColor(Color.GREEN);
-                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                    } else {
-                        EmbedBuilder embedBuilder = new EmbedBuilder()
-                                .setDescription(":warning:  Nothing to skip")
-                                .setColor(Color.RED);
-                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                    }
-                } else {
-                    if(this.musicBot.getMusicManager().getPlayingTrack(event.getGuild()) != null) {
-                        String previousSong = "";
-                        previousSong = this.musicBot.getMusicManager().getPlayingTrack(event.getGuild()).getInfo().title;
-                        this.musicBot.getMusicManager().next(event.getGuild());
-                        EmbedBuilder embedBuilder = new EmbedBuilder()
-                                .setDescription(":track_next:  Skipped " + previousSong)
-                                .setColor(Color.GREEN);
-                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                    } else {
-                        EmbedBuilder embedBuilder = new EmbedBuilder()
-                                .setDescription(":warning:  Nothing to skip")
-                                .setColor(Color.RED);
-                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                    }
-                }
-            } else {
-                event.getHook().sendMessage("").addEmbeds(getNotConnectedErrorMessage().build()).queue();
-            }
-        }
-    }
-
-    private void removeCommand(SlashCommandInteractionEvent event) {
-        if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
-            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
-            if(this.musicBot.getMusicManager().isConnected(event.getGuild())) {
-                if(event.getOption("index") != null) {
-                    int index = (int) event.getOption("index").getAsLong();
-                    if(index < this.musicBot.getMusicManager().getQueue(event.getGuild()).size()) {
-                        this.musicBot.getMusicManager().remove(event.getGuild(), index);
-                        EmbedBuilder embedBuilder = new EmbedBuilder()
-                                .setDescription(":white_check_mark:  Successfully removed")
-                                .setColor(Color.GREEN);
-                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                    } else {
-                        EmbedBuilder embedBuilder = new EmbedBuilder()
-                                .setDescription(":warning:  Index does not exist")
-                                .setColor(Color.RED);
-                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                    }
-                } else {
-                    EmbedBuilder embedBuilder = new EmbedBuilder()
-                            .setDescription(":warning:  Index required")
                             .setColor(Color.RED);
                     event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
                 }

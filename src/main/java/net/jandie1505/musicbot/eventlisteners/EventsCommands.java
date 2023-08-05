@@ -33,6 +33,8 @@ public class EventsCommands extends ListenerAdapter {
             case "play" -> playCommand(interaction);
             case "stop" -> stopCommand(interaction);
             case "disconnect" -> disconnectCommand(interaction);
+            case "forceskip" -> forceskipCommand(interaction);
+            case "remove" -> removeCommand(interaction);
             default -> {}
         }
 
@@ -203,7 +205,7 @@ public class EventsCommands extends ListenerAdapter {
         // Enqueue
 
         boolean startafterload = musicPlayer.getPlayingTrack() == null;
-        String source = interaction.getOption("name").getAsString();
+        String source = interaction.getOption("song").getAsString();
         MusicEqueuedResponse response = null;
 
         if (source.startsWith("http://") || source.startsWith("https://")) {
@@ -348,6 +350,103 @@ public class EventsCommands extends ListenerAdapter {
         interaction.getHook().sendMessageEmbeds(
                 new EmbedBuilder()
                         .setDescription(":heavy_multiplication_x:  Disconnected")
+                        .setColor(Color.GREEN)
+                        .build()
+        ).queue();
+
+    }
+
+    private void forceskipCommand(SlashCommandInteraction interaction) {
+
+        // Null checks
+
+        if (interaction.getGuild() == null || interaction.getMember() == null) {
+            return;
+        }
+
+        // Permission check
+
+        if (!this.musicBot.getGMS().memberHasDJPermissions(interaction.getMember())) {
+            return;
+        }
+
+        // Defer reply
+
+        interaction.deferReply(this.musicBot.getDatabaseManager().getGuild(interaction.getGuild().getIdLong()).isEphemeralState()).queue();
+
+        // Get music player
+
+        MusicPlayer musicPlayer = this.musicBot.getMusicManager().getMusicPlayer(interaction.getGuild().getIdLong());
+
+        if (musicPlayer.getPlayingTrack() == null && musicPlayer.getQueue().isEmpty()) {
+
+            interaction.getHook().sendMessageEmbeds(
+                    Messages.failMessage("Nothing to skip")
+            ).queue();
+
+            return;
+        }
+
+        musicPlayer.nextTrack();
+
+        interaction.getHook().sendMessageEmbeds(
+                new EmbedBuilder()
+                        .setDescription("Skipped track")
+                        .setColor(Color.GREEN)
+                        .build()
+        ).queue();
+
+    }
+
+    private void removeCommand(SlashCommandInteraction interaction) {
+
+        // Null checks
+
+        if (interaction.getGuild() == null || interaction.getMember() == null) {
+            return;
+        }
+
+        // Permission check
+
+        if (!this.musicBot.getGMS().memberHasDJPermissions(interaction.getMember())) {
+            return;
+        }
+
+        // Defer reply
+
+        interaction.deferReply(this.musicBot.getDatabaseManager().getGuild(interaction.getGuild().getIdLong()).isEphemeralState()).queue();
+
+        // get option
+
+        if (interaction.getOption("index") == null) {
+            return;
+        }
+
+        int index = interaction.getOption("index").getAsInt();
+
+        // Get music player
+
+        MusicPlayer musicPlayer = this.musicBot.getMusicManager().getMusicPlayer(interaction.getGuild().getIdLong());
+
+        // Check if index exists
+
+        if (index >= musicPlayer.getQueue().size() || index < 0) {
+
+            interaction.getHook().sendMessageEmbeds(
+                    Messages.failMessage("Index does not exist")
+            ).queue();
+
+            return;
+        }
+
+        // Remove track
+
+        musicPlayer.removeTrack(index);
+
+        interaction.getHook().sendMessageEmbeds(
+                new EmbedBuilder()
+                        .setDescription(":wastebasket:  Track removed from queue")
+                        .setColor(Color.GREEN)
                         .build()
         ).queue();
 
