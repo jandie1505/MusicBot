@@ -12,7 +12,6 @@ import net.dv8tion.jda.api.sharding.DefaultShardManager;
 import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
 import net.dv8tion.jda.api.sharding.ShardManager;
 import net.dv8tion.jda.internal.interactions.CommandDataImpl;
-import net.jandie1505.musicbot.config.ConfigManager;
 import net.jandie1505.musicbot.console.Console;
 import net.jandie1505.musicbot.console.commands.*;
 import net.jandie1505.musicbot.database.DatabaseManager;
@@ -28,12 +27,12 @@ import org.jline.reader.LineReaderBuilder;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.security.auth.login.LoginException;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -68,7 +67,7 @@ public class MusicBot {
 
     // INSTANCE
     private final Console console;
-    private final ConfigManager configManager;
+    private final JSONObject config;
     private final ScheduledExecutorService executorService;
     private final DatabaseManager databaseManager;
     private final GMS gms;
@@ -91,34 +90,30 @@ public class MusicBot {
 
         // CONFIG
 
-        this.configManager = new ConfigManager(this);
-        this.configManager.getConfig().setDisableShardsCheck(disableShardsCheck);
+        this.config = new JSONObject();
 
         if(!ignoreConfigFile) {
-            try {
-                File configFile = new File(System.getProperty("user.dir"), "config.json");
 
-                if(!configFile.exists()) {
-                    configFile.createNewFile();
-                    this.configManager.saveConfig(configFile);
-                }
+            File configFile = new File(System.getProperty("user.dir"), "config.json");
 
-                this.configManager.loadConfig(configFile);
-            } catch (IOException | JSONException e) {
-
+            if(!configFile.exists()) {
+                configFile.createNewFile();
+                this.saveConfig(configFile);
             }
+
+            this.loadConfig(configFile);
+
         }
-        MusicBot.LOGGER.debug("ConfigManager initialization completed");
 
         // OVERRIDE CONFIG VALUES
 
         if (token != null && !token.equalsIgnoreCase("")) {
-            this.configManager.getConfig().setToken(token);
+            this.config.put("token", token);
             MusicBot.LOGGER.info("Config value token overridden by start argument");
         }
 
         if (shardsCount > 0) {
-            this.configManager.getConfig().setShardsCount(shardsCount);
+            this.config.put("shardsCount", shardsCount);
             MusicBot.LOGGER.info("Config value shardsCount overridden by start argument");
         }
 
@@ -216,6 +211,48 @@ public class MusicBot {
 
     }
 
+    // CONFIG
+
+    public void loadConfig(File file) {
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(file));
+
+            StringBuilder sb = new StringBuilder();
+            String line = br.readLine();
+
+            while (line != null) {
+                sb.append(line);
+                sb.append(System.lineSeparator());
+                line = br.readLine();
+            }
+
+            String out = sb.toString();
+
+            JSONObject jsonConfig = new JSONObject(out);
+
+            for (String key : jsonConfig.keySet()) {
+                this.config.put(key, jsonConfig.get(key));
+            }
+
+            LOGGER.info("Config loaded");
+        } catch (IOException | JSONException e) {
+            LOGGER.warn("Failed to load config");
+        }
+    }
+
+    public void saveConfig(File file) {
+        try {
+            FileWriter writer = new FileWriter(file);
+            writer.write(this.config.toString(4));
+            writer.flush();
+            writer.close();
+
+            LOGGER.info("Config saved");
+        } catch (IOException e) {
+            LOGGER.warn("Failed to save config");
+        }
+    }
+
     // BOT MANAGER
 
     public BotStatus getBotStatus() {
@@ -267,7 +304,7 @@ public class MusicBot {
             return;
         }
 
-        this.shardManager = DefaultShardManagerBuilder.createDefault(this.configManager.getConfig().getToken())
+        this.shardManager = DefaultShardManagerBuilder.createDefault(this.config.optString("token", ""))
                 .setShardsTotal(shardsTotal)
                 .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.DIRECT_MESSAGES, GatewayIntent.GUILD_INVITES, GatewayIntent.GUILD_EMOJIS_AND_STICKERS)
                 .build();
@@ -281,7 +318,7 @@ public class MusicBot {
     }
 
     public void startShardManager() {
-        this.startShardManager(this.configManager.getConfig().getShardsCount());
+        this.startShardManager(this.config.optInt("shardsCount", 1));
     }
 
     // SHARD MANAGER
@@ -364,7 +401,7 @@ public class MusicBot {
     public void reloadShards() {
         new Thread(() -> {
             if(shardManager.getShardsRunning() < shardManager.getShardsTotal()) {
-                if(!this.getConfigManager().getConfig().isDisableShardsCheck()) {
+                if(!this.config.optBoolean("disableShardCheck", false)) {
                     this.shardManagerInfo("Only " + shardManager.getShardsRunning() + " of " + shardManager.getShardsTotal() + " are online. Auto restarting...");
                     startShards();
                 } else {
@@ -447,8 +484,8 @@ public class MusicBot {
         return this.console;
     }
 
-    public ConfigManager getConfigManager() {
-        return this.configManager;
+    public JSONObject getConfig() {
+        return this.config;
     }
 
     public DatabaseManager getDatabaseManager() {

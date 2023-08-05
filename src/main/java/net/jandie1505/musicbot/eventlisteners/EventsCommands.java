@@ -221,7 +221,7 @@ public class EventsCommands extends ListenerAdapter {
 
             } else if (source.startsWith("https://spotify.com/")) {
 
-                List<AudioTrack> tracks = SpotifySearchHandler.search(source, this.musicBot.getConfigManager().getConfig().getSpotifyClientId(), this.musicBot.getConfigManager().getConfig().getSpotifyClientSecret());
+                List<AudioTrack> tracks = SpotifySearchHandler.search(source, this.musicBot.getConfig().optString("spotifyClientId", ""), this.musicBot.getConfig().optString("spotifyClientSecret", ""));
 
                 for (AudioTrack track : tracks) {
                     musicPlayer.enqueue(source, startafterload);

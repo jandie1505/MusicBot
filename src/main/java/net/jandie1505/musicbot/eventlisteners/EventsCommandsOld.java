@@ -526,7 +526,7 @@ public class EventsCommandsOld extends ListenerAdapter {
      */
 
     private void cmdCommand(SlashCommandInteractionEvent event) {
-        if(event.getMember().getId().equals(this.musicBot.getConfigManager().getConfig().getBotOwner())) {
+        if(event.getMember().getId().equals(this.musicBot.getConfig().optString("botOwner", ""))) {
             event.deferReply(true).queue();
             if(event.getOption("cmd") != null) {
                 String response = this.musicBot.getConsole().runCommand(event.getOption("cmd").getAsString());

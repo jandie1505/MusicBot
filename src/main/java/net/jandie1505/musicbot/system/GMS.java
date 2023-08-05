@@ -31,7 +31,7 @@ public class GMS {
             return;
         }
 
-        if (!this.musicBot.getConfigManager().getConfig().isPublicMode() && !this.musicBot.getDatabaseManager().isGuildWhitelisted(g.getIdLong())) {
+        if (!this.musicBot.getConfig().optBoolean("publicMode", false) && !this.musicBot.getDatabaseManager().isGuildWhitelisted(g.getIdLong())) {
             g.leave().queue();
             this.logInfo("Left guild " + g.getId() + " because it is not whitelisted");
             return;
