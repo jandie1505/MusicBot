@@ -327,6 +327,7 @@ public class MusicPlayer {
 
     // DESTROY
     public void destroy() {
+        player.stopTrack();
         playerManager.shutdown();
         player.destroy();
     }

@@ -6,10 +6,7 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.jandie1505.musicbot.MusicBot;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MusicManager {
 
@@ -207,6 +204,10 @@ public class MusicManager {
         musicPlayer.destroy();
         this.musicPlayers.remove(guildId);
 
+    }
+
+    public Map<Long, MusicPlayer> getPlayers() {
+        return Map.copyOf(this.musicPlayers);
     }
 
     public MusicBot getMusicBot() {

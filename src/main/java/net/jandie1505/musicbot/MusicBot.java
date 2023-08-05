@@ -85,6 +85,7 @@ public class MusicBot {
         this.console.registerCommand("database", new DatabaseCommand(this));
         this.console.registerCommand("guild", new GuildCommand(this));
         this.console.registerCommand("commands", new CommandsCommand(this));
+        this.console.registerCommand("player", new PlayerCommand(this));
         this.console.start();
         MusicBot.LOGGER.debug("Console initialization completed");
 
