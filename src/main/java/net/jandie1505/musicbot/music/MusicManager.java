@@ -1,11 +1,9 @@
 package net.jandie1505.musicbot.music;
 
-import com.sedmelluq.discord.lavaplayer.player.event.AudioEventListener;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.jandie1505.musicbot.MusicBot;
 
 import java.util.ArrayList;
@@ -61,10 +59,6 @@ public class MusicManager {
         getMusicPlayer(g.getIdLong()).enqueue(source, startafterload);
     }
 
-    public void add(Guild g, String source, SlashCommandInteractionEvent event, boolean startafterload) {
-        getMusicPlayer(g.getIdLong()).enqueue(source, event, startafterload);
-    }
-
     public void remove(Guild g, int index) {
         getMusicPlayer(g.getIdLong()).removeTrack(index);
     }
@@ -91,10 +85,6 @@ public class MusicManager {
         getMusicPlayer(g.getIdLong()).setPause(pause);
     }
 
-    public void setPause(Guild g, boolean pause, AudioEventListener listener) {
-        getMusicPlayer(g.getIdLong()).setPause(pause, listener);
-    }
-
     public boolean isPaused(Guild g) {
         return getMusicPlayer(g.getIdLong()).isPaused();
     }
@@ -109,26 +99,6 @@ public class MusicManager {
 
     public void next(Guild g) {
         getMusicPlayer(g.getIdLong()).nextTrack();
-    }
-
-    public void next(Guild g, AudioEventListener listener) {
-        getMusicPlayer(g.getIdLong()).nextTrack(listener);
-    }
-
-    public void next(Guild g, int position) {
-        getMusicPlayer(g.getIdLong()).nextTrack(position);
-    }
-
-    public void next(Guild g, int position, AudioEventListener listener) {
-        getMusicPlayer(g.getIdLong()).nextTrack(position, listener);
-    }
-
-    public void playnow(Guild g, String source) {
-        getMusicPlayer(g.getIdLong()).playnow(source);
-    }
-
-    public void playnow(Guild g, String source, SlashCommandInteractionEvent event) {
-        getMusicPlayer(g.getIdLong()).playnow(source, event);
     }
 
     public void setVolume(Guild g, int volume) {

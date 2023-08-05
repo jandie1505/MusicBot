@@ -35,6 +35,10 @@ public class EventsCommands extends ListenerAdapter {
             case "disconnect" -> disconnectCommand(interaction);
             case "forceskip" -> forceskipCommand(interaction);
             case "remove" -> removeCommand(interaction);
+            case "pause" -> pauseCommand(interaction);
+            case "resume" -> resumeCommand(interaction);
+            case "clear" -> clearCommand(interaction);
+            case "playnow" -> playnowCommand(interaction);
             default -> {}
         }
 
@@ -446,6 +450,202 @@ public class EventsCommands extends ListenerAdapter {
         interaction.getHook().sendMessageEmbeds(
                 new EmbedBuilder()
                         .setDescription(":wastebasket:  Track removed from queue")
+                        .setColor(Color.GREEN)
+                        .build()
+        ).queue();
+
+    }
+
+    private void pauseCommand(SlashCommandInteraction interaction) {
+
+        // Null checks
+
+        if (interaction.getGuild() == null || interaction.getMember() == null) {
+            return;
+        }
+
+        // Permission check
+
+        if (!this.musicBot.getGMS().memberHasDJPermissions(interaction.getMember())) {
+            return;
+        }
+
+        // Defer reply
+
+        interaction.deferReply(this.musicBot.getDatabaseManager().getGuild(interaction.getGuild().getIdLong()).isEphemeralState()).queue();
+
+        // Get music player
+
+        MusicPlayer musicPlayer = this.musicBot.getMusicManager().getMusicPlayer(interaction.getGuild().getIdLong());
+
+        // options
+
+        if (interaction.getOption("state") != null) {
+
+            musicPlayer.setPause(interaction.getOption("state").getAsBoolean());
+
+            interaction.getHook().sendMessageEmbeds(
+                    new EmbedBuilder()
+                            .setDescription("Pause set to: " + interaction.getOption("state").getAsBoolean())
+                            .setColor(Color.GREEN)
+                            .build()
+            ).queue();
+
+        } else {
+
+            musicPlayer.setPause(true);
+
+            interaction.getHook().sendMessageEmbeds(
+                    new EmbedBuilder()
+                            .setDescription(":pause_button:  Player paused")
+                            .setColor(Color.GREEN)
+                            .build()
+            ).queue();
+
+        }
+
+    }
+
+    private void resumeCommand(SlashCommandInteraction interaction) {
+
+        // Null checks
+
+        if (interaction.getGuild() == null || interaction.getMember() == null) {
+            return;
+        }
+
+        // Permission check
+
+        if (!this.musicBot.getGMS().memberHasDJPermissions(interaction.getMember())) {
+            return;
+        }
+
+        // Defer reply
+
+        interaction.deferReply(this.musicBot.getDatabaseManager().getGuild(interaction.getGuild().getIdLong()).isEphemeralState()).queue();
+
+        // Get music player
+
+        MusicPlayer musicPlayer = this.musicBot.getMusicManager().getMusicPlayer(interaction.getGuild().getIdLong());
+
+        // resume
+
+        if (musicPlayer.isPaused()) {
+            musicPlayer.setPause(false);
+        }
+
+        if (musicPlayer.getPlayingTrack() == null) {
+            musicPlayer.nextTrack();
+        }
+
+        interaction.getHook().sendMessageEmbeds(
+                new EmbedBuilder()
+                        .setDescription(":arrow_forward:  Player resumed")
+                        .setColor(Color.GREEN)
+                        .build()
+        ).queue();
+
+    }
+
+    private void clearCommand(SlashCommandInteraction interaction) {
+
+        // Null checks
+
+        if (interaction.getGuild() == null || interaction.getMember() == null) {
+            return;
+        }
+
+        // Permission check
+
+        if (!this.musicBot.getGMS().memberHasDJPermissions(interaction.getMember())) {
+            return;
+        }
+
+        // Defer reply
+
+        interaction.deferReply(this.musicBot.getDatabaseManager().getGuild(interaction.getGuild().getIdLong()).isEphemeralState()).queue();
+
+        // Get music player
+
+        MusicPlayer musicPlayer = this.musicBot.getMusicManager().getMusicPlayer(interaction.getGuild().getIdLong());
+
+        // Clear queue
+
+        musicPlayer.clearQueue();
+
+        // reply
+
+        interaction.getHook().sendMessageEmbeds(
+                new EmbedBuilder()
+                        .setDescription(":wastebasket::asterisk:  Queue cleared")
+                        .setColor(Color.GREEN)
+                        .build()
+        ).queue();
+
+    }
+
+    private void playnowCommand(SlashCommandInteraction interaction) {
+
+        // Null checks
+
+        if (interaction.getGuild() == null || interaction.getMember() == null) {
+            return;
+        }
+
+        // Permission check
+
+        if (!this.musicBot.getGMS().memberHasDJPermissions(interaction.getMember())) {
+            return;
+        }
+
+        // Defer reply
+
+        interaction.deferReply(this.musicBot.getDatabaseManager().getGuild(interaction.getGuild().getIdLong()).isEphemeralState()).queue();
+
+        // Option
+
+        if (interaction.getOption("song") == null || interaction.getOption("song").getAsString() == null) {
+            return;
+        }
+
+        String source = interaction.getOption("song").getAsString();
+
+        // Get music player
+
+        MusicPlayer musicPlayer = this.musicBot.getMusicManager().getMusicPlayer(interaction.getGuild().getIdLong());
+
+        // play
+
+        MusicEqueuedResponse response = null;
+
+        if (source.startsWith("https://youtube.com/")) {
+
+            response = musicPlayer.playnowWithResponse(source);
+
+        } else {
+
+            List<AudioTrack> tracks = YTSearchHandler.search(source);
+
+            if (!tracks.isEmpty()) {
+                response = musicPlayer.playnowWithResponse(tracks.get(0).getInfo().uri);
+            }
+
+        }
+
+        // reply
+
+        if (response == null) {
+
+            interaction.getHook().sendMessageEmbeds(
+                    Messages.failMessage("Nothing found")
+            ).queue();
+
+            return;
+        }
+
+        interaction.getHook().sendMessageEmbeds(
+                new EmbedBuilder()
+                        .setDescription(":arrow_forward:  Playing track " + response.getTitle() + " now")
                         .setColor(Color.GREEN)
                         .build()
         ).queue();

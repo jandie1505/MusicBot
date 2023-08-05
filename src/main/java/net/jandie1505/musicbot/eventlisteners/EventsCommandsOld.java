@@ -29,24 +29,16 @@ public class EventsCommandsOld extends ListenerAdapter {
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         if(event.getMember() != null && event.getGuild() != null) {
-            if(event.getName().equalsIgnoreCase("add")) {
-                this.addCommand(event);
-            } else if(event.getName().equalsIgnoreCase("clear")) {
-                this.clearCommand(event);
-            } else if(event.getName().equalsIgnoreCase("movetrack")) {
+            if(event.getName().equalsIgnoreCase("movetrack")) {
                 this.movetrackCommand(event);
             } else if(event.getName().equalsIgnoreCase("shuffle")) {
                 this.shuffleCommand(event);
-            } else if(event.getName().equalsIgnoreCase("playnow")) {
-                this.playnowCommand(event);
             } else if(event.getName().equalsIgnoreCase("search")) {
                 this.searchCommand(event);
             } else if(event.getName().equalsIgnoreCase("volume")) {
                 this.volumeCommand(event);
             } else if(event.getName().equalsIgnoreCase("skip")) {
                 this.skipCommand(event);
-            } else if(event.getName().equalsIgnoreCase("mbsettings")) {
-                //this.mbsettingsCommand(event);
             }
         }
         if(event.getName().equalsIgnoreCase("cmd")) {
@@ -57,39 +49,6 @@ public class EventsCommandsOld extends ListenerAdapter {
     }
 
     // COMMANDS
-
-    private void addCommand(SlashCommandInteractionEvent event) {
-        if(this.musicBot.getGMS().memberHasUserPermissions(event.getMember())) {
-            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
-            if(this.musicBot.getMusicManager().isConnected(event.getGuild())) {
-                if(event.getOption("song") != null) {
-                    this.musicBot.getMusicManager().add(event.getGuild(), event.getOption("song").getAsString(), event, false);
-                } else {
-                    EmbedBuilder embedBuilder = new EmbedBuilder()
-                            .setDescription(":warning:  Song required")
-                            .setColor(Color.RED);
-                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                }
-            } else {
-                event.getHook().sendMessage("").addEmbeds(getNotConnectedErrorMessage().build()).queue();
-            }
-        }
-    }
-
-    private void clearCommand(SlashCommandInteractionEvent event) {
-        if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
-            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
-            if(this.musicBot.getMusicManager().isConnected(event.getGuild())) {
-                this.musicBot.getMusicManager().clear(event.getGuild());
-                EmbedBuilder embedBuilder = new EmbedBuilder()
-                        .setDescription(":asterisk:  Queue cleared")
-                        .setColor(Color.GREEN);
-                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-            } else {
-                event.getHook().sendMessage("").addEmbeds(getNotConnectedErrorMessage().build()).queue();
-            }
-        }
-    }
 
     private void movetrackCommand(SlashCommandInteractionEvent event) {
         if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
@@ -143,32 +102,6 @@ public class EventsCommandsOld extends ListenerAdapter {
                 }
             } else {
                 event.getHook().sendMessage("").addEmbeds(getNotConnectedErrorMessage().build()).queue();
-            }
-        }
-    }
-
-    private void playnowCommand(SlashCommandInteractionEvent event) {
-        if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
-            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
-            if(event.getOption("song") != null) {
-                if(!this.musicBot.getMusicManager().isConnected(event.getGuild())) {
-                    if(event.getMember().getVoiceState().inAudioChannel()) {
-                        this.musicBot.getMusicManager().connect(event.getMember().getVoiceState().getChannel());
-                        this.playnow(event);
-                    } else {
-                        EmbedBuilder notInVoiceChannel = new EmbedBuilder()
-                                .setDescription(":warning:  You are not in a voice channel")
-                                .setColor(Color.RED);
-                        event.getHook().sendMessage("").addEmbeds(notInVoiceChannel.build()).queue();
-                    }
-                } else {
-                    this.playnow(event);
-                }
-            } else {
-                EmbedBuilder embedBuilder = new EmbedBuilder()
-                        .setDescription(":warning:  Music source required")
-                        .setColor(Color.RED);
-                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
             }
         }
     }
@@ -614,146 +547,7 @@ public class EventsCommandsOld extends ListenerAdapter {
         event.getHook().sendMessage("").addEmbeds(getHelpMessage().build()).queue();
     }
 
-
-
     // UTILITY
-    private void play(SlashCommandInteractionEvent event, boolean startafterload) {
-        if(event.getOption("song") != null) {
-            String source = event.getOption("song").getAsString();
-            if(source.startsWith("http://") || source.startsWith("https://")) {
-                if(source.contains("https://www.youtube.com/") || source.contains("https://youtube.com/")) {
-                    this.musicBot.getMusicManager().add(event.getGuild(), source, event, startafterload);
-                } else if(source.contains("https://open.spotify.com/playlist/")) {
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Random randomizer = new Random();
-                            int random = randomizer.nextInt(9);
-                            if(random == 8) {
-                                event.getHook().sendMessage("Loading spotify playlist. Here is a gif to show you how long this can take:\nhttps://tenor.com/view/loading-forever-12years-later-gif-10516198").queue();
-                            } else {
-                                EmbedBuilder embedBuilder = new EmbedBuilder()
-                                        .setDescription(":zzz:  Loading playlist from spotify...")
-                                        .setColor(Color.YELLOW);
-                                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                            }
-                            List<AudioTrack> trackList = SpotifySearchHandler.search(source, musicBot.getConfigManager().getConfig().getSpotifyClientId(), musicBot.getConfigManager().getConfig().getSpotifyClientSecret());
-                            if(!trackList.isEmpty() && event.getGuild() != null && musicBot.getMusicManager().isConnected(event.getGuild())) {
-                                EmbedBuilder embedBuilder = new EmbedBuilder()
-                                        .setDescription(":zzz:  Converting to youtube...")
-                                        .setColor(Color.YELLOW);
-                                event.getHook().editOriginal(" ").setEmbeds(embedBuilder.build()).queue(null, new ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE));
-                                boolean blacklisted = false;
-                                int index = 0;
-                                for(AudioTrack track : trackList) {
-                                    if(!musicBot.getGMS().isBlacklisted(event.getGuild(), event.getMember(), track)) {
-                                        musicBot.getMusicManager().add(event.getGuild(), track.getInfo().uri, ((index == 0) && startafterload));
-                                    } else {
-                                        blacklisted = true;
-                                    }
-                                    index++;
-                                    try {
-                                        TimeUnit.SECONDS.sleep(1);
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                                if(blacklisted) {
-                                    EmbedBuilder embedBuilder2 = new EmbedBuilder()
-                                            .setDescription(":white_check_mark:  Successfully added " + trackList.size() + " songs from spotify (some tracks are blacklisted)")
-                                            .setColor(Color.GREEN);
-                                    event.getHook().editOriginal(" ").setEmbeds(embedBuilder2.build()).queue(null, new ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE));
-                                } else {
-                                    EmbedBuilder embedBuilder2 = new EmbedBuilder()
-                                            .setDescription(":white_check_mark:  Successfully added " + trackList.size() + " songs from spotify")
-                                            .setColor(Color.GREEN);
-                                    event.getHook().editOriginal(" ").setEmbeds(embedBuilder2.build()).queue(null, new ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE));
-                                }
-                            } else {
-                                EmbedBuilder embedBuilder = new EmbedBuilder()
-                                        .setDescription(":warning:  Nothing was found")
-                                        .setColor(Color.RED);
-                                event.getHook().editOriginal(" ").setEmbeds(embedBuilder.build()).queue(null, new ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE));
-                            }
-                        }
-                    }).start();
-                } else {
-                    EmbedBuilder embedBuilder = new EmbedBuilder()
-                            .setDescription(":warning:  Incompatible link")
-                            .setColor(Color.RED);
-                    event.getHook().editOriginal(" ").setEmbeds(embedBuilder.build()).queue(null, new ErrorHandler().ignore(ErrorResponse.UNKNOWN_MESSAGE));
-                }
-            } else {
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        List<AudioTrack> trackList = YTSearchHandler.search(source);
-                        if(!trackList.isEmpty()) {
-                            musicBot.getMusicManager().add(event.getGuild(), trackList.get(0).getInfo().uri, event, startafterload);
-                        } else {
-                            EmbedBuilder embedBuilder = new EmbedBuilder()
-                                    .setDescription(":warning:  Nothing was found")
-                                    .setColor(Color.RED);
-                            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                        }
-                    }
-                }).start();
-            }
-        } else {
-            if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
-                if(!this.musicBot.getMusicManager().getQueue(event.getGuild()).isEmpty() || this.musicBot.getMusicManager().isPaused(event.getGuild()) || this.musicBot.getMusicManager().getPlayingTrack(event.getGuild()) != null) {
-                    if(this.musicBot.getMusicManager().isPaused(event.getGuild())) {
-                        this.musicBot.getMusicManager().setPause(event.getGuild(), false);
-                    }
-                    if(this.musicBot.getMusicManager().getPlayingTrack(event.getGuild()) == null) {
-                        this.musicBot.getMusicManager().next(event.getGuild());
-                    }
-                    EmbedBuilder resumedMessage = new EmbedBuilder()
-                            .setDescription(":arrow_forward:  Resumed playback")
-                            .setColor(Color.GREEN);
-                    event.getHook().sendMessage("").addEmbeds(resumedMessage.build()).queue();
-                } else {
-                    EmbedBuilder resumedMessage = new EmbedBuilder()
-                            .setDescription(":warning:  Nothing playing")
-                            .setColor(Color.RED);
-                    event.getHook().sendMessage("").addEmbeds(resumedMessage.build()).queue();
-                }
-            } else {
-                EmbedBuilder embedBuilder = new EmbedBuilder()
-                        .setDescription(":x:  No permission")
-                        .setColor(Color.RED);
-                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-            }
-        }
-    }
-    private void playnow(SlashCommandInteractionEvent event) {
-        if(event.getOption("song") != null) {
-            String source = event.getOption("song").getAsString();
-            if(source.startsWith("http://") || source.startsWith("https://")) {
-                this.musicBot.getMusicManager().playnow(event.getGuild(), source, event);
-            } else {
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        List<AudioTrack> trackList = YTSearchHandler.search(source);
-                        if(!trackList.isEmpty()) {
-                            musicBot.getMusicManager().playnow(event.getGuild(), trackList.get(0).getInfo().uri, event);
-                        } else {
-                            EmbedBuilder embedBuilder = new EmbedBuilder()
-                                    .setDescription(":warning:  Nothing was found")
-                                    .setColor(Color.RED);
-                            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                        }
-                    }
-                }).start();
-            }
-        } else {
-            EmbedBuilder embedBuilder = new EmbedBuilder()
-                    .setDescription(":warning:  Music source required")
-                    .setColor(Color.RED);
-            event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-        }
-    }
 
     private EmbedBuilder getNotConnectedErrorMessage(){
         return new EmbedBuilder()

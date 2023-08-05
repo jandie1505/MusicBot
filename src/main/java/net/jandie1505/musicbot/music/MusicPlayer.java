@@ -131,66 +131,6 @@ public class MusicPlayer {
         return response[0];
     }
 
-    public void enqueue(String source, SlashCommandInteractionEvent event, boolean startafterload) {
-        playerManager.loadItem(source, new AudioLoadResultHandler() {
-            @Override
-            public void trackLoaded(AudioTrack audioTrack) {
-                if(!musicManager.getMusicBot().getGMS().isBlacklisted(event.getGuild(), event.getMember(), audioTrack)) {
-                    queue.add(audioTrack);
-                    EmbedBuilder embedBuilder = new EmbedBuilder()
-                            .setDescription("Added " + audioTrack.getInfo().title + " [" + audioTrack.getInfo().author + "] to queue")
-                            .setColor(Color.GREEN);
-                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                    if(startafterload) {
-                        nextTrack();
-                    }
-                } else {
-                    EmbedBuilder embedBuilder = new EmbedBuilder()
-                            .setDescription(":warning:  This track is blacklisted")
-                            .setColor(Color.RED);
-                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                }
-            }
-
-            @Override
-            public void playlistLoaded(AudioPlaylist audioPlaylist) {
-                boolean blacklisted = false;
-                for(AudioTrack track : audioPlaylist.getTracks()) {
-                    if(!musicManager.getMusicBot().getGMS().isBlacklisted(event.getGuild(), event.getMember(), track)) {
-                        queue.add(track);
-                    } else {
-                        blacklisted = true;
-                    }
-                }
-                EmbedBuilder embedBuilder = new EmbedBuilder()
-                        .setDescription("Added " + audioPlaylist.getName() + " [" + audioPlaylist.getTracks().size() + " tracks] to queue")
-                        .setColor(Color.GREEN);
-                if(blacklisted) {
-                    embedBuilder.setDescription("Added " + audioPlaylist.getName() + " [" + audioPlaylist.getTracks().size() + " tracks] to queue (some of the tracks are blacklisted and could not be added)");
-                }
-                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                if(startafterload && !queue.isEmpty()) {
-                    nextTrack();
-                }
-            }
-
-            @Override public void noMatches() {
-                EmbedBuilder embedBuilder = new EmbedBuilder()
-                        .setDescription(":warning:  Unknown source")
-                        .setColor(Color.RED);
-                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-            }
-
-            @Override
-            public void loadFailed(FriendlyException e) {
-                EmbedBuilder embedBuilder = new EmbedBuilder()
-                        .setDescription(":warning:  Load failed")
-                        .setColor(Color.RED);
-                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-            }
-        });
-    }
-
     public void addAudioTrack(AudioTrack track) {
         queue.add(track);
     }
@@ -322,47 +262,39 @@ public class MusicPlayer {
             public void loadFailed(FriendlyException e) {}
         });
     }
-    public void playnow(String source, SlashCommandInteractionEvent event) {
+
+    public MusicEqueuedResponse playnowWithResponse(String source) {
+        CountDownLatch latch = new CountDownLatch(1);
+        final MusicEqueuedResponse[] response = {null};
+
         playerManager.loadItem(source, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack audioTrack) {
-                if(!musicManager.getMusicBot().getGMS().isBlacklisted(event.getGuild(), event.getMember(), audioTrack)) {
-                    play(audioTrack);
-                    EmbedBuilder embedBuilder = new EmbedBuilder()
-                            .setDescription("Playing " + audioTrack.getInfo().title + " [" + audioTrack.getInfo().author + "] now")
-                            .setColor(Color.GREEN);
-                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                } else {
-                    EmbedBuilder embedBuilder = new EmbedBuilder()
-                            .setDescription(":warning:  This track is blacklisted")
-                            .setColor(Color.RED);
-                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                }
+
+                play(audioTrack);
+
+                response[0] = new MusicEqueuedResponse(audioTrack.getInfo().title);
+                latch.countDown();
+
             }
 
             @Override
-            public void playlistLoaded(AudioPlaylist audioPlaylist) {
-                EmbedBuilder embedBuilder = new EmbedBuilder()
-                        .setDescription(":warning:  Playlists are not supported here")
-                        .setColor(Color.RED);
-                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-            }
-
-            @Override public void noMatches() {
-                EmbedBuilder embedBuilder = new EmbedBuilder()
-                        .setDescription(":warning:  Unknown source")
-                        .setColor(Color.RED);
-                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-            }
+            public void playlistLoaded(AudioPlaylist audioPlaylist) {}
 
             @Override
-            public void loadFailed(FriendlyException e) {
-                EmbedBuilder embedBuilder = new EmbedBuilder()
-                        .setDescription(":warning:  Load failed")
-                        .setColor(Color.RED);
-                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-            }
+            public void noMatches() {}
+
+            @Override
+            public void loadFailed(FriendlyException e) {}
         });
+
+        try {
+            latch.await(1, TimeUnit.SECONDS);
+        } catch (InterruptedException ignored) {
+            // ignored
+        }
+
+        return response[0];
     }
 
     // SKIPVOTES
