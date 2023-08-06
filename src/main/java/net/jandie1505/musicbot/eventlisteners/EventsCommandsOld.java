@@ -41,9 +41,7 @@ public class EventsCommandsOld extends ListenerAdapter {
                 this.skipCommand(event);
             }
         }
-        if(event.getName().equalsIgnoreCase("cmd")) {
-            this.cmdCommand(event);
-        } else if(event.getName().equalsIgnoreCase("help")) {
+        if(event.getName().equalsIgnoreCase("help")) {
             this.helpCommand(event);
         }
     }
@@ -524,23 +522,6 @@ public class EventsCommandsOld extends ListenerAdapter {
     }
 
      */
-
-    private void cmdCommand(SlashCommandInteractionEvent event) {
-        if(event.getMember().getId().equals(this.musicBot.getConfig().optString("botOwner", ""))) {
-            event.deferReply(true).queue();
-            if(event.getOption("cmd") != null) {
-                String response = this.musicBot.getConsole().runCommand(event.getOption("cmd").getAsString());
-                EmbedBuilder embedBuilder = new EmbedBuilder()
-                        .addField("Command response:", response, false);
-                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-            } else {
-                EmbedBuilder embedBuilder = new EmbedBuilder()
-                        .setDescription(":warning:  Command required")
-                        .setColor(Color.RED);
-                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-            }
-        }
-    }
 
     private void helpCommand(SlashCommandInteractionEvent event) {
         event.deferReply(true).queue();

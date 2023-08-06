@@ -28,6 +28,8 @@ public class EventsCommands extends ListenerAdapter {
         SlashCommandInteraction interaction = event.getInteraction();
 
         switch (interaction.getName()) {
+            case "help" -> helpCommand(interaction);
+            case "cmd" -> cmdCommand(interaction);
             case "nowplaying" -> nowplayingCommand(interaction);
             case "queue" -> queueCommand(interaction);
             case "play" -> playCommand(interaction);
@@ -41,6 +43,45 @@ public class EventsCommands extends ListenerAdapter {
             case "playnow" -> playnowCommand(interaction);
             default -> {}
         }
+
+    }
+
+    private void helpCommand(SlashCommandInteraction interaction) {
+
+        interaction.deferReply(true).queue();
+
+        interaction.getHook().sendMessage(
+                Messages.getHelpMessage().build()
+        ).queue();
+
+    }
+
+    private void cmdCommand(SlashCommandInteraction interaction) {
+
+        if (this.musicBot.getConfig().optLong("botOwner", -1) < 0) {
+            return;
+        }
+
+        if (this.musicBot.getConfig().optLong("botOwner", -1) != interaction.getUser().getIdLong()) {
+            return;
+        }
+
+        if (interaction.getOption("cmd") == null) {
+            return;
+        }
+
+        interaction.deferReply(true).queue();
+
+        String command = interaction.getOption("cmd").getAsString();
+        String response = this.musicBot.getConsole().runCommand(command);
+
+        interaction.getHook().sendMessageEmbeds(
+                new EmbedBuilder()
+                        .addField("Executed command:", command, false)
+                        .addField("Response:", response, false)
+                        .setColor(Color.BLACK)
+                        .build()
+        ).queue();
 
     }
 
