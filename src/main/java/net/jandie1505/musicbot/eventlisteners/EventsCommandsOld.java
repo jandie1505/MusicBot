@@ -29,9 +29,7 @@ public class EventsCommandsOld extends ListenerAdapter {
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         if(event.getMember() != null && event.getGuild() != null) {
-            if(event.getName().equalsIgnoreCase("movetrack")) {
-                this.movetrackCommand(event);
-            } else if(event.getName().equalsIgnoreCase("shuffle")) {
+            if(event.getName().equalsIgnoreCase("shuffle")) {
                 this.shuffleCommand(event);
             } else if(event.getName().equalsIgnoreCase("search")) {
                 this.searchCommand(event);
@@ -41,46 +39,9 @@ public class EventsCommandsOld extends ListenerAdapter {
                 this.skipCommand(event);
             }
         }
-        if(event.getName().equalsIgnoreCase("help")) {
-            this.helpCommand(event);
-        }
     }
 
     // COMMANDS
-
-    private void movetrackCommand(SlashCommandInteractionEvent event) {
-        if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
-            event.deferReply(this.getEphemeralState(event.getGuild().getIdLong())).queue();
-            if(this.musicBot.getMusicManager().isConnected(event.getGuild())) {
-                if(event.getOption("from") != null && event.getOption("to") != null) {
-                    int from = (int) event.getOption("from").getAsLong();
-                    int to = (int) event.getOption("to").getAsLong();
-                    if(from < this.musicBot.getMusicManager().getQueue(event.getGuild()).size()) {
-                        this.musicBot.getMusicManager().move(event.getGuild(), from, to);
-                        EmbedBuilder embedBuilder = new EmbedBuilder()
-                                .setDescription(":white_check_mark:  Successfully moved")
-                                .setColor(Color.GREEN);
-                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                    } else {
-                        EmbedBuilder embedBuilder = new EmbedBuilder()
-                                .setDescription(":warning:  From index does not exist")
-                                .setColor(Color.RED);
-                        event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                    }
-                } else {
-                    EmbedBuilder embedBuilder = new EmbedBuilder()
-                            .setDescription(":warning:  Indexes does not exist")
-                            .setColor(Color.RED);
-                    event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-                }
-            } else {
-                EmbedBuilder embedBuilder = new EmbedBuilder()
-                        .setDescription(":warning:  Not connected")
-                        .setColor(Color.RED);
-                event.getHook().sendMessage("").addEmbeds(embedBuilder.build()).queue();
-            }
-        }
-    }
 
     private void shuffleCommand(SlashCommandInteractionEvent event) {
         if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
@@ -523,40 +484,12 @@ public class EventsCommandsOld extends ListenerAdapter {
 
      */
 
-    private void helpCommand(SlashCommandInteractionEvent event) {
-        event.deferReply(true).queue();
-        event.getHook().sendMessage("").addEmbeds(getHelpMessage().build()).queue();
-    }
-
     // UTILITY
 
     private EmbedBuilder getNotConnectedErrorMessage(){
         return new EmbedBuilder()
                 .setDescription(":warning:  Not connected")
                 .setColor(Color.RED);
-    }
-
-    public EmbedBuilder getHelpMessage() {
-        return new EmbedBuilder()
-                .setTitle("MusicBot Help")
-                .setDescription("MusicBot by jandie1505")
-                .addField("For users:", "/play <song name / link> - Add a specific song to queue\n" +
-                        "/skip - Skipvote a specific song\n" +
-                        "/nowplaying - Get the song that is currently playing\n" +
-                        "/queue - Show the queue\n" +
-                        "/queue <index> - Show the queue from a certain index (\"Queue pages\")\n" +
-                        "/search <song name> - Search for a specific song and list the result\n", false)
-                .addField("For DJs:", "/stop and /pause - Pause the player\n" +
-                        "/play - Resume the player\n" +
-                        "/leave - Disconnect the bot\n" +
-                        "/forceskip - Skip a track\n" +
-                        "/movetrack <from> <to> -Move a specific track in queue\n" +
-                        "/remove <index> - Remove a specific song from queue\n" +
-                        "/clear - Clear the queue\n" +
-                        "/shuffle - Shuffles the queue\n" +
-                        "/volume <0-200> - Change the volume\n" +
-                        "/playnow <song name / link> - Plays a specific song immediately\n", false)
-                .addField("For Admins:", "/mbsettings - Change settings of the bot", false);
     }
 
     public boolean getEphemeralState(long guildId) {

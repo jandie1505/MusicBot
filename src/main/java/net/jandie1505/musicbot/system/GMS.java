@@ -169,6 +169,16 @@ public class GMS {
                 g.upsertCommand(new CommandDataImpl("playnow", "Play a current track now instead of adding it to the queue")).queue(null, this.missingAccess(g));
             }
 
+            if (!registeredCommands.contains("movetrack")) {
+                g.upsertCommand(
+                        new CommandDataImpl("movetrack", "Move a track from a queue position to another")
+                                .addOptions(
+                                        new OptionData(OptionType.INTEGER, "from", "The index of the track you want to move").setRequired(true),
+                                        new OptionData(OptionType.INTEGER, "to", "The new index of the track you want to set").setRequired(true)
+                                )
+                ).queue();
+            }
+
             this.logDebug("Commands on guild " + g.getIdLong() + " were set up");
         }, this.missingAccess(g));
     }

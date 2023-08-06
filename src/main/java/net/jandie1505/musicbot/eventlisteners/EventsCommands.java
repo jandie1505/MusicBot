@@ -41,6 +41,7 @@ public class EventsCommands extends ListenerAdapter {
             case "resume" -> resumeCommand(interaction);
             case "clear" -> clearCommand(interaction);
             case "playnow" -> playnowCommand(interaction);
+            case "movetrack" -> movetrackCommand(interaction);
             default -> {}
         }
 
@@ -687,6 +688,49 @@ public class EventsCommands extends ListenerAdapter {
         interaction.getHook().sendMessageEmbeds(
                 new EmbedBuilder()
                         .setDescription(":arrow_forward:  Playing track " + response.getTitle() + " now")
+                        .setColor(Color.GREEN)
+                        .build()
+        ).queue();
+
+    }
+
+    private void movetrackCommand(SlashCommandInteraction interaction) {
+
+        // Null checks
+
+        if (interaction.getGuild() == null || interaction.getMember() == null) {
+            return;
+        }
+
+        // Permission check
+
+        if (!this.musicBot.getGMS().memberHasDJPermissions(interaction.getMember())) {
+            return;
+        }
+
+        // Option
+
+        if (interaction.getOption("from") == null || interaction.getOption("to") == null) {
+            return;
+        }
+
+        // Defer reply
+
+        interaction.deferReply(this.musicBot.getDatabaseManager().getGuild(interaction.getGuild().getIdLong()).isEphemeralState()).queue();
+
+        // Get music player
+
+        MusicPlayer musicPlayer = this.musicBot.getMusicManager().getMusicPlayer(interaction.getGuild().getIdLong());
+
+        // move track
+
+        musicPlayer.moveTrack(interaction.getOption("from").getAsInt(), interaction.getOption("to").getAsInt());
+
+        // reply
+
+        interaction.getHook().sendMessageEmbeds(
+                new EmbedBuilder()
+                        .setDescription(":ballot_box_with_check:  Track moved")
                         .setColor(Color.GREEN)
                         .build()
         ).queue();

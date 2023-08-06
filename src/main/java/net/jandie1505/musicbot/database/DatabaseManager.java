@@ -53,7 +53,7 @@ public class DatabaseManager {
                     "guildId INTEGER NOT NULL PRIMARY KEY," +
                     "DJRoles VARCHAR(1000) NOT NULL DEFAULT '[]'," +
                     "restrictToRoles INTEGER NOT NULL DEFAULT 0," +
-                    "ephemeralState BOOLEAN NOT NULL DEFAULT false" +
+                    "ephemeralState BOOLEAN NOT NULL DEFAULT true" +
                     ");";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.execute();
