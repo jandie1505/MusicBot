@@ -203,6 +203,15 @@ public class GMS {
                 ).queue(null, this.missingAccess(g));
             }
 
+            if (!registeredCommands.contains("connect")) {
+                g.upsertCommand(
+                        new CommandDataImpl("connect", "Connect the bot to a channel")
+                                .addOptions(
+                                        new OptionData(OptionType.CHANNEL, "channel", "The channel the bot should be connected to")
+                                )
+                ).queue(null, this.missingAccess(g));
+            }
+
             if (!registeredCommands.contains("mbsettings")) {
                 g.upsertCommand(
                         new CommandDataImpl("mbsettings", "Manage music bot settings")

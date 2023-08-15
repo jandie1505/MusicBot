@@ -4,6 +4,9 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.channel.Channel;
+import net.dv8tion.jda.api.entities.channel.ChannelType;
+import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
@@ -49,6 +52,7 @@ public class EventsCommands extends ListenerAdapter {
             case "shuffle" -> shuffleCommand(interaction);
             case "search" -> searchCommand(interaction);
             case "volume" -> volumeCommand(interaction);
+            case "connect" -> connectCommand(interaction);
             case "mbsettings" -> mbsettingsCommand(interaction);
             default -> {}
         }
@@ -945,6 +949,58 @@ public class EventsCommands extends ListenerAdapter {
         interaction.getHook().sendMessageEmbeds(
                 new EmbedBuilder()
                         .setDescription(replyString)
+                        .setColor(Color.GREEN)
+                        .build()
+        ).queue();
+
+    }
+
+    public void connectCommand(SlashCommandInteraction interaction) {
+
+        // Null checks
+
+        if (interaction.getGuild() == null || interaction.getMember() == null) {
+            return;
+        }
+
+        // Permission check
+
+        if (!this.musicBot.getGMS().memberHasDJPermissions(interaction.getMember())) {
+            return;
+        }
+
+        // Defer reply
+
+        interaction.deferReply(this.musicBot.getDatabaseManager().getGuild(interaction.getGuild().getIdLong()).isEphemeralState()).queue();
+
+        // Get Channel
+
+        AudioChannel channel = null;
+
+        if (interaction.getOption("channel") != null) {
+
+            if (interaction.getOption("channel").getAsChannel() instanceof AudioChannel) {
+                channel = interaction.getOption("channel").getAsChannel().asAudioChannel();
+            }
+
+        } else {
+
+            if (interaction.getMember().getVoiceState() != null && interaction.getMember().getVoiceState().getChannel() != null) {
+                channel = interaction.getMember().getVoiceState().getChannel();
+            }
+
+        }
+
+        if (channel == null) {
+            interaction.getHook().sendMessageEmbeds(Messages.failMessage("The bot can only connect to audio channels")).queue();
+            return;
+        }
+
+        this.musicBot.getMusicManager().connect(channel);
+
+        interaction.getHook().sendMessageEmbeds(
+                new EmbedBuilder()
+                        .setDescription(":white_check_mark:  Successfully connected")
                         .setColor(Color.GREEN)
                         .build()
         ).queue();
