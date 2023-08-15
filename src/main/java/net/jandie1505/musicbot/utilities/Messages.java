@@ -102,9 +102,11 @@ public class Messages {
                                         "/nowplaying - Get the song that is currently playing\n" +
                                         "/queue - Show the queue\n" +
                                         "/queue <index> - Show the queue from a certain index (\"Queue pages\")\n" +
-                                        "/search <song name> - Search for a specific song and list the result\n", false)
-                                .addField("For DJs:", "/stop and /pause - Pause the player\n" +
+                                        "/search <song name> - Search for a specific song and list the result", false)
+                                .addField("For DJs:", "/pause - Pause the player\n" +
                                         "/resume - Resume the player\n" +
+                                        "/stop - Stops the player (only when paused, else pauses the player)\n" +
+                                        "/connect [channel] - Connect to a channel\n" +
                                         "/disconnect - Disconnect the bot\n" +
                                         "/forceskip - Skip a track\n" +
                                         "/movetrack <from> <to> - Move a specific track in queue\n" +
@@ -112,7 +114,7 @@ public class Messages {
                                         "/clear - Clear the queue\n" +
                                         "/shuffle - Randomizes the order of the queue\n" +
                                         "/volume <value> - Change the volume (0-200)\n" +
-                                        "/playnow <song name / link> - Plays a specific song immediately\n", false)
+                                        "/playnow <song name / link> - Plays a specific song immediately", false)
                                 .addField("For Admins:", "/mbsettings - Change settings of the bot", false)
                                 .build()
                 );

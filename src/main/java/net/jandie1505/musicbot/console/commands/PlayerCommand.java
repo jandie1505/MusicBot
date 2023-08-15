@@ -3,8 +3,6 @@ package net.jandie1505.musicbot.console.commands;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
-import net.dv8tion.jda.api.entities.channel.Channel;
-import net.dv8tion.jda.api.entities.channel.concrete.StageChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.jandie1505.musicbot.MusicBot;
 import net.jandie1505.musicbot.console.CommandExecutor;
@@ -238,7 +236,7 @@ public class PlayerCommand implements CommandExecutor {
                     return list;
                 }
                 case "cleanup" -> {
-                    this.musicBot.getMusicManager().reload();
+                    this.musicBot.getMusicManager().reloadPlayers();
                     return "Cleaned up players";
                 }
                 case "queue" -> {

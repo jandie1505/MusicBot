@@ -159,6 +159,24 @@ public class MusicBot {
 
         }, 1, TimeUnit.MINUTES);
 
+        this.executorService.schedule(() -> {
+
+            if (this.shardManager == null) {
+                return;
+            }
+
+            if (this.shardManager.getShardsRunning() >= this.shardManager.getShardsTotal()) {
+
+                this.shardManager.setPresence(OnlineStatus.ONLINE, Activity.listening("/help and /play"));
+
+            } else {
+
+                this.shardManager.setPresence(OnlineStatus.IDLE, Activity.listening("Limited functionality"));
+
+            }
+
+        }, 5, TimeUnit.MINUTES);
+
         // GMS
 
         this.gms = new GMS(this);
@@ -169,7 +187,8 @@ public class MusicBot {
 
         this.musicManager = new MusicManager(this);
 
-        this.executorService.schedule(this.musicManager::reload, 1, TimeUnit.MINUTES);
+        this.executorService.schedule(this.musicManager::reloadPlayers, 1, TimeUnit.MINUTES);
+        this.executorService.schedule(this.musicManager::reloadChannelConnections, 5, TimeUnit.MINUTES);
 
     }
 

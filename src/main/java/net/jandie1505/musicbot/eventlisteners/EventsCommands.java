@@ -271,12 +271,11 @@ public class EventsCommands extends ListenerAdapter {
 
         if (source.startsWith("http://") || source.startsWith("https://")) {
 
-            if (source.startsWith("https://youtube.com/")) {
+            if (source.startsWith("https://youtube.com/") || source.startsWith("https://www.youtube.com/")) {
 
                 response = musicPlayer.enqueueWithResponse(interaction.getOption("song").getAsString(), startafterload);
 
-
-            } else if (source.startsWith("https://spotify.com/")) {
+            } else if (source.startsWith("https://open.spotify.com/")) {
 
                 List<AudioTrack> tracks = SpotifySearchHandler.search(source, this.musicBot.getConfig().optString("spotifyClientId", ""), this.musicBot.getConfig().optString("spotifyClientSecret", ""));
 
@@ -992,7 +991,7 @@ public class EventsCommands extends ListenerAdapter {
         }
 
         if (channel == null) {
-            interaction.getHook().sendMessageEmbeds(Messages.failMessage("The bot can only connect to audio channels")).queue();
+            interaction.getHook().sendMessageEmbeds(Messages.failMessage("Channel not valid or not found")).queue();
             return;
         }
 

@@ -1,11 +1,13 @@
 package net.jandie1505.musicbot.music;
 
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.jandie1505.musicbot.MusicBot;
 import net.jandie1505.musicbot.database.GuildData;
+import net.jandie1505.musicbot.utilities.BotStatus;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,9 +54,43 @@ public class MusicManager {
         return g.getSelfMember().getVoiceState().inAudioChannel();
     }
 
+    public void reloadChannelConnections() {
+
+        if (this.musicBot.getBotStatus() != BotStatus.ACTIVE) {
+            return;
+        }
+
+        for (Guild g : List.copyOf(this.musicBot.getShardManager().getGuilds())) {
+
+            if (g.getSelfMember().getVoiceState() == null) {
+                continue;
+            }
+
+            if (!g.getSelfMember().getVoiceState().inAudioChannel()) {
+                continue;
+            }
+
+            if (g.getSelfMember().getVoiceState().getChannel() == null) {
+                continue;
+            }
+
+            List<Member> members = new ArrayList<>(g.getSelfMember().getVoiceState().getChannel().getMembers());
+
+            members.removeIf(m -> m.getIdLong() == g.getSelfMember().getIdLong());
+
+            if (!members.isEmpty()) {
+                continue;
+            }
+
+            this.disconnect(g);
+
+        }
+
+    }
+
     // PLAYER MANAGEMENT
 
-    public void reload() {
+    public void reloadPlayers() {
 
         for (long guildId : musicPlayers.keySet()) {
 
@@ -66,6 +102,16 @@ public class MusicManager {
             Guild g = this.musicBot.getShardManager().getGuildById(guildId);
 
             if (g == null) {
+                this.removePlayer(guildId);
+                continue;
+            }
+
+            if (g.getSelfMember().getVoiceState() == null) {
+                this.removePlayer(guildId);
+                continue;
+            }
+
+            if (!g.getSelfMember().getVoiceState().inAudioChannel()) {
                 this.removePlayer(guildId);
                 continue;
             }
