@@ -52,48 +52,10 @@ public class MusicManager {
         return g.getSelfMember().getVoiceState().inAudioChannel();
     }
 
-    // QUEUE
-
-    public void add(Guild g, String source, boolean startafterload) {
-        getMusicPlayer(g.getIdLong()).enqueue(source, startafterload);
-    }
-
-    public void remove(Guild g, int index) {
-        getMusicPlayer(g.getIdLong()).removeTrack(index);
-    }
-
-    public void move(Guild g, int from, int to) {
-        getMusicPlayer(g.getIdLong()).moveTrack(from, to);
-    }
-
-    public void clear(Guild g) {
-        getMusicPlayer(g.getIdLong()).clearQueue();
-    }
-
-    public List<AudioTrack> getQueue(Guild g) {
-        return getMusicPlayer(g.getIdLong()).getQueue();
-    }
-
     // PLAYER
-
-    public void setPause(Guild g, boolean pause) {
-        getMusicPlayer(g.getIdLong()).setPause(pause);
-    }
 
     public boolean isPaused(Guild g) {
         return getMusicPlayer(g.getIdLong()).isPaused();
-    }
-
-    public AudioTrack getPlayingTrack(Guild g) {
-        return getMusicPlayer(g.getIdLong()).getPlayingTrack();
-    }
-
-    public void stop(Guild g) {
-        getMusicPlayer(g.getIdLong()).stop();
-    }
-
-    public void next(Guild g) {
-        getMusicPlayer(g.getIdLong()).nextTrack();
     }
 
     // PLAYER MANAGEMENT

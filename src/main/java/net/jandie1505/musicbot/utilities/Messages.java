@@ -49,7 +49,7 @@ public class Messages {
                     ));
                 } else if(!musicBot.getMusicManager().isPaused(g)) {
                     messageBuilder.addComponents(ActionRow.of(
-                            Button.primary("nowplaying_button_play", "⏸"),
+                            Button.primary("nowplaying_button_pause", "⏸"),
                             Button.primary("nowplaying_button_skip", "⏭"),
                             Button.secondary("nowplaying_button_refresh", "\uD83D\uDD04")
                     ));
@@ -83,83 +83,12 @@ public class Messages {
             messageBuilder.setEmbeds(noMusicPlaying.build());
 
             messageBuilder.setComponents(ActionRow.of(
-                    Button.secondary("refreshbutton", "\uD83D\uDD04")
+                    Button.secondary("nowplaying_button_refresh", "\uD83D\uDD04")
             ));
 
             return messageBuilder;
         }
 
-    }
-
-    public static MessageCreateBuilder getQueueMessage(MusicBot musicBot, Guild g, int indexOption) {
-        if(!musicBot.getMusicManager().getQueue(g).isEmpty()) {
-            MessageCreateBuilder messageBuilder = new MessageCreateBuilder();
-            if(indexOption != 0) {
-                String queue = "";
-                int index = 0;
-                for(AudioTrack track : musicBot.getMusicManager().getQueue(g)) {
-                    String current = "`" + index + ".` " +
-                            "`" + Messages.formatTime(track.getDuration()) + "` " +
-                            track.getInfo().title + " [" + track.getInfo().author + "]\n";
-                    String nextString = queue + current;
-                    if(nextString.length() <= 950) {
-                        if(index >= indexOption) {
-                            queue = queue + current;
-                        }
-                    } else {
-                        queue = queue + "`+ " + (musicBot.getMusicManager().getQueue(g).size()-index) + " entries. Use /queue <index> to search for indexes.`";
-                        break;
-                    }
-                    index++;
-                }
-                EmbedBuilder queueFull = new EmbedBuilder()
-                        .addField("Queue:", queue, false);
-                messageBuilder.setEmbeds(queueFull.build());
-
-                /*
-                messageBuilder.setActionRows(ActionRow.of(
-                        Button.primary("queuenext", "➡"),
-                        Button.primary("queueprevious", "⬅")
-                ));
-
-                 */
-
-                return messageBuilder;
-            } else {
-                String queue = "";
-                int index = 0;
-                for(AudioTrack track : musicBot.getMusicManager().getQueue(g)) {
-                    String current = "`" + index + ".` " +
-                            "`" + Messages.formatTime(track.getDuration()) + "` " +
-                            track.getInfo().title + " [" + track.getInfo().author + "]\n";
-                    String nextString = queue + current;
-                    if(nextString.length() <= 950) {
-                        queue = queue + current;
-                    } else {
-                        queue = queue + "`+ " + (musicBot.getMusicManager().getQueue(g).size()-index) + " entries. Use /queue <index> to search for indexes.`";
-                        break;
-                    }
-                    index++;
-                }
-                EmbedBuilder queueFull = new EmbedBuilder()
-                        .addField("Queue:", queue, false);
-                messageBuilder.setEmbeds(queueFull.build());
-
-                messageBuilder.setComponents(ActionRow.of(
-                        Button.primary("queuenext", "➡")
-                ));
-
-                return messageBuilder;
-            }
-        } else {
-            MessageCreateBuilder messageBuilder = new MessageCreateBuilder();
-            EmbedBuilder queueEmpty = new EmbedBuilder()
-                    .setDescription("The queue is empty")
-                    .setColor(Color.RED);
-            messageBuilder.setEmbeds(queueEmpty.build());
-
-            return messageBuilder;
-        }
     }
 
     public static MessageCreateBuilder getHelpMessage() {

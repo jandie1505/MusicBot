@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.utils.messages.MessageEditData;
 import net.jandie1505.musicbot.MusicBot;
+import net.jandie1505.musicbot.music.MusicPlayer;
 import net.jandie1505.musicbot.utilities.Messages;
 
 public class EventsButtons extends ListenerAdapter {
@@ -17,48 +18,70 @@ public class EventsButtons extends ListenerAdapter {
 
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {
-        if(event.getButton().getId().equalsIgnoreCase("playbutton")) {
-            if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
-                if(event.getGuild() != null) {
-                    Message m = event.getMessage();
-                    if(m != null) {
-                        if(this.musicBot.getMusicManager().getPlayingTrack(event.getGuild()) == null) {
-                            this.musicBot.getMusicManager().next(event.getGuild());
-                        }
-                        if(this.musicBot.getMusicManager().isPaused(event.getGuild())) {
-                            this.musicBot.getMusicManager().setPause(event.getGuild(), false);
-                        }
-                        event.editMessage(MessageEditData.fromCreateData(Messages.nowplayingMessage(musicBot, event.getGuild(), this.musicBot.getGMS().memberHasDJPermissions(event.getMember())).build())).queue();
-                    }
-                }
+
+        if(event.getButton().getId().equalsIgnoreCase("nowplaying_button_play")) {
+
+            if (!this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
+                return;
             }
-        } else if(event.getButton().getId().equalsIgnoreCase("pausebutton")) {
-            if(this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
-                if(event.getGuild() != null) {
-                    Message m = event.getMessage();
-                    if(m != null) {
-                        if(!this.musicBot.getMusicManager().isPaused(event.getGuild())) {
-                            this.musicBot.getMusicManager().setPause(event.getGuild(), true);
-                        }
-                        event.editMessage(MessageEditData.fromCreateData(Messages.nowplayingMessage(musicBot, event.getGuild(), this.musicBot.getGMS().memberHasDJPermissions(event.getMember())).build())).queue();
-                    }
-                }
+
+            if (event.getGuild() == null) {
+                return;
             }
-        } else if(event.getButton().getId().equalsIgnoreCase("refreshbutton")) {
-            if(event.getGuild() != null) {
-                Message m = event.getMessage();
-                if(m != null) {
-                    event.editMessage(MessageEditData.fromCreateData(Messages.nowplayingMessage(musicBot, event.getGuild(), this.musicBot.getGMS().memberHasDJPermissions(event.getMember())).build())).queue();
-                }
+
+            MusicPlayer player = this.musicBot.getMusicManager().getMusicPlayer(event.getGuild().getIdLong());
+
+            if (player.isPaused()) {
+                player.setPause(false);
             }
-        } else if(event.getButton().getId().equalsIgnoreCase("nowplayingskipbutton")) {
-            if(event.getGuild() != null) {
-                Message m = event.getMessage();
-                if(m != null) {
-                    this.musicBot.getMusicManager().next(event.getGuild());
-                    event.editMessage(MessageEditData.fromCreateData(Messages.nowplayingMessage(musicBot, event.getGuild(), this.musicBot.getGMS().memberHasDJPermissions(event.getMember())).build())).queue();
-                }
+
+            if (player.getPlayingTrack() == null && !player.getQueue().isEmpty()) {
+                player.nextTrack();
             }
+
+            event.editMessage(MessageEditData.fromCreateData(Messages.nowplayingMessage(this.musicBot, event.getGuild(), this.musicBot.getGMS().memberHasDJPermissions(event.getMember())).build())).queue();
+
+        } else if(event.getButton().getId().equalsIgnoreCase("nowplaying_button_pause")) {
+
+            if (!this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
+                return;
+            }
+
+            if (event.getGuild() == null) {
+                return;
+            }
+
+            MusicPlayer player = this.musicBot.getMusicManager().getMusicPlayer(event.getGuild().getIdLong());
+
+            player.setPause(true);
+
+            event.editMessage(MessageEditData.fromCreateData(Messages.nowplayingMessage(this.musicBot, event.getGuild(), this.musicBot.getGMS().memberHasDJPermissions(event.getMember())).build())).queue();
+
+        } else if(event.getButton().getId().equalsIgnoreCase("nowplaying_button_refresh")) {
+
+            if (event.getGuild() == null) {
+                return;
+            }
+
+            event.editMessage(MessageEditData.fromCreateData(Messages.nowplayingMessage(this.musicBot, event.getGuild(), this.musicBot.getGMS().memberHasDJPermissions(event.getMember())).build())).queue();
+
+        } else if(event.getButton().getId().equalsIgnoreCase("nowplaying_button_skip")) {
+
+            if (!this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
+                return;
+            }
+
+            if (event.getGuild() == null) {
+                return;
+            }
+
+            MusicPlayer player = this.musicBot.getMusicManager().getMusicPlayer(event.getGuild().getIdLong());
+
+            player.nextTrack();
+
+            event.editMessage(MessageEditData.fromCreateData(Messages.nowplayingMessage(this.musicBot, event.getGuild(), this.musicBot.getGMS().memberHasDJPermissions(event.getMember())).build())).queue();
+
         }
+
     }
 }
