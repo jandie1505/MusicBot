@@ -79,6 +79,7 @@ public class MusicBot {
 
         this.console = new Console(this);
         this.console.registerCommand("stop", new StopCommand(this));
+        this.console.registerCommand("bot", new BotCommand(this));
         this.console.registerCommand("shards", new ShardsCommand(this));
         this.console.registerCommand("database", new DatabaseCommand(this));
         this.console.registerCommand("guild", new GuildCommand(this));
@@ -314,7 +315,7 @@ public class MusicBot {
 
     public void startShardManager(int shardsTotal) {
 
-        if (this.shardManager != null) {
+        if (this.getBotStatus() != BotStatus.NOT_AVAILABLE && this.getBotStatus() != BotStatus.SHUTDOWN) {
             return;
         }
 
@@ -322,16 +323,23 @@ public class MusicBot {
             return;
         }
 
-        this.shardManager = DefaultShardManagerBuilder.createDefault(this.config.optString("token", ""))
-                .setShardsTotal(shardsTotal)
-                .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.DIRECT_MESSAGES, GatewayIntent.GUILD_INVITES, GatewayIntent.GUILD_EMOJIS_AND_STICKERS)
-                .build();
-        this.shardManager.setPresence(OnlineStatus.IDLE, Activity.playing("Starting up..."));
-        this.shardManager.addEventListener(new EventsBasic(this));
-        this.shardManager.addEventListener(new EventsCommands(this));
-        this.shardManager.addEventListener(new EventsButtons(this));
+        try {
 
-        MusicBot.LOGGER.info("Started ShardManager");
+            this.shardManager = DefaultShardManagerBuilder.createDefault(this.config.optString("token", ""))
+                    .setShardsTotal(shardsTotal)
+                    .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.DIRECT_MESSAGES, GatewayIntent.GUILD_INVITES, GatewayIntent.GUILD_EMOJIS_AND_STICKERS)
+                    .build();
+            this.shardManager.setPresence(OnlineStatus.IDLE, Activity.playing("Starting up..."));
+            this.shardManager.addEventListener(new EventsBasic(this));
+            this.shardManager.addEventListener(new EventsCommands(this));
+            this.shardManager.addEventListener(new EventsButtons(this));
+
+            MusicBot.LOGGER.info("Started ShardManager");
+
+        } catch (Exception e) {
+            LOGGER.warn("Exception while starting the ShardManager", e);
+        }
+
     }
 
     public void startShardManager() {
