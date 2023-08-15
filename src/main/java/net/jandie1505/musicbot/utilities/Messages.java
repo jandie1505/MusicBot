@@ -24,7 +24,7 @@ public class Messages {
             MessageCreateBuilder messageBuilder = new MessageCreateBuilder();
             AudioTrack audioTrack = player.getPlayingTrack();
             String description = "";
-            if(musicBot.getMusicManager().isPaused(g)) {
+            if(player.isPaused()) {
                 description = ":pause_button:  Player is currently paused";
             } else {
                 description = ":arrow_forward:  Player is currently playing";
@@ -32,22 +32,22 @@ public class Messages {
             String playIcon = ":stop_button:";
             String progressbar = "▬▬▬▬▬▬▬▬▬▬";
 
-            if(musicBot.getMusicManager().isPaused(g)) {
+            if(player.isPaused()) {
                 playIcon = ":pause_button:";
                 progressbar = getProgressBar(audioTrack.getPosition(), audioTrack.getDuration());
-            } else if(!musicBot.getMusicManager().isPaused(g)) {
+            } else if(!player.isPaused()) {
                 playIcon = ":arrow_forward:";
                 progressbar = getProgressBar(audioTrack.getPosition(), audioTrack.getDuration());
             }
 
             if(showbuttons) {
-                if(musicBot.getMusicManager().isPaused(g)) {
+                if(player.isPaused()) {
                     messageBuilder.addComponents(ActionRow.of(
                             Button.primary("nowplaying_button_play", "▶"),
                             Button.primary("nowplaying_button_skip", "⏭"),
                             Button.secondary("nowplaying_button_refresh", "\uD83D\uDD04")
                     ));
-                } else if(!musicBot.getMusicManager().isPaused(g)) {
+                } else if(!player.isPaused()) {
                     messageBuilder.addComponents(ActionRow.of(
                             Button.primary("nowplaying_button_pause", "⏸"),
                             Button.primary("nowplaying_button_skip", "⏭"),

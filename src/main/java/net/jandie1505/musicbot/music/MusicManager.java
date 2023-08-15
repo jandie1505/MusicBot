@@ -52,12 +52,6 @@ public class MusicManager {
         return g.getSelfMember().getVoiceState().inAudioChannel();
     }
 
-    // PLAYER
-
-    public boolean isPaused(Guild g) {
-        return getMusicPlayer(g.getIdLong()).isPaused();
-    }
-
     // PLAYER MANAGEMENT
 
     public void reload() {
