@@ -81,7 +81,8 @@ public class DatabaseCommand implements CommandExecutor {
                                     "guildId: " + guildData.getGuildId() + "\n" +
                                     "djRoles: " + guildData.getDjRoles() + "\n" +
                                     "restrictToRoles: " + guildData.getRestrictToRoles() + "\n" +
-                                    "ephemeralState: " + guildData.isEphemeralState();
+                                    "ephemeralState: " + guildData.isEphemeralState() + "\n" +
+                                    "defaultVolume: " + guildData.getDefaultVolume();
                         }
                         case "update" -> {
 
@@ -131,6 +132,11 @@ public class DatabaseCommand implements CommandExecutor {
                                     guildData.setEphemeralState(Boolean.parseBoolean(args[4]));
                                     this.musicBot.getDatabaseManager().updateGuild(guildData);
                                     return "Updated ephemeralState";
+                                }
+                                case "defaultVolume" -> {
+                                    guildData.setDefaultVolume(Integer.parseInt(args[4]));
+                                    this.musicBot.getDatabaseManager().updateGuild(guildData);
+                                    return "Updated defaultVolume";
                                 }
                                 default -> {
                                     return "Invalid value";

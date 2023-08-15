@@ -15,12 +15,14 @@ public class GuildData {
     private final List<Long> djRoles;
     private int restrictToRoles;
     private boolean ephemeralState;
+    private int defaultVolume;
 
     public GuildData(long guildId) {
         this.guildId = guildId;
         this.djRoles = new ArrayList<>();
         this.restrictToRoles = 0;
         this.ephemeralState = true;
+        this.defaultVolume = 50;
     }
 
     public GuildData(ResultSet rs) throws SQLException {
@@ -28,6 +30,7 @@ public class GuildData {
         this.djRoles = new ArrayList<>();
         this.restrictToRoles = rs.getInt("restrictToRoles");
         this.ephemeralState = rs.getBoolean("ephemeralState");
+        this.defaultVolume = rs.getInt("defaultVolume");
 
         this.setDJRolesFromJSONArray(rs.getString("djRoles"));
     }
@@ -56,15 +59,33 @@ public class GuildData {
         this.ephemeralState = ephemeralState;
     }
 
+    public int getDefaultVolume() {
+
+        if (defaultVolume < 0) {
+            return 0;
+        }
+
+        if (defaultVolume > 200) {
+            return 200;
+        }
+
+        return defaultVolume;
+    }
+
+    public void setDefaultVolume(int defaultVolume) {
+        this.defaultVolume = defaultVolume;
+    }
+
     protected PreparedStatement getStatement(Connection connection) throws SQLException {
         PreparedStatement statement = connection.prepareStatement(
-                "INSERT OR REPLACE INTO guilds (guildId, DJRoles, restrictToRoles, ephemeralState) VALUES (?, ?, ?, ?);"
+                "INSERT OR REPLACE INTO guilds (guildId, DJRoles, restrictToRoles, ephemeralState, defaultVolume) VALUES (?, ?, ?, ?, ?);"
         );
 
         statement.setLong(1, this.guildId);
         statement.setString(2, new JSONArray(this.djRoles).toString());
         statement.setInt(3, this.restrictToRoles);
         statement.setBoolean(4, this.ephemeralState);
+        statement.setInt(5, this.defaultVolume);
 
         return statement;
     }

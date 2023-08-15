@@ -7,9 +7,11 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.exceptions.MissingAccessException;
 import net.dv8tion.jda.api.interactions.commands.Command;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 import net.jandie1505.musicbot.MusicBot;
@@ -198,6 +200,29 @@ public class GMS {
                                 .addOptions(
                                         new OptionData(OptionType.INTEGER, "volume", "The volume between 0 and 200").setRequired(true)
                                 )
+                ).queue(null, this.missingAccess(g));
+            }
+
+            if (!registeredCommands.contains("mbsettings")) {
+                g.upsertCommand(
+                        new CommandDataImpl("mbsettings", "Manage music bot settings")
+                                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
+                                .addOptions(
+                                        new OptionData(OptionType.INTEGER, "action", "What do you want to do")
+                                                .setRequired(true)
+                                                .addChoices(
+                                                        new Command.Choice("Show all Settings", 0),
+                                                        new Command.Choice("Show DJ Roles", 1),
+                                                        new Command.Choice("Add DJ Role", 2),
+                                                        new Command.Choice("Remove DJ Role", 3),
+                                                        new Command.Choice("Clear DJ Roles", 4),
+                                                        new Command.Choice("Manage Restrict to Roles", 5),
+                                                        new Command.Choice("Manage Ephemeral State", 6),
+                                                        new Command.Choice("Manage Default Volume" , 7)
+                                                ),
+                                        new OptionData(OptionType.STRING, "value", "The value you want to set")
+                                )
+
                 ).queue(null, this.missingAccess(g));
             }
 

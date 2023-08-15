@@ -2,10 +2,13 @@ package net.jandie1505.musicbot.eventlisteners;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.jandie1505.musicbot.MusicBot;
+import net.jandie1505.musicbot.database.GuildData;
 import net.jandie1505.musicbot.music.MusicEqueuedResponse;
 import net.jandie1505.musicbot.music.MusicPlayer;
 import net.jandie1505.musicbot.utilities.Messages;
@@ -46,6 +49,7 @@ public class EventsCommands extends ListenerAdapter {
             case "shuffle" -> shuffleCommand(interaction);
             case "search" -> searchCommand(interaction);
             case "volume" -> volumeCommand(interaction);
+            case "mbsettings" -> mbsettingsCommand(interaction);
             default -> {}
         }
 
@@ -938,6 +942,296 @@ public class EventsCommands extends ListenerAdapter {
                         .build()
         ).queue();
 
+    }
+
+    public void mbsettingsCommand(SlashCommandInteraction interaction) {
+
+        // Null checks
+
+        if (interaction.getGuild() == null || interaction.getMember() == null) {
+            return;
+        }
+
+        // Permission check
+
+        if (!this.musicBot.getGMS().memberHasAdminPermissions(interaction.getMember())) {
+            return;
+        }
+
+        // Option
+
+        if (interaction.getOption("action") == null) {
+            return;
+        }
+
+        int action = interaction.getOption("action").getAsInt();
+
+        // Defer Reply
+
+        interaction.deferReply(true).queue();
+
+        // Guild Data
+
+        GuildData guildData = this.musicBot.getDatabaseManager().getGuild(interaction.getGuild().getIdLong());
+
+        // Action
+
+        switch (action) {
+            case 0 -> {
+
+                interaction.getHook().sendMessageEmbeds(
+                        new EmbedBuilder()
+                                .setTitle("MusicBot Settings")
+                                .addField("DJ Roles", this.getDJRoleList(interaction.getGuild()), false)
+                                .addField("Restrict to Roles:", this.getRestrictToRolesStatus(interaction.getGuild()), false)
+                                .addField("Ephemeral Messages:", guildData.isEphemeralState() ? "enabled" : "disabled", false)
+                                .addField("Default Volume:", String.valueOf(guildData.getDefaultVolume()), false)
+                                .setColor(Color.GRAY)
+                                .build()
+                ).queue();
+
+            }
+            case 1 -> {
+
+                interaction.getHook().sendMessageEmbeds(
+                        new EmbedBuilder()
+                                .addField("DJ Roles:", this.getDJRoleList(interaction.getGuild()), false)
+                                .setColor(Color.GRAY)
+                                .build()
+                ).queue();
+
+            }
+            case 2 -> {
+
+                if (interaction.getOption("value") == null) {
+                    interaction.getHook().sendMessageEmbeds(Messages.failMessage("You need to specify the role")).queue();
+                    return;
+                }
+
+                Role role = interaction.getGuild().getRoleById(interaction.getOption("value").getAsString());
+
+                if (role == null) {
+
+                    for (Role otherRole : interaction.getGuild().getRolesByName(interaction.getOption("value").getAsString(), true)) {
+                        role = otherRole;
+                        break;
+                    }
+
+                }
+
+                if (role == null) {
+                    interaction.getHook().sendMessageEmbeds(Messages.warningMessage("Role does not exist")).queue();
+                    return;
+                }
+
+                guildData.getDjRoles().add(role.getIdLong());
+                this.musicBot.getDatabaseManager().updateGuild(guildData);
+
+                interaction.getHook().sendMessageEmbeds(
+                        new EmbedBuilder()
+                                .setDescription(":white_check_mark:  Set role " + role.getName() + " (" + role.getIdLong() + ") as a DJ role")
+                                .setColor(Color.GREEN)
+                                .build()
+                ).queue();
+
+            }
+            case 3 -> {
+
+                if (interaction.getOption("value") == null) {
+                    interaction.getHook().sendMessageEmbeds(Messages.failMessage("You need to specify the role")).queue();
+                    return;
+                }
+
+                try {
+                    guildData.getDjRoles().remove(Long.parseLong(interaction.getOption("value").getAsString()));
+                    this.musicBot.getDatabaseManager().updateGuild(guildData);
+                } catch (IllegalArgumentException e) {
+                    interaction.getHook().sendMessageEmbeds(Messages.warningMessage("You need to specify a valid **role id**")).queue();
+                    return;
+                }
+
+                interaction.getHook().sendMessageEmbeds(
+                        new EmbedBuilder()
+                                .setDescription(":negative_squared_cross_mark:  Role " + Long.parseLong(interaction.getOption("value").getAsString()) + " is no longer a DJ role")
+                                .setColor(Color.GREEN)
+                                .build()
+                ).queue();
+
+            }
+            case 4 -> {
+
+                guildData.getDjRoles().clear();
+                this.musicBot.getDatabaseManager().updateGuild(guildData);
+
+                interaction.getHook().sendMessageEmbeds(
+                        new EmbedBuilder()
+                                .setDescription(":wastebasket:  Cleared all DJ roles")
+                                .setColor(Color.GREEN)
+                                .build()
+                ).queue();
+
+            }
+            case 5 -> {
+
+                if (interaction.getOption("value") != null) {
+
+                    try {
+                        int status = Integer.parseInt(interaction.getOption("value").getAsString());
+
+                        if (status < 0 || status > 2) {
+                            interaction.getHook().sendMessageEmbeds(Messages.warningMessage("You need to set a value between 0 and 2. Run the command without a value for help.")).queue();
+                            return;
+                        }
+
+                        guildData.setRestrictToRoles(status);
+                        this.musicBot.getDatabaseManager().updateGuild(guildData);
+
+                        interaction.getHook().sendMessageEmbeds(
+                                new EmbedBuilder()
+                                        .setDescription(":white_check_mark:  Restrict to roles status has been set")
+                                        .setColor(Color.GREEN)
+                                        .build()
+                        ).queue();
+
+                    } catch (IllegalArgumentException e) {
+                        interaction.getHook().sendMessageEmbeds(Messages.warningMessage("You need to specify a valid id")).queue();
+                    }
+
+                } else {
+
+                    interaction.getHook().sendMessageEmbeds(
+                            new EmbedBuilder()
+                                    .setTitle("Restrict to Roles")
+                                    .addField("Current status:", this.getRestrictToRolesStatus(interaction.getGuild()), false)
+                                    .addField("How to set:", "Specify the id of the status as the value.", false)
+                                    .addField("Available statuses:",
+                                            "`0` - :lock:  Admin/DJ only mode (Only Admins/DJs can use the bot)\n" +
+                                            "`1` - :unlock:  Normal mode (Normal users can add songs and skipvote)\n" +
+                                            "`2` - :infinity:  Unlimited mode (Normal users have DJ permissions)",
+                                            false
+                                    )
+                                    .setColor(Color.GRAY)
+                                    .build()
+                    ).queue();
+
+                }
+
+            }
+            case 6 -> {
+
+                if (interaction.getOption("value") != null) {
+
+                    String value = interaction.getOption("value").getAsString();
+
+                    switch (value) {
+                        case "enable" -> guildData.setEphemeralState(true);
+                        case "disable" -> guildData.setEphemeralState(false);
+                        case "true", "false" -> guildData.setEphemeralState(Boolean.parseBoolean(value));
+                        default -> {
+                            interaction.getHook().sendMessageEmbeds(Messages.warningMessage("You need to specify a valid value. Run the command without value for help.")).queue();
+                            return;
+                        }
+                    }
+
+                    this.musicBot.getDatabaseManager().updateGuild(guildData);
+
+                    interaction.getHook().sendMessageEmbeds(
+                            new EmbedBuilder()
+                                    .setDescription(":white_check_mark:  Ephemeral messages status set")
+                                    .setColor(Color.GREEN)
+                                    .build()
+                    ).queue();
+
+                } else {
+
+                    interaction.getHook().sendMessageEmbeds(
+                            new EmbedBuilder()
+                                    .setTitle("Ephemeral Messages:")
+                                    .addField("Current Status:", guildData.isEphemeralState() ? "enabled" : "disabled", false)
+                                    .addField("How to set:", "Set enable/true or disable/false as the value.", false)
+                                    .addField("What this is:", "Ephemeral messages are special command replys that only the user that has run the command can see.\nEnabling this is recommended.", false)
+                                    .build()
+                    ).queue();
+
+                }
+
+            }
+            case 7 -> {
+
+                if (interaction.getOption("value") != null) {
+
+                    try {
+                        int status = Integer.parseInt(interaction.getOption("value").getAsString());
+
+                        if (status < 0 || status > 200) {
+                            interaction.getHook().sendMessageEmbeds(Messages.warningMessage("You need to set a value between 0 and 200. Run the command without a value for help.")).queue();
+                            return;
+                        }
+
+                        guildData.setDefaultVolume(status);
+                        this.musicBot.getDatabaseManager().updateGuild(guildData);
+
+                        interaction.getHook().sendMessageEmbeds(
+                                new EmbedBuilder()
+                                        .setDescription(":white_check_mark:  Default volume has been set")
+                                        .setColor(Color.GREEN)
+                                        .build()
+                        ).queue();
+
+                    } catch (IllegalArgumentException e) {
+                        interaction.getHook().sendMessageEmbeds(Messages.warningMessage("You need to specify a valid volume value")).queue();
+                    }
+
+                } else {
+
+                    interaction.getHook().sendMessageEmbeds(
+                            new EmbedBuilder()
+                                    .setTitle("Restrict to Roles")
+                                    .addField("Current volume:", String.valueOf(guildData.getDefaultVolume()), false)
+                                    .addField("How to set:", "Set the volume value between 0 and 200 as the value.", false)
+                                    .setColor(Color.GRAY)
+                                    .build()
+                    ).queue();
+
+                }
+
+            }
+            default -> interaction.getHook().sendMessageEmbeds(Messages.warningMessage("Unknown action")).queue();
+        }
+
+    }
+
+    private String getDJRoleList(Guild guild) {
+        GuildData guildData = this.musicBot.getDatabaseManager().getGuild(guild.getIdLong());
+        String djRoles = "";
+
+        for (long roleId : guildData.getDjRoles()) {
+            Role role = guild.getRoleById(roleId);
+
+            if (role == null) {
+                djRoles = djRoles + "`" + roleId + "`,\n";
+                continue;
+            }
+
+            djRoles = djRoles + role.getName() + " (`" + roleId + "`),\n";
+        }
+
+        djRoles = djRoles + "The server has " + guildData.getDjRoles().size() + " DJ roles";
+
+        return djRoles;
+    }
+
+    private String getRestrictToRolesStatus(Guild guild) {
+        GuildData guildData = this.musicBot.getDatabaseManager().getGuild(guild.getIdLong());
+        String restrictToRoles = ":question:  Unknown status";
+
+        switch (guildData.getRestrictToRoles()) {
+            case 0 -> restrictToRoles = ":lock:  Admin/DJ only mode (0)";
+            case 1 -> restrictToRoles = ":unlock:  Normal mode";
+            case 2 -> restrictToRoles = ":infinity:  Unlimited mode";
+        }
+
+        return restrictToRoles;
     }
 
 }
