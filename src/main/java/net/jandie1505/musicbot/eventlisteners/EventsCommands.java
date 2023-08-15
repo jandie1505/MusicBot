@@ -177,8 +177,11 @@ public class EventsCommands extends ListenerAdapter {
         for (int i = startIndex; i < max; i++) {
             AudioTrack track = musicPlayer.getQueue().get(i);
 
-            list = list + "`" + i + ".` `" + Messages.formatTime(track.getDuration()) + "` " + track.getInfo().title + " [" + track.getInfo().author + "]\n";
+            if (list.length() > 512) {
+                break;
+            }
 
+            list = list + "`" + i + ".` `" + Messages.formatTime(track.getDuration()) + "` " + track.getInfo().title + " [" + track.getInfo().author + "]\n";
         }
 
         list = list + "`Showing track " + startIndex + "-" + max + " with a total of " + musicPlayer.getQueue().size() + " tracks.`\n";
@@ -824,10 +827,14 @@ public class EventsCommands extends ListenerAdapter {
         for (int i = 0; i < response.size(); i++) {
             AudioTrack track = response.get(i);
 
+            if (list.length() > 512) {
+                break;
+            }
+
             list = list + "`" + i + ".` `" + Messages.formatTime(track.getDuration()) + "` " + track.getInfo().title + " [" + track.getInfo().author + "]\n";
         }
 
-        list = list + "`Showing " + response.size() + " search results`";
+        list = list + "`Found " + response.size() + " search results`";
 
         // Reply
 

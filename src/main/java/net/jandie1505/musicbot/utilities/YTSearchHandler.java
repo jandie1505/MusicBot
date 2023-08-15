@@ -4,90 +4,73 @@ import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
+import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-public class YTSearchHandler {
-    private boolean await;
-    private List<AudioTrack> result;
-    private AudioPlayerManager manager;
+public final class YTSearchHandler {
 
-    private YTSearchHandler() {
-        await = false;
-        result = new ArrayList<>();
-        manager = new DefaultAudioPlayerManager();
-        AudioSourceManagers.registerRemoteSources(manager);
-    }
+    private YTSearchHandler() {}
 
-    private List<AudioTrack> awaitSearch(String query) {
-        this.searchHandler(query);
-        while(await) {
-            try {
-                TimeUnit.SECONDS.sleep(1);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        manager.shutdown();
-        return result;
-    }
+    public static List<AudioTrack> search(String query) {
+        AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
+        CountDownLatch latch = new CountDownLatch(1);
+        List<AudioTrack> result = new ArrayList<>();
 
-    private void searchHandler(String query) {
-        String searchQuery = "ytsearch:" + query;
-        this.startAwait();
-        manager.loadItem(searchQuery, new AudioLoadResultHandler() {
+        AudioSourceManagers.registerRemoteSources(playerManager);
+
+        playerManager.loadItem("ytsearch:" + query, new AudioLoadResultHandler() {
             @Override
-            public void trackLoaded(AudioTrack track) {
-                result.add(track);
-                stopAwait();
+            public void trackLoaded(AudioTrack audioTrack) {
+                result.add(audioTrack);
+                latch.countDown();
             }
 
             @Override
-            public void playlistLoaded(AudioPlaylist playlist) {
-                result.addAll(playlist.getTracks());
-                stopAwait();
+            public void playlistLoaded(AudioPlaylist audioPlaylist) {
+                result.addAll(audioPlaylist.getTracks());
+                latch.countDown();
             }
 
             @Override
             public void noMatches() {
-                stopAwait();
+                latch.countDown();
             }
 
             @Override
-            public void loadFailed(FriendlyException exception) {
-                stopAwait();
+            public void loadFailed(FriendlyException e) {
+                latch.countDown();
             }
         });
-    }
 
-    private void startAwait() {
-        await = true;
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    TimeUnit.SECONDS.sleep(5);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+        try {
+            latch.await(30, TimeUnit.SECONDS);
+        } catch (InterruptedException ignored) {
+            // ignored, will return null
+        }
+
+        if (result.size() > 20) {
+
+            int index = 0;
+            for (AudioTrack track : List.copyOf(result)) {
+
+                if (index > 20) {
+                    result.remove(track);
                 }
-                await = false;
+
+                index++;
             }
-        }).start();
-    }
 
-    private void stopAwait() {
-        await = false;
-    }
+        }
 
-
-
-    public static List<AudioTrack> search(String query) {
-        YTSearchHandler searchHandler = new YTSearchHandler();
-        return searchHandler.awaitSearch(query);
+        return result;
     }
 }
