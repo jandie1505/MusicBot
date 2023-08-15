@@ -1295,8 +1295,8 @@ public class EventsCommands extends ListenerAdapter {
 
         switch (guildData.getRestrictToRoles()) {
             case 0 -> restrictToRoles = ":lock:  Admin/DJ only mode (0)";
-            case 1 -> restrictToRoles = ":unlock:  Normal mode";
-            case 2 -> restrictToRoles = ":infinity:  Unlimited mode";
+            case 1 -> restrictToRoles = ":unlock:  Normal mode (1)";
+            case 2 -> restrictToRoles = ":infinity:  Unlimited mode (2)";
         }
 
         return restrictToRoles;
