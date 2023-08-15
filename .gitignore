@@ -2,3 +2,7 @@
 *.class
 /out/
 /target/
+/config.json
+/logs/
+/.idea/
+/dependency-reduced-pom.xml

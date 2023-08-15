@@ -1,320 +1,258 @@
 package net.jandie1505.musicbot.system;
 
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Invite;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
-import net.dv8tion.jda.api.exceptions.ErrorResponseException;
-import net.dv8tion.jda.api.exceptions.PermissionException;
+import net.dv8tion.jda.api.exceptions.MissingAccessException;
+import net.dv8tion.jda.api.interactions.commands.Command;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.requests.ErrorResponse;
-import net.dv8tion.jda.api.sharding.ShardManager;
+import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 import net.jandie1505.musicbot.MusicBot;
-import net.jandie1505.musicbot.console.Console;
-import org.json.JSONArray;
+import net.jandie1505.musicbot.database.GuildData;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class GMS {
-    private static ShardManager shardManager;
-
-    public static void init() {
-        shardManager = MusicBot.getShardManager();
+    private final MusicBot musicBot;
+    
+    public GMS(MusicBot musicBot) {
+        this.musicBot = musicBot;
     }
 
-    public static void reloadGuilds(boolean completeReload) {
-        Console.messageGMS("Checking database guilds...");
-        for(String guildId : DatabaseManager.getRegisteredGuilds()) {
-            Guild g = shardManager.getGuildById(guildId);
-            if(g == null) {
-                if(!MusicBot.completeOnline()) {
-                    Console.messageGMS("Guild " + guildId + " will not be deleted because not all shards are online", true);
-                } else {
-                    DatabaseManager.deleteGuild(guildId);
-                    Console.messageGMS("Deleted guild " + guildId + " because it's null", true);
-                }
-            }
-        }
-        Console.messageGMS("Checking discord guilds...");
-        for(Guild g : shardManager.getGuilds()) {
-            if(g != null) {
-                if(completeReload) {
-                    setupGuild(g);
-                } else {
-                    if(!DatabaseManager.getRegisteredGuilds().contains(g.getId())) {
-                        setupGuild(g);
-                        Console.messageGMS("Added guild " + g.getId() + " to database", true);
-                    }
-                }
-            }
-        }
-        Console.messageGMS("Reloaded guilds");
-    }
+    public void setupGuild(Guild g) {
 
-    public static void leaveGuild(String guildId) {
-        Guild g = shardManager.getGuildById(guildId);
-        if(g != null) {
+        if (g == null) {
+            return;
+        }
+
+        if (!this.musicBot.getConfig().optBoolean("publicMode", false) && !this.musicBot.getDatabaseManager().isGuildWhitelisted(g.getIdLong())) {
             g.leave().queue();
+            this.logInfo("Left guild " + g.getId() + " because it is not whitelisted");
+            return;
         }
-        DatabaseManager.deleteGuild(guildId);
-        Console.messageDB("Left guild " + guildId, true);
+
+        if (!this.hasRequiredPermissions(g)) {
+            g.leave().queue();
+            this.logDebug("Left guild " + g.getId() + " because of missing permissions");
+            return;
+        }
+
+        this.setupCommands(g);
+
+        this.logDebug("Guild " + g.getId() + " was set up");
     }
 
-    public static void leaveGuild(String guildId, String reason) {
-        Guild g = shardManager.getGuildById(guildId);
-        if(g != null) {
-            g.retrieveOwner().queue(member -> {
-                member.getUser().openPrivateChannel().queue(privateChannel -> {
-                    EmbedBuilder botLeftGuildMessage = new EmbedBuilder()
-                            .setTitle("Left your server")
-                            .addField("Name (ID):", g.getName() + " (" + g.getId() + ")", false)
-                            .addField("Reason:", reason, false)
-                            .setColor(Color.RED);
-                    privateChannel.sendMessage("Left your server " + g.getName() + " (" + g.getId() + ")").setEmbeds(botLeftGuildMessage.build()).queue();
-                    g.leave().queue();
-                    Console.messageDB("Left guild " + guildId + " for reason " + reason, true);
-                }, new ErrorHandler().handle(ErrorResponse.CANNOT_SEND_TO_USER, e -> {
-                    g.leave().queue();
-                    Console.messageDB("Left guild " + guildId + " for reason " + reason, true);
-                }));
-            }, new ErrorHandler().handle(ErrorResponse.UNKNOWN_MEMBER, e -> {
-                g.leave().queue();
-                Console.messageDB("Left guild " + guildId, true);
-            }));
+    public boolean hasRequiredPermissions(Guild g) {
+
+        if (g == null) {
+            return false;
         }
-        DatabaseManager.deleteGuild(guildId);
+
+        Member m = g.getSelfMember();
+
+        return m.hasPermission(Permission.NICKNAME_CHANGE)
+                || m.hasPermission(Permission.VIEW_CHANNEL)
+                || m.hasPermission(Permission.MESSAGE_SEND)
+                || m.hasPermission(Permission.MESSAGE_EMBED_LINKS)
+                || m.hasPermission(Permission.MESSAGE_ATTACH_FILES)
+                || m.hasPermission(Permission.MESSAGE_HISTORY)
+                || m.hasPermission(Permission.MESSAGE_ADD_REACTION)
+                || m.hasPermission(Permission.VOICE_CONNECT)
+                || m.hasPermission(Permission.VOICE_SPEAK)
+                || m.hasPermission(Permission.VOICE_USE_VAD);
     }
 
-    public static void setupGuild(Guild g) {
-        if(g != null) {
-            String guildId = g .getId();
-            if(!MusicBot.getPublicMode() && !DatabaseManager.isGuildWhitelisted(g.getId())) {
-                GMS.leaveGuild(g.getId());
-                Console.messageGMS("Removed bot from guild " + guildId + " because it is not whitelisted");
-            } else {
-                if(!g.getSelfMember().hasPermission(Permission.CREATE_INSTANT_INVITE)
-                        || !g.getSelfMember().hasPermission(Permission.NICKNAME_CHANGE)
-                        || !g.getSelfMember().hasPermission(Permission.VIEW_CHANNEL)
-                        || !g.getSelfMember().hasPermission(Permission.MESSAGE_SEND)
-                        || !g.getSelfMember().hasPermission(Permission.MESSAGE_EMBED_LINKS)
-                        || !g.getSelfMember().hasPermission(Permission.MESSAGE_ATTACH_FILES)
-                        || !g.getSelfMember().hasPermission(Permission.MESSAGE_HISTORY)
-                        || !g.getSelfMember().hasPermission(Permission.MESSAGE_ADD_REACTION)
-                        || !g.getSelfMember().hasPermission(Permission.VOICE_CONNECT)
-                        || !g.getSelfMember().hasPermission(Permission.VOICE_SPEAK)
-                        || !g.getSelfMember().hasPermission(Permission.VOICE_USE_VAD)) {
-                    GMS.leaveGuild(g.getId(), "Missing permissions");
-                    Console.messageGMS("Removed bot from guild " + guildId + " because of missing permissions");
-                } else {
-                    DatabaseManager.registerGuild(g.getId());
-                    setupCommands(g);
-                    reloadDJRoles(g.getId());
-                    Console.messageGMS("Guild " + g.getId() + " was set up");
+    public void deleteCommands(Guild g) {
+
+        if (g == null) {
+            return;
+        }
+
+        g.retrieveCommands().queue(commands -> {
+
+            for (Command command : commands) {
+
+                if (command.getApplicationIdLong() != g.getJDA().getSelfUser().getIdLong()) {
+                    continue;
                 }
+
+                command.delete().queue(null, this.missingAccess(g));
             }
-        }
+
+        });
+
     }
 
-    public static void setupCommands(Guild g) {
-        /*
-        if(g != null) {
-            String guildId = g.getId();
-            g.retrieveCommands().queue(commands -> {
-                try {
-                    for(Command cmd : commands) {
-                        cmd.delete().queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
-                            leaveGuild(g.getId(), "Missing permissions for slash commands");
-                            Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
-                        }));
-                    }
+    public void setupCommands(Guild g) {
 
-                    try {
-                        TimeUnit.SECONDS.sleep(1);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-
-                    CommandData nowplayingCommand = new CommandData("nowplaying", "Shows information about the song which is currently playing");
-                    CommandData queueCommand = new CommandData("queue", "Shows the current queue");
-                    CommandData playCommand = new CommandData("play", "Play a song")
-                            .addOptions(new OptionData(OptionType.STRING, "song", "The song link / song name / playlist link you want to play"));
-                    CommandData removeCommand = new CommandData("remove", "Remove a specific song from the queue")
-                            .addOptions(new OptionData(OptionType.INTEGER, "index", "The index of the song you want to remove").setRequired(true));
-                    CommandData searchCommand = new CommandData("search", "YTSearchHandler youtube")
-                            .addOptions(new OptionData(OptionType.STRING, "query", "The text you want to search for"));
-                    CommandData shuffleCommand = new CommandData("shuffle", "Shuffle the queue");
-                    CommandData skipCommand = new CommandData("skip", "Skip a song")
-                            .addOptions(new OptionData(OptionType.INTEGER, "position", "Skip to a specific queue position"));
-                    CommandData removeUserCommand = new CommandData("removeuser", "Removes all songs by a specific member")
-                            .addOptions(new OptionData(OptionType.USER, "member", "The member you want to remove the music from").setRequired(true));
-                    CommandData forceskipCommand = new CommandData("forceskip", "Force skip a song")
-                            .addOptions(new OptionData(OptionType.INTEGER, "position", "Skip to a specific queue position"));
-                    CommandData movetrackCommand = new CommandData("movetrack", "Move a specific track in queue")
-                            .addOptions(new OptionData(OptionType.INTEGER, "from", "The track you want to move").setRequired(true))
-                            .addOptions(new OptionData(OptionType.INTEGER, "to", "The queue position you want to move the track to").setRequired(true));
-                    CommandData playnowCommand = new CommandData("playnow", "Stop the current song and play the specified song immediately")
-                            .addOptions(new OptionData(OptionType.STRING, "song", "The song you want to play").setRequired(true));
-                    CommandData stopCommand = new CommandData("stop", "Stop playing music");
-                    CommandData volumeCommand = new CommandData("volume", "Change the volume")
-                            .addOptions(new OptionData(OptionType.INTEGER, "volume", "Change the volume to this value").setRequired(true));
-                    CommandData leaveCommand = new CommandData("leave", "Leave the voice channel");
-
-                    SubcommandData mbsettingsInfoCommand = new SubcommandData("info", "See an overview of all settings");
-                    SubcommandData mbsettingsDJRoleCommand = new SubcommandData("djrole", "Add/remove/clear dj roles")
-                            .addOptions(new OptionData(OptionType.STRING, "action", "add/remove").setRequired(true).addChoice("add", "add").addChoice("remove", "remove").addChoice("clear", "clear"))
-                            .addOptions(new OptionData(OptionType.ROLE, "role", "Only required if you have chosen add/remove"));
-                    CommandData mbsettingsCommand = new CommandData("mbsettings", "Music bot settings command for administrators")
-                            .addSubcommands(mbsettingsInfoCommand)
-                            .addSubcommands(mbsettingsDJRoleCommand);
-
-                    g.upsertCommand(nowplayingCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
-                        leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
-                    }));
-                    g.upsertCommand(queueCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
-                        leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
-                    }));
-                    g.upsertCommand(playCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
-                        leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
-                    }));
-                    g.upsertCommand(removeCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
-                        leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
-                    }));
-                    g.upsertCommand(searchCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
-                        leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
-                    }));
-                    g.upsertCommand(shuffleCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
-                        leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
-                    }));
-                    g.upsertCommand(skipCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
-                        leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
-                    }));
-                    g.upsertCommand(removeUserCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
-                        leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
-                    }));
-                    g.upsertCommand(forceskipCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
-                        leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
-                    }));
-                    g.upsertCommand(movetrackCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
-                        leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
-                    }));
-                    g.upsertCommand(playnowCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
-                        leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
-                    }));
-                    g.upsertCommand(stopCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
-                        leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
-                    }));
-                    g.upsertCommand(volumeCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
-                        leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
-                    }));
-                    g.upsertCommand(leaveCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
-                        leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
-                    }));
-                    g.upsertCommand(mbsettingsCommand).queue(null, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
-                        leaveGuild(g.getId(), "Missing permissions for slash commands");
-                        Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
-                    }));
-
-                    Console.messageGMS("Reloaded commands on guild " + g.getId());
-                } catch(PermissionException ignored) {}
-            }, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
-                leaveGuild(g.getId(), "Missing permissions for slash commands");
-                Console.messageGMS("Left guild " + guildId + " for missing slash command permissions");
-            }));
+        if (g == null) {
+            return;
         }
 
-         */
-    }
+        g.retrieveCommands().queue(commands -> {
 
-    public static Invite createGuildInvite(Guild g) {
-        try {
-            if(g != null) {
-                return g.getTextChannels().get(0).createInvite().complete();
-            } else {
-                return null;
-            }
-        } catch(PermissionException | ErrorResponseException e) {
-            return null;
-        }
-    }
+            List<String> registeredCommands = new ArrayList<>();
 
-    // DJ Roles
-    public static void addDJRole(String guildId, String roleId) {
-        try {
-            JSONArray moderatorRoles = new JSONArray(DatabaseManager.getDJRoles(guildId));
-            if(!moderatorRoles.toList().contains(roleId)) {
-                moderatorRoles.put(roleId);
-                DatabaseManager.setDJRoles(guildId, moderatorRoles.toString());
-                Console.messageGMS("Added moderator role " + roleId + " on guild " + guildId);
-            }
-        } catch(Exception ignored) {}
-    }
+            for (Command cmd : commands) {
 
-    public static void removeDJRole(String guildId, String roleId) {
-        try {
-            JSONArray moderatorRoles = new JSONArray(DatabaseManager.getDJRoles(guildId));
-            if(moderatorRoles.toList().contains(roleId)) {
-                moderatorRoles.remove(moderatorRoles.toList().indexOf(roleId));
-                DatabaseManager.setDJRoles(guildId, moderatorRoles.toString());
-                Console.messageGMS("Removed moderator role " + roleId + " on guild " + guildId);
-            }
-        } catch(Exception ignored) {}
-    }
-
-    public static void clearDJRoles(String guildId) {
-        try {
-            JSONArray moderatorRoles = new JSONArray(DatabaseManager.getDJRoles(guildId));
-            moderatorRoles.clear();
-            DatabaseManager.setDJRoles(guildId, moderatorRoles.toString());
-            Console.messageGMS("Cleared moderator roles on guild " + guildId);
-        } catch(Exception ignored) {}
-    }
-
-    public static List<String> getDJRoles(String guildId) {
-        List<String> returnList = new ArrayList<>();
-
-        try {
-            JSONArray moderatorRoles = new JSONArray(DatabaseManager.getDJRoles(guildId));
-            for(Object roleIdObject : moderatorRoles) {
-                String roleId = (String) roleIdObject;
-                returnList.add(roleId);
-            }
-        } catch(Exception ignored) {}
-
-        return returnList;
-    }
-
-    public static void reloadDJRoles(String guildId) {
-        try {
-            Guild g = shardManager.getGuildById(guildId);
-            if(g != null) {
-                for(String roleId : getDJRoles(guildId)) {
-                    Role role = g.getRoleById(roleId);
-                    if(role == null) {
-                        removeDJRole(guildId, roleId);
-                    }
+                if (cmd.getApplicationIdLong() != g.getJDA().getSelfUser().getIdLong()) {
+                    continue;
                 }
-                Console.messageGMS("Reloaded moderator roles on guild " + guildId);
+
+                registeredCommands.add(cmd.getName());
             }
-        } catch(Exception ignored) {}
+
+            if (!registeredCommands.contains("nowplaying")) {
+                g.upsertCommand(new CommandDataImpl("nowplaying", "Shows information about the song that is currently playing")).queue(null, this.missingAccess(g));
+            }
+
+            if (!registeredCommands.contains("queue")) {
+                g.upsertCommand(new CommandDataImpl("queue", "Shows the current queue")).queue(null, this.missingAccess(g));
+            }
+
+            if (!registeredCommands.contains("play")) {
+                CommandData commandData = new CommandDataImpl("play", "Add a song to the queue")
+                        .addOptions(
+                                new OptionData(OptionType.STRING, "song", "The song link / search query / playlist link you want to play")
+                                        .setRequired(true)
+                        );
+
+                g.upsertCommand(commandData).queue(null, this.missingAccess(g));
+            }
+
+            if (!registeredCommands.contains("stop")) {
+                g.upsertCommand(new CommandDataImpl("stop", "Pause the player / stop the player and clear queue")).queue(null, this.missingAccess(g));
+            }
+
+            if (!registeredCommands.contains("disconnect")) {
+                g.upsertCommand(new CommandDataImpl("disconnect", "Disconnect the bot from the voice channel")).queue(null, this.missingAccess(g));
+            }
+
+            if (!registeredCommands.contains("forceskip")) {
+                g.upsertCommand(new CommandDataImpl("forceskip", "Force-skip a song")).queue(null, this.missingAccess(g));
+            }
+
+            if (!registeredCommands.contains("remove")) {
+                g.upsertCommand(
+                        new CommandDataImpl("remove", "Remove a song from the queue")
+                                .addOptions(
+                                        new OptionData(OptionType.INTEGER, "index", "The index of the sond that should be removed")
+                                                .setRequired(true)
+                                )
+                ).queue(null, this.missingAccess(g));
+            }
+
+            if (!registeredCommands.contains("pause")) {
+                g.upsertCommand(
+                        new CommandDataImpl("pause", "Pause the player or set current pause state")
+                                .addOptions(
+                                        new OptionData(OptionType.BOOLEAN, "state", "The pause state (optional), run command without this option to just pause the player")
+                                )
+                ).queue(null, this.missingAccess(g));
+            }
+
+            if (!registeredCommands.contains("resume")) {
+                g.upsertCommand(new CommandDataImpl("resume", "Resume the player")).queue(null, this.missingAccess(g));
+            }
+
+            if (!registeredCommands.contains("clear")) {
+                g.upsertCommand(new CommandDataImpl("clear", "Clear the queue")).queue(null, this.missingAccess(g));
+            }
+
+            if (!registeredCommands.contains("playnow")) {
+                g.upsertCommand(new CommandDataImpl("playnow", "Play a current track now instead of adding it to the queue")).queue(null, this.missingAccess(g));
+            }
+
+            if (!registeredCommands.contains("movetrack")) {
+                g.upsertCommand(
+                        new CommandDataImpl("movetrack", "Move a track from a queue position to another")
+                                .addOptions(
+                                        new OptionData(OptionType.INTEGER, "from", "The index of the track you want to move").setRequired(true),
+                                        new OptionData(OptionType.INTEGER, "to", "The new index of the track you want to set").setRequired(true)
+                                )
+                ).queue(null, this.missingAccess(g));
+            }
+
+            if (!registeredCommands.contains("shuffle")) {
+                g.upsertCommand(new CommandDataImpl("shuffle", "Randomizes the queue order")).queue(null, this.missingAccess(g));
+            }
+
+            if (!registeredCommands.contains("search")) {
+                g.upsertCommand(
+                        new CommandDataImpl("search", "Search for music")
+                                .addOptions(
+                                        new OptionData(OptionType.STRING, "query", "What you want to search").setRequired(true)
+                                )
+                ).queue(null, this.missingAccess(g));
+            }
+
+            if (!registeredCommands.contains("volume")) {
+                g.upsertCommand(
+                        new CommandDataImpl("volume", "Set the volume")
+                                .addOptions(
+                                        new OptionData(OptionType.INTEGER, "volume", "The volume between 0 and 200").setRequired(true)
+                                )
+                ).queue(null, this.missingAccess(g));
+            }
+
+            if (!registeredCommands.contains("connect")) {
+                g.upsertCommand(
+                        new CommandDataImpl("connect", "Connect the bot to a channel")
+                                .addOptions(
+                                        new OptionData(OptionType.CHANNEL, "channel", "The channel the bot should be connected to")
+                                )
+                ).queue(null, this.missingAccess(g));
+            }
+
+            if (!registeredCommands.contains("mbsettings")) {
+                g.upsertCommand(
+                        new CommandDataImpl("mbsettings", "Manage music bot settings")
+                                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
+                                .addOptions(
+                                        new OptionData(OptionType.INTEGER, "action", "What do you want to do")
+                                                .setRequired(true)
+                                                .addChoices(
+                                                        new Command.Choice("Show all Settings", 0),
+                                                        new Command.Choice("Show DJ Roles", 1),
+                                                        new Command.Choice("Add DJ Role", 2),
+                                                        new Command.Choice("Remove DJ Role", 3),
+                                                        new Command.Choice("Clear DJ Roles", 4),
+                                                        new Command.Choice("Manage Restrict to Roles", 5),
+                                                        new Command.Choice("Manage Ephemeral State", 6),
+                                                        new Command.Choice("Manage Default Volume" , 7)
+                                                ),
+                                        new OptionData(OptionType.STRING, "value", "The value you want to set")
+                                )
+
+                ).queue(null, this.missingAccess(g));
+            }
+
+            this.logDebug("Commands on guild " + g.getIdLong() + " were set up");
+
+        }, this.missingAccess(g));
+    }
+
+    private ErrorHandler missingAccess(Guild guild) {
+        return new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, e -> {
+            guild.leave().queue();
+            this.logDebug("Left guild " + guild.getId() + " because of missing access to slash commands");
+        });
+    }
+
+    public void setupGuilds() {
+
+        for (Guild g : this.musicBot.getShardManager().getGuilds()) {
+            this.setupGuild(g);
+        }
+
     }
 
     // PERMISSIONS
@@ -324,86 +262,87 @@ public class GMS {
     1 = Normal users have the permission to add tracks to the queue and voteskip
     2 = Normal users have DJ permissions
      */
-    public static boolean memberHasUserPermissions(Member m) {
-        return true;
-        /*if(m != null) {
-            if(memberHasDJPermissions(m)) {
-                return true;
-            } else if(DatabaseManager.getRestrictToRoles(m.getGuild().getId()) >= 1) {
+    public boolean memberHasUserPermissions(Member m) {
+
+        if (memberHasAdminPermissions(m)) {
+            return true;
+        }
+
+        if (memberHasDJPermissions(m)) {
+            return true;
+        }
+
+        GuildData guildData = this.musicBot.getDatabaseManager().getGuild(m.getGuild().getIdLong());
+
+        if (guildData.getRestrictToRoles() >= 1) {
+            return true;
+        }
+
+        for (long roleId : guildData.getDjRoles()) {
+            Role role = m.getGuild().getRoleById(roleId);
+
+            if (role == null) {
+                continue;
+            }
+
+            if (m.getRoles().contains(role)) {
                 return true;
             }
-        }
-        return false;
 
-         */
-    }
-
-    public static boolean memberHasDJPermissions(Member m) {
-        if(memberHasAdminPermissions(m)) {
-            return true;
-        } else if(m.hasPermission(Permission.MANAGE_CHANNEL) || m.hasPermission(Permission.MANAGE_SERVER)) {
-            return true;
-        } else if(DatabaseManager.getRestrictToRoles(m.getGuild().getId()) >= 2) {
-            return true;
-        } else {
-            for(String roleId : GMS.getDJRoles(m.getGuild().getId())) {
-                Role role = shardManager.getRoleById(roleId);
-                if(role != null) {
-                    if(m.getRoles().contains(role)) {
-                        return true;
-                    }
-                }
-            }
         }
+
         return false;
     }
 
-    public static boolean memberHasAdminPermissions(Member m) {
-        if(m.hasPermission(Permission.ADMINISTRATOR)) {
+    public boolean memberHasDJPermissions(Member m) {
+
+        if (memberHasUserPermissions(m)) {
             return true;
         }
+
+        if (m.hasPermission(Permission.MANAGE_CHANNEL) || m.hasPermission(Permission.MANAGE_SERVER)) {
+            return true;
+        }
+
+        GuildData guildData = this.musicBot.getDatabaseManager().getGuild(m.getGuild().getIdLong());
+
+        if (guildData.getRestrictToRoles() >= 2) {
+            return true;
+        }
+
+        for (long roleId : guildData.getDjRoles()) {
+            Role role = m.getGuild().getRoleById(roleId);
+
+            if (role == null) {
+                continue;
+            }
+
+            if (m.getRoles().contains(role)) {
+                return true;
+            }
+
+        }
+
         return false;
     }
 
-    // BLACKLIST
-    public static boolean isBlacklisted(Guild g, String link) {
-        if(g != null) {
-            return !DatabaseManager.getGlobalBlacklist().contains(link) || !DatabaseManager.getBlacklist(g.getId()).contains(link);
-        } else {
-            return false;
-        }
+    public boolean memberHasAdminPermissions(Member m) {
+        return m.hasPermission(Permission.ADMINISTRATOR);
     }
-    public static boolean isBlacklisted(Guild g, Member m, AudioTrack audioTrack) {
-        if(g != null) {
-            if(DatabaseManager.getGlobalBlacklist().contains(audioTrack.getInfo().uri) || DatabaseManager.getGlobalBlacklist().contains(audioTrack.getIdentifier())) {
-                return true;
-            }
-            if(DatabaseManager.getGlobalArtistBlacklist().contains(audioTrack.getInfo().author)) {
-                return true;
-            }
-            for(String string : DatabaseManager.getGlobalKeywordBlacklist()) {
-                if(audioTrack.getInfo().title.contains(string)) {
-                    return true;
-                }
-            }
 
-            if(GMS.memberHasAdminPermissions(m)) {
-                if(DatabaseManager.getBlacklist(g.getId()).contains(audioTrack.getInfo().uri) || DatabaseManager.getBlacklist(g.getId()).contains(audioTrack.getIdentifier())) {
-                    return true;
-                }
-                if(DatabaseManager.getArtistBlacklist(g.getId()).contains(audioTrack.getInfo().author)) {
-                    return true;
-                }
-                for(String string : DatabaseManager.getKeywordBlacklist(g.getId())) {
-                    if(audioTrack.getInfo().title.contains(string)) {
-                        return true;
-                    }
-                }
-            }
+    // LOGGER
 
-            return false;
-        } else {
-            return false;
-        }
+    private void logInfo(String message) {
+        MusicBot.LOGGER.info(message);
+    }
+
+    private void logDebug(String message) {
+        MusicBot.LOGGER.debug(message);
+    }
+
+    // BOT
+
+    public MusicBot getMusicBot() {
+        return this.musicBot;
     }
 }

@@ -2,58 +2,60 @@ package net.jandie1505.musicbot.console;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.jandie1505.musicbot.MusicBot;
-import net.jandie1505.musicbot.system.DatabaseManager;
-import net.jandie1505.musicbot.system.GMS;
-import net.jandie1505.musicbot.system.MusicManager;
+import net.jandie1505.musicbot.database.BlacklistEntry;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Commands {
 
-    public static String command(String command) {
+    public static String command(MusicBot musicBot, String command) {
         String[] cmd = command.split(" ");
         String returnString = "";
 
         try {
             if(cmd.length >= 1) {
-                if(MusicBot.completeOnline()) {
+                if(musicBot.completeOnline()) {
                     if(cmd[0].equalsIgnoreCase("guild")) {
-                        returnString = guildCommand(cmd);
+                        returnString = guildCommand(musicBot, cmd);
                     } else if(cmd[0].equalsIgnoreCase("stop") || cmd[0].equalsIgnoreCase("shutdown")) {
                         returnString = "SENT SHUTDOWN COMMAND";
-                        MusicBot.shutdown();
+                        musicBot.shutdown();
                     } else if(cmd[0].equalsIgnoreCase("invite")) {
-                        returnString = "https://discord.com/api/oauth2/authorize?client_id=" + MusicBot.getShardManager().retrieveApplicationInfo().getJDA().getSelfUser().getApplicationId() + "&permissions=2251418689&scope=bot%20applications.commands";
+                        returnString = "https://discord.com/api/oauth2/authorize?client_id=" + musicBot.getShardManager().retrieveApplicationInfo().getJDA().getSelfUser().getApplicationId() + "&permissions=2251418689&scope=bot%20applications.commands";
                     } else if(cmd[0].equalsIgnoreCase("player")) {
-                        returnString = playerCommand(cmd);
+                        returnString = playerCommand(musicBot, cmd);
                     } else if(cmd[0].equalsIgnoreCase("blacklist")) {
-                        returnString = blacklistCommand(cmd);
+                        //returnString = blacklistCommand(musicBot, cmd);
                     } else if(cmd[0].equalsIgnoreCase("keywordblacklist")) {
-                        returnString = keywordBlacklistCommand(cmd);
+                        //returnString = keywordBlacklistCommand(musicBot, cmd);
                     } else if(cmd[0].equalsIgnoreCase("artistblacklist")) {
-                        returnString = artistBlacklistCommand(cmd);
+                        //returnString = artistBlacklistCommand(musicBot, cmd);
                     } else if(cmd[0].equalsIgnoreCase("cmdreload")) {
                         if(cmd.length == 2) {
                             if(cmd[1].equalsIgnoreCase("true")) {
-                                MusicBot.upsertCommands(true);
+                                musicBot.upsertCommands(true);
                                 returnString = "SENT COMPLETE COMMANDS RELOAD COMMAND";
                             } else {
-                                MusicBot.upsertCommands(false);
+                                musicBot.upsertCommands(false);
                                 returnString = "SENT COMMANDS RELOAD COMMAND";
                             }
                         } else {
-                            MusicBot.upsertCommands(false);
+                            musicBot.upsertCommands(false);
                             returnString = "SENT COMMANDS RELOAD COMMAND";
                         }
                     } else if(cmd[0].equalsIgnoreCase("shard") || cmd[0].equalsIgnoreCase("shards")) {
-                        returnString = shardsCommand(cmd);
+                        returnString = shardsCommand(musicBot, cmd);
                     } else if(cmd[0].equalsIgnoreCase("verbose")) {
-                        returnString = verboseCommand(cmd);
+                        //returnString = verboseCommand(musicBot, cmd);
                     } else if(cmd[0].equalsIgnoreCase("help")) {
                         returnString = helpCommand(cmd);
+                    } else if(cmd[0].equalsIgnoreCase("config")) {
+                        returnString = configCommand(musicBot, cmd);
                     }
                     else {
                         returnString = "Unknown command. Use help for a list of available commands.";
@@ -61,17 +63,17 @@ public class Commands {
                 } else {
                     if(cmd[0].equalsIgnoreCase("stop") || cmd[0].equalsIgnoreCase("shutdown")) {
                         returnString = "SENT SHUTDOWN COMMAND";
-                        MusicBot.shutdown();
+                        musicBot.shutdown();
                     } else if(cmd[0].equalsIgnoreCase("shard") || cmd[0].equalsIgnoreCase("shards")) {
-                         returnString = shardsCommand(cmd);
+                         returnString = shardsCommand(musicBot, cmd);
                     } else if(cmd[0].equalsIgnoreCase("verbose")) {
-                        returnString = verboseCommand(cmd);
+                        //returnString = verboseCommand(musicBot, cmd);
                     } else if(cmd[0].equalsIgnoreCase("blacklist")) {
-                        returnString = blacklistCommand(cmd);
+                        //returnString = blacklistCommand(musicBot, cmd);
                     } else if(cmd[0].equalsIgnoreCase("keywordblacklist")) {
-                        returnString = keywordBlacklistCommand(cmd);
+                        //returnString = keywordBlacklistCommand(musicBot, cmd);
                     } else if(cmd[0].equalsIgnoreCase("artistblacklist")) {
-                        returnString = artistBlacklistCommand(cmd);
+                        //returnString = artistBlacklistCommand(musicBot, cmd);
                     } else {
                         returnString = "The bot is in limited mode. Some commands are disabled.";
                     }
@@ -85,12 +87,12 @@ public class Commands {
 
 
     // COMMANDS
-    private static String guildCommand(String[] cmd) {
+    private static String guildCommand(MusicBot musicBot, String[] cmd) {
         String returnString = "";
         if(cmd.length >= 2) {
             if(cmd[1].equalsIgnoreCase("list-ids")) {
                 List<String> guildIds = new ArrayList<>();
-                for(Guild g : MusicBot.getShardManager().getGuilds()) {
+                for(Guild g : musicBot.getShardManager().getGuilds()) {
                     if(g != null) {
                         guildIds.add(g.getId());
                     }
@@ -98,7 +100,7 @@ public class Commands {
                 returnString = guildIds.toString();
             } else if(cmd[1].equalsIgnoreCase("list")) {
                 returnString = "GUILD ID | GUILD NAME | GUILD OWNER\n";
-                for(Guild g : MusicBot.getShardManager().getGuilds()) {
+                for(Guild g : musicBot.getShardManager().getGuilds()) {
                     if(g != null) {
                         Member owner = g.retrieveOwner().complete();
                         if(owner != null) {
@@ -110,17 +112,17 @@ public class Commands {
                 }
             } else if(cmd[1].equalsIgnoreCase("leave")) {
                 if(cmd.length == 3) {
-                    GMS.leaveGuild(cmd[2]);
+                    musicBot.getGMS().leaveGuild(cmd[2]);
                     returnString = "SENT LEAVE GUILD COMMAND";
                 }
             } else if(cmd[1].equalsIgnoreCase("reload")) {
                 if(cmd.length == 2) {
-                    GMS.reloadGuilds(false);
+                    musicBot.getGMS().reloadGuilds(false);
                     returnString = "SENT RELOAD GUILDS COMMAND";
                 } else if(cmd.length == 3) {
-                    Guild g = MusicBot.getShardManager().getGuildById(cmd[2]);
+                    Guild g = musicBot.getShardManager().getGuildById(cmd[2]);
                     if(g != null) {
-                        GMS.setupGuild(g);
+                        musicBot.getGMS().setupGuild(g);
                         returnString = "SENT RELOAD GUILD COMMAND";
                     } else {
                         returnString = "GUILD NOT AVAILABLE";
@@ -128,14 +130,14 @@ public class Commands {
                 }
             } else if(cmd[1].equalsIgnoreCase("complete-reload")) {
                 if(cmd.length == 2) {
-                    GMS.reloadGuilds(true);
+                    musicBot.getGMS().reloadGuilds(true);
                     returnString = "SENT RELOAD GUILDS COMMAND";
                 }
             }/* else if(cmd[1].equalsIgnoreCase("invite")) {
                 if(cmd.length == 3) {
-                    Guild g = MusicBot.getShardManager().getGuildById(cmd[2]);
+                    Guild g = musicBot.getShardManager().getGuildById(cmd[2]);
                     if(g != null) {
-                        Invite invite = GMS.createGuildInvite(g);
+                        Invite invite = musicBot.getGMS().createGuildInvite(g);
                         if(invite != null) {
                             returnString = "INVITE LINK FOR GUILD " + g.getId() + ": " + invite.getUrl();
                         } else {
@@ -148,20 +150,17 @@ public class Commands {
             }*/ else if(cmd[1].equalsIgnoreCase("whitelist")) {
                 if(cmd.length == 3) {
                     if(cmd[2].equalsIgnoreCase("list")) {
-                        returnString = DatabaseManager.getGuildWhitelist().toString();
-                    } else if(cmd[2].equalsIgnoreCase("clear")) {
-                        DatabaseManager.clearGuildWhitelist();
-                        returnString = "SENT CLEAR GUILD WHITELIST COMMAND";
+                        returnString = musicBot.getDatabaseManager().getGuildWhitelist().toString();
                     }
                 } else if(cmd.length == 4) {
                     if(cmd[2].equalsIgnoreCase("add")) {
-                        DatabaseManager.addGuildToWhitelist(cmd[3]);
+                        musicBot.getDatabaseManager().addGuildToWhitelist(Long.parseLong(cmd[3]));
                         returnString = "SENT ADD GUILD TO WHITELIST COMMAND";
                     } else if(cmd[2].equalsIgnoreCase("remove")) {
-                        DatabaseManager.removeGuildFromWhitelist(cmd[3]);
+                        musicBot.getDatabaseManager().removeGuildFromWhitelist(cmd[3]);
                         returnString = "SENT REMOVE GUILD FROM WHITELIST COMMAND";
                     } else if(cmd[2].equalsIgnoreCase("isGuildWhitelisted")) {
-                        returnString = Boolean.toString(DatabaseManager.isGuildWhitelisted(cmd[3]));
+                        returnString = Boolean.toString(musicBot.getDatabaseManager().isGuildWhitelisted(Long.parseLong(cmd[3])));
                     }
                 }
                 else {
@@ -176,30 +175,30 @@ public class Commands {
         return returnString;
     }
 
-    private static String playerCommand(String[] cmd) {
+    private static String playerCommand(MusicBot musicBot, String[] cmd) {
         String returnString = "";
         if(cmd.length == 3) {
             if(cmd[1].equalsIgnoreCase("disconnect")) {
-                Guild g = MusicBot.getShardManager().getGuildById(cmd[2]);
+                Guild g = musicBot.getShardManager().getGuildById(cmd[2]);
                 if(g != null) {
-                    MusicManager.disconnect(g);
-                    MusicManager.stop(g);
+                    musicBot.getMusicManager().disconnect(g);
+                    musicBot.getMusicManager().stop(g);
                     returnString = "SENT DISCONNECT COMMAND";
                 } else {
                     returnString = "GUILD IS NULL";
                 }
             } else if(cmd[1].equalsIgnoreCase("stop")) {
-                Guild g = MusicBot.getShardManager().getGuildById(cmd[2]);
+                Guild g = musicBot.getShardManager().getGuildById(cmd[2]);
                 if(g != null) {
-                    MusicManager.stop(g);
+                    musicBot.getMusicManager().stop(g);
                     returnString = "SENT STOP COMMAND";
                 } else {
                     returnString = "GUILD IS NULL";
                 }
             } else if(cmd[1].equalsIgnoreCase("queue")) {
-                Guild g = MusicBot.getShardManager().getGuildById(cmd[2]);
+                Guild g = musicBot.getShardManager().getGuildById(cmd[2]);
                 if(g != null) {
-                    List<AudioTrack> audioTrackList = MusicManager.getQueue(g);
+                    List<AudioTrack> audioTrackList = musicBot.getMusicManager().getQueue(g);
                     returnString = "* INDEX | TITLE | AUTHOR | DURATION | URL *\n";
                     int index = 0;
                     for(AudioTrack track : audioTrackList) {
@@ -210,52 +209,52 @@ public class Commands {
                     returnString = "GUILD IS NULL";
                 }
             } else if(cmd[1].equalsIgnoreCase("next")) {
-                Guild g = MusicBot.getShardManager().getGuildById(cmd[2]);
+                Guild g = musicBot.getShardManager().getGuildById(cmd[2]);
                 if(g != null) {
-                    MusicManager.next(g);
+                    musicBot.getMusicManager().next(g);
                     returnString = "SENT NEXT COMMAND";
                 } else {
                     returnString = "GUILD IS NULL";
                 }
             } else if(cmd[1].equalsIgnoreCase("clear")) {
-                Guild g = MusicBot.getShardManager().getGuildById(cmd[2]);
+                Guild g = musicBot.getShardManager().getGuildById(cmd[2]);
                 if(g != null) {
-                    MusicManager.clear(g);
+                    musicBot.getMusicManager().clear(g);
                     returnString = "SENT CLEAR COMMAND";
                 } else {
                     returnString = "GUILD IS NULL";
                 }
             } else if(cmd[1].equalsIgnoreCase("pause")) {
-                Guild g = MusicBot.getShardManager().getGuildById(cmd[2]);
+                Guild g = musicBot.getShardManager().getGuildById(cmd[2]);
                 if(g != null) {
-                    if(MusicManager.isPaused(g)) {
-                        MusicManager.setPause(g, false);
+                    if(musicBot.getMusicManager().isPaused(g)) {
+                        musicBot.getMusicManager().setPause(g, false);
                         returnString = "SENT RESUME COMMAND";
                     } else {
-                        MusicManager.setPause(g, true);
+                        musicBot.getMusicManager().setPause(g, true);
                         returnString = "SENT PAUSE COMMAND";
                     }
                 } else {
                     returnString = "GUILD IS NULL";
                 }
             } else if(cmd[1].equalsIgnoreCase("ispaused")) {
-                Guild g = MusicBot.getShardManager().getGuildById(cmd[2]);
+                Guild g = musicBot.getShardManager().getGuildById(cmd[2]);
                 if(g != null) {
-                    returnString = "PAUSE STATE: " + MusicManager.isPaused(g);
+                    returnString = "PAUSE STATE: " + musicBot.getMusicManager().isPaused(g);
                 } else {
                     returnString = "GUILD IS NULL";
                 }
             } else if(cmd[1].equalsIgnoreCase("nowplaying")) {
-                Guild g = MusicBot.getShardManager().getGuildById(cmd[2]);
+                Guild g = musicBot.getShardManager().getGuildById(cmd[2]);
                 if(g != null) {
-                    AudioTrack track = MusicManager.getPlayingTrack(g);
+                    AudioTrack track = musicBot.getMusicManager().getPlayingTrack(g);
                     if(track != null) {
                         returnString = "NOW PLAYING:\n" +
                                 "Name: " + track.getInfo().title + "\n" +
                                 "Author: " + track.getInfo().author + "\n" +
                                 "URL: " + track.getInfo().uri + "\n" +
                                 "Duration: " + track.getPosition() + "/" + track.getDuration() + "\n" +
-                                "Paused: " + MusicManager.isPaused(g);
+                                "Paused: " + musicBot.getMusicManager().isPaused(g);
                     } else {
                         returnString = "THE BOT IS NOTHING PLAYING";
                     }
@@ -265,11 +264,11 @@ public class Commands {
             }
         } else if(cmd.length == 4) {
             if(cmd[1].equalsIgnoreCase("connect")) {
-                Guild g = MusicBot.getShardManager().getGuildById(cmd[2]);
+                Guild g = musicBot.getShardManager().getGuildById(cmd[2]);
                 if(g != null) {
                     VoiceChannel voiceChannel = g.getVoiceChannelById(cmd[3]);
                     if(voiceChannel != null) {
-                        MusicManager.connect(voiceChannel);
+                        musicBot.getMusicManager().connect(voiceChannel);
                     } else {
                         returnString = "VOICE CHANNEL IS NULL";
                     }
@@ -277,17 +276,17 @@ public class Commands {
                     returnString = "GUILD IS NULL";
                 }
             } else if(cmd[1].equalsIgnoreCase("add")) {
-                Guild g = MusicBot.getShardManager().getGuildById(cmd[2]);
+                Guild g = musicBot.getShardManager().getGuildById(cmd[2]);
                 if(g != null) {
-                    MusicManager.add(g, cmd[3], false);
+                    musicBot.getMusicManager().add(g, cmd[3], false);
                     returnString = "SENT ADD COMMAND";
                 } else {
                     returnString = "GUILD IS NULL";
                 }
             } else if(cmd[1].equalsIgnoreCase("remove")) {
-                Guild g = MusicBot.getShardManager().getGuildById(cmd[2]);
+                Guild g = musicBot.getShardManager().getGuildById(cmd[2]);
                 if(g != null) {
-                    MusicManager.remove(g, Integer.parseInt(cmd[3]));
+                    musicBot.getMusicManager().remove(g, Integer.parseInt(cmd[3]));
                     returnString = "SENT PLAY COMMAND";
                 } else {
                     returnString = "GUILD IS NULL";
@@ -309,52 +308,44 @@ public class Commands {
         return returnString;
     }
 
-    private static String shardsCommand(String[] cmd) {
+    private static String shardsCommand(MusicBot musicBot, String[] cmd) {
         String returnString = "";
         if(cmd.length == 2) {
             if(cmd[1].equalsIgnoreCase("list")) {
                 returnString = "* SHARD ID | STATUS | GUILDS *\n";
-                for(JDA jda : MusicBot.getShardManager().getShards()) {
+                for(JDA jda : musicBot.getShardManager().getShards()) {
                     returnString = returnString + "* " + jda.getShardInfo().getShardId() + " | " + jda.getStatus() + " | " + jda.getGuilds().size() + " *\n";
                 }
-                returnString = returnString + "* SHARDS ONLINE: " + MusicBot.getShardManager().getShardsRunning() + "\n" +
-                        "* SHARDS QUEUED: " + MusicBot.getShardManager().getShardsQueued() + "\n" +
-                        "* SHARDS COUNT: " + MusicBot.getShardManager().getShards().size() + "\n" +
-                        "* SHARDS TOTAL: " + MusicBot.getShardManager().getShardsTotal() + "\n";
+                returnString = returnString + "* SHARDS ONLINE: " + musicBot.getShardManager().getShardsRunning() + "\n" +
+                        "* SHARDS QUEUED: " + musicBot.getShardManager().getShardsQueued() + "\n" +
+                        "* SHARDS COUNT: " + musicBot.getShardManager().getShards().size() + "\n" +
+                        "* SHARDS TOTAL: " + musicBot.getShardManager().getShardsTotal() + "\n";
             } else if(cmd[1].equalsIgnoreCase("listraw")) {
-                returnString = MusicBot.getShardManager().getShards().toString();
+                returnString = musicBot.getShardManager().getShards().toString();
             } else if(cmd[1].equalsIgnoreCase("restartall")) {
-                MusicBot.restartShards();
+                musicBot.restartShards();
             } else if(cmd[1].equalsIgnoreCase("startall")) {
-                MusicBot.startShards();
+                musicBot.startShards();
             } else if(cmd[1].equalsIgnoreCase("stopall")) {
-                MusicBot.stopShards();
+                musicBot.stopShards();
             } else if(cmd[1].equalsIgnoreCase("reload")) {
-                MusicBot.reloadShards();
+                musicBot.reloadShards();
                 returnString = "SENT RELOAD SHARDS COMMAND";
             }
         } else if(cmd.length == 3) {
             if(cmd[1].equalsIgnoreCase("info")) {
-                JDA jda = MusicBot.getShardManager().getShardById(Integer.parseInt(cmd[2]));
+                JDA jda = musicBot.getShardManager().getShardById(Integer.parseInt(cmd[2]));
                 returnString = "SHARD INFO: " + jda.getShardInfo().getShardId() + "\n" +
                         "SHARD STRING: " + jda.getShardInfo().getShardString() + "\n" +
                         "GUILD COUNT: " + jda.getGuilds().size() + "\n" +
                         "STATUS: " + jda.getStatus().toString() + "\n" +
                         "GUILD LIST: " + jda.getGuilds().toString() + "\n";
             } else if(cmd[1].equalsIgnoreCase("restart")) {
-                MusicBot.restartShard(Integer.parseInt(cmd[2]));
+                musicBot.restartShard(Integer.parseInt(cmd[2]));
             } else if(cmd[1].equalsIgnoreCase("start")) {
-                MusicBot.startShard(Integer.parseInt(cmd[2]));
+                musicBot.startShard(Integer.parseInt(cmd[2]));
             } else if(cmd[1].equalsIgnoreCase("stop")) {
-                MusicBot.stopShard(Integer.parseInt(cmd[2]));
-            } else if(cmd[1].equalsIgnoreCase("setautomode <true/false>")) {
-                if(cmd[2].equalsIgnoreCase("true")) {
-                    MusicBot.setShardAutoMode(true);
-                    returnString = "SENT ENABLE SHARD AUTO MODE COMMAND";
-                } else {
-                    MusicBot.setShardAutoMode(true);
-                    returnString = "SENT DISABLE SHARD AUTO MODE COMMAND";
-                }
+                musicBot.stopShard(Integer.parseInt(cmd[2]));
             }
         } else {
             returnString = "shards list\n" +
@@ -366,12 +357,13 @@ public class Commands {
         return returnString;
     }
 
-    private static String verboseCommand(String[] cmd) {
+    /*
+    private static String verboseCommand(MusicBot musicBot, String[] cmd) {
         String returnString = "";
         if(cmd.length >= 2) {
             if(cmd[1].equalsIgnoreCase("enable")) {
                 if(cmd.length >= 3) {
-                    if(cmd[2].equalsIgnoreCase("GMS")) {
+                    if(cmd[2].equalsIgnoreCase("musicBot.getGMS()")) {
                         Console.setGMSLogging(true);
                         returnString = "ENABLED GMS VERBOSE OUTPUT";
                     } else if(cmd[2].equalsIgnoreCase("DB") || cmd[2].equalsIgnoreCase("DBM")) {
@@ -391,48 +383,52 @@ public class Commands {
                 }
             } else if(cmd[1].equalsIgnoreCase("info")) {
                 returnString = "VERBOSE STATE:\n" +
-                        "Guild Manager (GMS): " + Console.isGMSLogging() + "\n" +
+                        "Guild Management System (GMS): " + Console.isGMSLogging() + "\n" +
                         "Database Manager (DB/DBM): " + Console.isDBMLogging() + "\n";
             }
         }
         return returnString;
     }
+     */
 
-    private static String blacklistCommand(String[] cmd) {
+    /*
+    private static String blacklistCommand(MusicBot musicBot, String[] cmd) {
         String returnString = "";
 
         if(cmd.length >= 3) {
             if(cmd[1].equalsIgnoreCase("global")) {
                 if(cmd.length == 3) {
                     if(cmd[2].equalsIgnoreCase("list")) {
-                        returnString = "GLOBAL BLACKLIST:\n" + DatabaseManager.getGlobalBlacklist().toString() + "\n";
+                        returnString = "GLOBAL BLACKLIST:\n" + musicBot.getDatabaseManager().getBlacklist(-1).toString() + "\n";
                     } else if(cmd[2].equalsIgnoreCase("clear")) {
-                        DatabaseManager.clearGlobalBlacklist();
+                        musicBot.getDatabaseManager().clearBlacklist(-1);
                         returnString = "CLEARED GLOBAL BLACKLIST";
                     }
                 } else if(cmd.length == 4) {
                     if(cmd[2].equalsIgnoreCase("add")) {
-                        DatabaseManager.addToGlobalBlacklist(cmd[3]);
+                        BlacklistEntry blacklistEntry = new BlacklistEntry(-1);
+
+                        musicBot.getDatabaseManager().addToBlacklist(cmd[3]);
                         returnString = "ADDED LINK TO GLOBAL BLACKLIST";
                     } else if(cmd[2].equalsIgnoreCase("remove")) {
-                        DatabaseManager.deleteFromGlobalBlacklist(cmd[3]);
+                        musicBot.getDatabaseManager().deleteFromGlobalBlacklist(cmd[3]);
                         returnString = "REMOVED LINK FROM GLOBAL BLACKLIST";
                     }
                 }
             } else if(cmd[1].equalsIgnoreCase("guild")) {
                 if(cmd.length == 4) {
                     if(cmd[3].equalsIgnoreCase("list")) {
-                        returnString = "BLACKLIST:\n" + DatabaseManager.getBlacklist(cmd[2]).toString() + "\n";
+                        returnString = "BLACKLIST:\n" + musicBot.getDatabaseManager().getBlacklist(cmd[2]).toString() + "\n";
                     } else if(cmd[3].equalsIgnoreCase("clear")) {
-                        DatabaseManager.clearBlacklist(cmd[3]);
+                        musicBot.getDatabaseManager().clearBlacklist(cmd[3]);
                         returnString = "CLEARED BLACKLIST";
                     }
                 } else if(cmd.length == 5) {
                     if(cmd[3].equalsIgnoreCase("add")) {
-                        DatabaseManager.addToBlacklist(cmd[2], cmd[4]);
+                        musicBot.getDatabaseManager().addToBlacklist(cmd[2], cmd[4]);
                         returnString = "ADDED LINK TO BLACKLIST";
                     } else if(cmd[3].equalsIgnoreCase("remove")) {
-                        DatabaseManager.deleteFromBlacklist(cmd[2], cmd[4]);
+                        musicBot.getDatabaseManager().deleteFromBlacklist(cmd[2], cmd[4]);
                         returnString = "REMOVED LINK FROM BLACKLIST";
                     }
                 }
@@ -451,41 +447,41 @@ public class Commands {
         return returnString;
     }
 
-    private static String keywordBlacklistCommand(String[] cmd) {
+    private static String keywordBlacklistCommand(MusicBot musicBot, String[] cmd) {
         String returnString = "";
 
         if(cmd.length >= 3) {
             if(cmd[1].equalsIgnoreCase("global")) {
                 if(cmd.length == 3) {
                     if(cmd[2].equalsIgnoreCase("list")) {
-                        returnString = "GLOBAL KEYWORD BLACKLIST:\n" + DatabaseManager.getGlobalKeywordBlacklist().toString() + "\n";
+                        returnString = "GLOBAL KEYWORD BLACKLIST:\n" + musicBot.getDatabaseManager().getGlobalKeywordBlacklist().toString() + "\n";
                     } else if(cmd[2].equalsIgnoreCase("clear")) {
-                        DatabaseManager.clearGlobalKeywordBlacklist();
+                        musicBot.getDatabaseManager().clearGlobalKeywordBlacklist();
                         returnString = "CLEARED GLOBAL KEYWORD BLACKLIST";
                     }
                 } else if(cmd.length == 4) {
                     if(cmd[2].equalsIgnoreCase("add")) {
-                        DatabaseManager.addToGlobalKeywordBlacklist(cmd[3]);
+                        musicBot.getDatabaseManager().addToGlobalKeywordBlacklist(cmd[3]);
                         returnString = "ADDED LINK TO GLOBAL KEYWORD BLACKLIST";
                     } else if(cmd[2].equalsIgnoreCase("remove")) {
-                        DatabaseManager.deleteFromGlobalKeywordBlacklist(cmd[3]);
+                        musicBot.getDatabaseManager().deleteFromGlobalKeywordBlacklist(cmd[3]);
                         returnString = "REMOVED LINK FROM GLOBAL KEYWORD BLACKLIST";
                     }
                 }
             } else if(cmd[1].equalsIgnoreCase("guild")) {
                 if(cmd.length == 4) {
                     if(cmd[3].equalsIgnoreCase("list")) {
-                        returnString = "KEYWORD BLACKLIST:\n" + DatabaseManager.getKeywordBlacklist(cmd[2]).toString() + "\n";
+                        returnString = "KEYWORD BLACKLIST:\n" + musicBot.getDatabaseManager().getKeywordBlacklist(cmd[2]).toString() + "\n";
                     } else if(cmd[3].equalsIgnoreCase("clear")) {
-                        DatabaseManager.clearKeywordBlacklist(cmd[3]);
+                        musicBot.getDatabaseManager().clearKeywordBlacklist(cmd[3]);
                         returnString = "CLEARED KEYWORD BLACKLIST";
                     }
                 } else if(cmd.length == 5) {
                     if(cmd[3].equalsIgnoreCase("add")) {
-                        DatabaseManager.addToKeywordBlacklist(cmd[2], cmd[4].replace("%20", " "));
+                        musicBot.getDatabaseManager().addToKeywordBlacklist(cmd[2], cmd[4].replace("%20", " "));
                         returnString = "ADDED LINK TO KEYWORD BLACKLIST";
                     } else if(cmd[3].equalsIgnoreCase("remove")) {
-                        DatabaseManager.deleteFromKeywordBlacklist(cmd[2], cmd[4].replace("%20", " "));
+                        musicBot.getDatabaseManager().deleteFromKeywordBlacklist(cmd[2], cmd[4].replace("%20", " "));
                         returnString = "REMOVED LINK FROM KEYWORD BLACKLIST";
                     }
                 }
@@ -504,41 +500,41 @@ public class Commands {
 
         return returnString;
     }
-    private static String artistBlacklistCommand(String[] cmd) {
+    private static String artistBlacklistCommand(MusicBot musicBot, String[] cmd) {
         String returnString = "";
 
         if(cmd.length >= 3) {
             if(cmd[1].equalsIgnoreCase("global")) {
                 if(cmd.length == 3) {
                     if(cmd[2].equalsIgnoreCase("list")) {
-                        returnString = "GLOBAL ARTIST BLACKLIST:\n" + DatabaseManager.getGlobalArtistBlacklist().toString() + "\n";
+                        returnString = "GLOBAL ARTIST BLACKLIST:\n" + musicBot.getDatabaseManager().getGlobalArtistBlacklist().toString() + "\n";
                     } else if(cmd[2].equalsIgnoreCase("clear")) {
-                        DatabaseManager.clearGlobalArtistBlacklist();
+                        musicBot.getDatabaseManager().clearGlobalArtistBlacklist();
                         returnString = "CLEARED GLOBAL ARTIST BLACKLIST";
                     }
                 } else if(cmd.length == 4) {
                     if(cmd[2].equalsIgnoreCase("add")) {
-                        DatabaseManager.addToGlobalArtistBlacklist(cmd[3].replace("%20", " "));
+                        musicBot.getDatabaseManager().addToGlobalArtistBlacklist(cmd[3].replace("%20", " "));
                         returnString = "ADDED LINK TO GLOBAL ARTIST BLACKLIST";
                     } else if(cmd[2].equalsIgnoreCase("remove")) {
-                        DatabaseManager.deleteFromGlobalArtistBlacklist(cmd[3].replace("%20", " "));
+                        musicBot.getDatabaseManager().deleteFromGlobalArtistBlacklist(cmd[3].replace("%20", " "));
                         returnString = "REMOVED LINK FROM GLOBAL ARTIST BLACKLIST";
                     }
                 }
             } else if(cmd[1].equalsIgnoreCase("guild")) {
                 if(cmd.length == 4) {
                     if(cmd[3].equalsIgnoreCase("list")) {
-                        returnString = "ARTIST BLACKLIST:\n" + DatabaseManager.getArtistBlacklist(cmd[2]).toString() + "\n";
+                        returnString = "ARTIST BLACKLIST:\n" + musicBot.getDatabaseManager().getArtistBlacklist(cmd[2]).toString() + "\n";
                     } else if(cmd[3].equalsIgnoreCase("clear")) {
-                        DatabaseManager.clearArtistBlacklist(cmd[3]);
+                        musicBot.getDatabaseManager().clearArtistBlacklist(cmd[3]);
                         returnString = "CLEARED ARTIST BLACKLIST";
                     }
                 } else if(cmd.length == 5) {
                     if(cmd[3].equalsIgnoreCase("add")) {
-                        DatabaseManager.addToArtistBlacklist(cmd[2], cmd[4].replace("%20", " "));
+                        musicBot.getDatabaseManager().addToArtistBlacklist(cmd[2], cmd[4].replace("%20", " "));
                         returnString = "ADDED LINK TO ARTIST BLACKLIST";
                     } else if(cmd[3].equalsIgnoreCase("remove")) {
-                        DatabaseManager.deleteFromArtistBlacklist(cmd[2], cmd[4].replace("%20", " "));
+                        musicBot.getDatabaseManager().deleteFromArtistBlacklist(cmd[2], cmd[4].replace("%20", " "));
                         returnString = "REMOVED LINK FROM ARTIST BLACKLIST";
                     }
                 }
@@ -556,6 +552,58 @@ public class Commands {
         }
 
         return returnString;
+    }
+     */
+
+    private static String configCommand(MusicBot musicBot, String[] cmd) {
+        if(cmd.length >= 2) {
+            if((cmd.length == 2 || cmd.length == 3) && cmd[1].equalsIgnoreCase("list")) {
+                String token;
+                String spotifyClientSecret;
+
+                if(cmd.length == 3 && cmd[2].equalsIgnoreCase("showhiddenoptions")) {
+                    token = musicBot.getConfigManager().getConfig().getToken();
+                    spotifyClientSecret = musicBot.getConfigManager().getConfig().getSpotifyClientSecret();
+                } else {
+                    token = "-hidden-";
+                    spotifyClientSecret = "-hidden-";
+                }
+
+                return "CONFIG OPTIONS:\n" +
+                        "token: " + token + "\n" +
+                        "publicMode: " + musicBot.getConfigManager().getConfig().isPublicMode() + "\n" +
+                        "shardsCount: " + musicBot.getConfigManager().getConfig().getShardsCount() + "\n" +
+                        "botOwner: " + musicBot.getConfigManager().getConfig().getBotOwner() + "\n" +
+                        "disableShardsCheck: " + musicBot.getConfigManager().getConfig().isDisableShardsCheck() + "\n" +
+                        "spotifyClientId: " + musicBot.getConfigManager().getConfig().getSpotifyClientId() + "\n" +
+                        "spotifyClientSecret: " + spotifyClientSecret + "\n";
+            } else if(cmd.length == 4 && cmd[1].equalsIgnoreCase("set")) {
+                if(cmd[2].equalsIgnoreCase("publicMode")) {
+                    musicBot.getConfigManager().getConfig().setPublicMode(Boolean.parseBoolean(cmd[3]));
+                    return "Updated value publicMode to " + Boolean.parseBoolean(cmd[3]);
+                } else if(cmd[2].equalsIgnoreCase("botOwner")) {
+                    musicBot.getConfigManager().getConfig().setBotOwner(cmd[3]);
+                    return "Updated botOwner to " + cmd[3];
+                } else if(cmd[2].equalsIgnoreCase("disableShardsCheck")) {
+                    musicBot.getConfigManager().getConfig().setDisableShardsCheck(Boolean.parseBoolean(cmd[3]));
+                    return "Updated value disableShardsCheck to " + Boolean.parseBoolean(cmd[3]);
+                } else if(cmd[2].equalsIgnoreCase("spotifyClientId")) {
+                    musicBot.getConfigManager().getConfig().setSpotifyClientId(cmd[3]);
+                    return "Updated spotifyClientId to " + cmd[3];
+                } else if(cmd[2].equalsIgnoreCase("spotifyClientSecret")) {
+                    musicBot.getConfigManager().getConfig().setSpotifyClientSecret(cmd[3]);
+                    return "Updated spotifyClientSecret";
+                } else {
+                    return "This config option can't be changed via config command or does not exist";
+                }
+            } else {
+                return "Run command without arguments for help";
+            }
+        } else {
+            return "CONFIG COMMAND USAGE:\n" +
+                    "config list\n" +
+                    "config set <option> <value>";
+        }
     }
 
     private static String helpCommand(String[] cmd) {

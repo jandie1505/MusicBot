@@ -1,97 +1,93 @@
 package net.jandie1505.musicbot.console;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Scanner;
+import net.jandie1505.musicbot.MusicBot;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Console implements Runnable {
-    // STATIC
-    private static boolean GMSLogging;
-    private static boolean DBMLogging;
-
     // NOT STATIC
+    private final MusicBot musicBot;
+    private final Map<String, CommandExecutor> commands;
     private Thread thread;
 
-    public Console() {
-        thread = new Thread(this);
+    public Console(MusicBot musicBot) {
+        this.musicBot = musicBot;
+        this.commands = Collections.synchronizedMap(new HashMap<>());
     }
 
     @Override
     public void run() {
-        System.out.println("Console started");
-        while(!thread.isInterrupted()) {
+
+        MusicBot.LINE_READER.printAbove("Console started");
+
+        while(thread == Thread.currentThread() && !thread.isInterrupted() && musicBot.isOperational()) {
+
+            String commandString = MusicBot.LINE_READER.readLine("MusicBot ==> ");
+
             try {
-                Scanner scan = new Scanner(System.in);
-                System.out.println(Commands.command(scan.nextLine()));
-            } catch(Exception ignored) {}
+
+                String reply = this.runCommand(commandString);
+
+                MusicBot.LOGGER.debug("Issued console command " + commandString + " with response " + reply);
+                MusicBot.LINE_READER.printAbove(reply);
+
+            } catch(Exception e) {
+
+                MusicBot.LOGGER.debug("Issued console command " + commandString + " threw an exception", e);
+                MusicBot.LINE_READER.printAbove("Error while executing command " + commandString + " [" + e.toString() + "]");
+
+            }
+
         }
-        System.out.println("Console stopped");
+
+        MusicBot.LINE_READER.printAbove("Console stopped");
     }
 
     public void start() {
-        if(!thread.isAlive()) {
+        if(this.thread == null || !thread.isAlive()) {
+            this.thread = new Thread(this);
+            this.thread.setName("MUSICBOT-CONSOLE-" + this);
             thread.start();
         }
     }
 
-    /*
     public void stop() {
-        thread.interrupt();
-    }
-     */
-
-
-
-    // STATIC
-    public static void messageShardManager(String msg) {
-        timestampMessage("[SHARDS] " + msg);
+        this.thread.interrupt();
     }
 
-    public static void messageGMS(String msg) {
-        if(GMSLogging) {
-            timestampMessage("[GMS] " + msg);
+    public String runCommand(String commandString) {
+
+        String[] split = commandString.split(" ");
+        String command = split[0];
+        String[] arguments = new String[split.length - 1];
+
+        for (int i = 1; i < split.length; i++) {
+            arguments[i - 1] = split[i];
         }
-    }
-    public static void messageGMS(String msg, boolean important) {
-        if(GMSLogging || important) {
-            timestampMessage("[GMS] " + msg);
-        }
-    }
 
-    public static void messageDB(String msg) {
-        if(DBMLogging) {
-            timestampMessage("[DB] " + msg);
-        }
-    }
-    public static void messageDB(String msg, boolean important) {
-        if(DBMLogging || important) {
-            timestampMessage("[DB] " + msg);
+        CommandExecutor commandExecutor = this.commands.get(command);
+
+        String reply;
+
+        if (commandExecutor != null) {
+            return commandExecutor.onCommand(command, arguments);
+        } else {
+            return  "Unknown command. Type help to see available commands.";
         }
     }
 
-    public static void defaultMessage(String msg) {
-        System.out.println(msg);
+    public void registerCommand(String command, CommandExecutor commandExecutor) {
+        this.commands.put(command, commandExecutor);
     }
 
-    public static void timestampMessage(String msg) {
-        LocalDateTime localDateTime = LocalDateTime.now();
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss");
-        System.out.println("[" + dateTimeFormatter.format(localDateTime) + "] " + msg);
+    public void removeCommand(String command) {
+        this.commands.remove(command);
     }
 
-    public static void setGMSLogging(boolean state) {
-        GMSLogging = state;
-    }
-
-    public static void setDBMLogging(boolean state) {
-        DBMLogging = state;
-    }
-
-    public static boolean isGMSLogging() {
-        return GMSLogging;
-    }
-
-    public static boolean isDBMLogging() {
-        return DBMLogging;
+    public Map<String, CommandExecutor> getCommands() {
+        return Map.copyOf(this.commands);
     }
 }

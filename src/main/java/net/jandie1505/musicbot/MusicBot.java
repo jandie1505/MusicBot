@@ -7,271 +7,439 @@ import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.sharding.DefaultShardManager;
 import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
 import net.dv8tion.jda.api.sharding.ShardManager;
 import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 import net.jandie1505.musicbot.console.Console;
-import net.jandie1505.musicbot.search.SpotifySearchHandler;
-import net.jandie1505.musicbot.system.*;
-import net.jandie1505.musicbot.tasks.TaskGMSReload;
-import net.jandie1505.musicbot.tasks.TaskGMSReloadComplete;
-import net.jandie1505.musicbot.tasks.TaskMusicManager;
-import net.jandie1505.musicbot.tasks.TaskShardsReload;
+import net.jandie1505.musicbot.console.commands.*;
+import net.jandie1505.musicbot.database.DatabaseManager;
+import net.jandie1505.musicbot.eventlisteners.EventsBasic;
+import net.jandie1505.musicbot.eventlisteners.EventsButtons;
+import net.jandie1505.musicbot.eventlisteners.EventsCommands;
+import net.jandie1505.musicbot.music.MusicManager;
+import net.jandie1505.musicbot.system.GMS;
+import net.jandie1505.musicbot.utilities.BotStatus;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.security.auth.login.LoginException;
+import java.io.*;
+import java.lang.reflect.Field;
+import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MusicBot {
-    private static Console console;
-    private static ShardManager shardManager;
-    private static int shardsTotal = 1;
-    private static boolean publicMode;
-    private static boolean shardAutoMode = true;
-    private static String bowOwner = "";
-    private static TaskShardsReload taskShardsReload;
-    private static TaskGMSReload taskGMSReload;
-    private static TaskGMSReloadComplete taskGMSReloadComplete;
-    private static TaskMusicManager taskMusicManager;
+    //STATIC
+    public static final Terminal TERMINAL;
+    public static final LineReader LINE_READER;
+    public static final Logger LOGGER;
+    private static MusicBot instance;
 
-    public static void main(String[] args) throws Exception {
-        console = new Console();
-        console.start();
-
-        if(args.length >= 4) {
-            if(args[3].equalsIgnoreCase("true")) {
-                Console.setGMSLogging(true);
-                Console.setDBMLogging(true);
-            } else {
-                Console.setGMSLogging(false);
-                Console.setDBMLogging(false);
-            }
-        } else {
-            Console.defaultMessage("Disabled verbose logging mode because the start argument was not specified.");
-        }
-
+    static {
         try {
-            DatabaseManager.init();
-
-            if(args.length >= 2) {
-                shardsTotal = Integer.parseInt(args[1]);
-            } else {
-                Console.defaultMessage("No shards count specified. Starting with 1 shard.");
-            }
-            if(args.length >= 3) {
-                if(args[2].equalsIgnoreCase("true")) {
-                    publicMode = true;
-                } else {
-                    publicMode = false;
-                }
-            } else {
-                Console.defaultMessage("Starting in private mode because the mode was not specified.");
-            }
-            if(args.length >= 5) {
-                bowOwner = args[4];
-            } else {
-                bowOwner = "";
-                Console.defaultMessage("Bot owner is not specified");
-            }
-            if(args.length >= 6) {
-                SpotifySearchHandler.setClientId(args[5]);
-            } else {
-                SpotifySearchHandler.setClientId("");
-                Console.defaultMessage("Starting without spotify client id (no support for spotify playlists)");
-            }
-            if(args.length >= 7) {
-                SpotifySearchHandler.setClientSecret(args[6]);
-            } else {
-                SpotifySearchHandler.setClientSecret("");
-                Console.defaultMessage("Starting without spotify client secret (no support for spotify playlists)");
-            }
-
-            Console.defaultMessage("*****************************\n" +
-                    "* Starting bot in 3 seconds *\n" +
-                    "*****************************");
-            TimeUnit.SECONDS.sleep(3);
-
-            if(shardsTotal > 0) {
-                shardManager = DefaultShardManagerBuilder
-                        .createDefault(args[0], GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.DIRECT_MESSAGES, GatewayIntent.GUILD_INVITES, GatewayIntent.GUILD_EMOJIS)
-                        .setShardsTotal(shardsTotal)
-                        .build();
-                shardManager.setPresence(OnlineStatus.IDLE, Activity.playing("Starting up..."));
-                shardManager.addEventListener(new EventsBasic());
-                shardManager.addEventListener(new EventsCommands());
-                shardManager.addEventListener(new EventsButtons());
-
-                reloadShards();
-
-                taskShardsReload = new TaskShardsReload();
-                taskShardsReload.start();
-
-                GMS.init();
-
-                taskGMSReload = new TaskGMSReload();
-                taskGMSReloadComplete = new TaskGMSReloadComplete();
-                taskMusicManager = new TaskMusicManager();
-
-                GMS.reloadGuilds(true);
-
-                taskGMSReload.start();
-                taskGMSReloadComplete.start();
-                taskMusicManager.start();
-
-                MusicManager.init();
-
-                Console.defaultMessage(
-                        "*****************************************\n"
-                                + "Application ID: " + shardManager.retrieveApplicationInfo().getJDA().getSelfUser().getApplicationId() + "\n"
-                                + "Username: " + shardManager.retrieveApplicationInfo().getJDA().getSelfUser().getName() + "#" + shardManager.retrieveApplicationInfo().getJDA().getSelfUser().getDiscriminator() + "\n"
-                                + "Public mode: " + getPublicMode() + "\n"
-                                + "Shards: " + shardManager.getShardsRunning() + " + " + shardManager.getShardsQueued() + " = " + shardManager.getShardsTotal() + "\n"
-                                + "*****************************************");
-            } else {
-                Console.defaultMessage("Please enter a valid shards count");
-            }
-        } catch(LoginException e) {
-            Console.defaultMessage("Check your bot token");
-            TimeUnit.SECONDS.sleep(3);
-            System.exit(-2);
-        } catch(ArrayIndexOutOfBoundsException | NumberFormatException e) {
-            Console.defaultMessage("Check your start arguments\n" +
-                    "Start arguments: <token (String)> [<shardsCount (int)> <publicMode (boolean)> <verbose (boolean)> <bowOwnerId (String)> <spotifyClientId (String)> <spotifyClientSecret (String)>]");
-            TimeUnit.SECONDS.sleep(3);
-            System.exit(-1);
+            TERMINAL = TerminalBuilder.builder()
+                    .system(true)
+                    .build();
+            LINE_READER = LineReaderBuilder.builder()
+                    .terminal(TERMINAL)
+                    .build();
+            LOGGER = LoggerFactory.getLogger(MusicBot.class);
+        } catch (IOException e) {
+            throw new RuntimeException(e.toString());
         }
     }
 
-    public static void shutdown() {
-        System.out.println("*****************\n" +
-                "* SHUTTING DOWN *\n" +
-                "*****************\n");
+    // INSTANCE
+    private final Console console;
+    private final JSONObject config;
+    private final ScheduledExecutorService executorService;
+    private final DatabaseManager databaseManager;
+    private final GMS gms;
+    private final MusicManager musicManager;
+    private ShardManager shardManager;
+
+    public MusicBot(String token, int shardsCount, boolean disableShardsCheck, boolean ignoreConfigFile, boolean disableAutoStart) throws LoginException, SQLException, IOException, ClassNotFoundException {
+
+        // CONSOLE
+
+        this.console = new Console(this);
+        this.console.registerCommand("stop", new StopCommand(this));
+        this.console.registerCommand("shards", new ShardsCommand(this));
+        this.console.registerCommand("database", new DatabaseCommand(this));
+        this.console.registerCommand("guild", new GuildCommand(this));
+        this.console.registerCommand("commands", new CommandsCommand(this));
+        this.console.registerCommand("player", new PlayerCommand(this));
+        this.console.start();
+        MusicBot.LOGGER.debug("Console initialization completed");
+
+        // CONFIG
+
+        this.config = new JSONObject();
+
+        if(!ignoreConfigFile) {
+
+            File configFile = new File(System.getProperty("user.dir"), "config.json");
+
+            if(!configFile.exists()) {
+                configFile.createNewFile();
+                this.saveConfig(configFile);
+            }
+
+            this.loadConfig(configFile);
+
+        }
+
+        // OVERRIDE CONFIG VALUES
+
+        if (token != null && !token.equalsIgnoreCase("")) {
+            this.config.put("token", token);
+            MusicBot.LOGGER.info("Config value token overridden by start argument");
+        }
+
+        if (shardsCount > 0) {
+            this.config.put("shardsCount", shardsCount);
+            MusicBot.LOGGER.info("Config value shardsCount overridden by start argument");
+        }
+
+        // EXECUTOR SERVICE
+
+        this.executorService = new ScheduledThreadPoolExecutor(1);
+
+        // DATABASE
+
+        this.databaseManager = new DatabaseManager(this);
+
+        this.executorService.schedule(() -> {
+
+            this.databaseManager.cleanupGuilds();
+            this.databaseManager.cleanupMusicBlacklist();
+
+        }, 1, TimeUnit.MINUTES);
+
+        MusicBot.LOGGER.debug("DatabaseManager initialization completed");
+
+        // BOT
+
+        if (!disableAutoStart) {
+            this.startShardManager();
+        }
+
+        this.executorService.schedule(() -> {
+
+            if (this.shardManager == null) {
+                return;
+            }
+
+            if (this.shardManager.getShardsRunning() >= this.shardManager.getShardsTotal()) {
+                return;
+            }
+
+            if (disableAutoStart) {
+                MusicBot.LOGGER.warn("Not all shards are online. Auto-restarting is disabled.");
+                return;
+            }
+
+            this.startShards();
+            MusicBot.LOGGER.warn("Not all shards are online. Restarting...");
+
+        }, 1, TimeUnit.MINUTES);
+
+        this.executorService.schedule(() -> {
+
+            if (this.shardManager == null) {
+                return;
+            }
+
+            if (this.shardManager.getShardsRunning() >= this.shardManager.getShardsTotal()) {
+
+                this.shardManager.setPresence(OnlineStatus.ONLINE, Activity.listening("/help and /play"));
+
+            } else {
+
+                this.shardManager.setPresence(OnlineStatus.IDLE, Activity.listening("Limited functionality"));
+
+            }
+
+        }, 5, TimeUnit.MINUTES);
+
+        // GMS
+
+        this.gms = new GMS(this);
+
+        this.executorService.schedule(this.gms::setupGuilds, 30, TimeUnit.MINUTES);
+
+        // MUSIC MANAGER
+
+        this.musicManager = new MusicManager(this);
+
+        this.executorService.schedule(this.musicManager::reloadPlayers, 1, TimeUnit.MINUTES);
+        this.executorService.schedule(this.musicManager::reloadChannelConnections, 5, TimeUnit.MINUTES);
+
+    }
+
+    public void shutdown() {
+
+        MusicBot.LOGGER.info("Shutting down...");
+
         try {
-            shardManager.shutdown();
-            TimeUnit.SECONDS.sleep(1);
-        } catch(InterruptedException e) {
+
+            if (this.shardManager != null) {
+                this.shardManager.shutdown();
+            }
+
+        } catch (Exception e) {
+            MusicBot.LOGGER.error("Exception while shutting down", e);
+        }
+
+        this.executorService.shutdownNow();
+
+        this.console.stop();
+
+        Thread shutdownThread = new Thread(() -> {
+            try {
+                int timer = 10;
+                while (timer > 0) {
+                    TimeUnit.SECONDS.sleep(1);
+                    timer--;
+                }
+                MusicBot.LOGGER.warn("Enforcing JVM exit");
+                System.exit(0);
+            } catch (InterruptedException e) {
+                System.exit(0);
+            }
+        });
+        shutdownThread.setName("MUSICBOT-SHUTDOWN-THREAD");
+        shutdownThread.setDaemon(true);
+        shutdownThread.start();
+
+    }
+
+    // CONFIG
+
+    public void loadConfig(File file) {
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(file));
+
+            StringBuilder sb = new StringBuilder();
+            String line = br.readLine();
+
+            while (line != null) {
+                sb.append(line);
+                sb.append(System.lineSeparator());
+                line = br.readLine();
+            }
+
+            String out = sb.toString();
+
+            JSONObject jsonConfig = new JSONObject(out);
+
+            for (String key : jsonConfig.keySet()) {
+                this.config.put(key, jsonConfig.get(key));
+            }
+
+            LOGGER.info("Config loaded");
+        } catch (IOException | JSONException e) {
+            LOGGER.warn("Failed to load config");
+        }
+    }
+
+    public void saveConfig(File file) {
+        try {
+            FileWriter writer = new FileWriter(file);
+            writer.write(this.config.toString(4));
+            writer.flush();
+            writer.close();
+
+            LOGGER.info("Config saved");
+        } catch (IOException e) {
+            LOGGER.warn("Failed to save config");
+        }
+    }
+
+    // BOT MANAGER
+
+    public BotStatus getBotStatus() {
+
+        if (this.shardManager == null) {
+            return BotStatus.NOT_AVAILABLE;
+        }
+
+        try {
+            Field shutdownField = DefaultShardManager.class.getDeclaredField("shutdown");
+            shutdownField.setAccessible(true);
+            AtomicBoolean shutdown = (AtomicBoolean) shutdownField.get(this.shardManager);
+
+            Field executorField = DefaultShardManager.class.getDeclaredField("executor");
+            executorField.setAccessible(true);
+            ScheduledExecutorService executor = (ScheduledExecutorService) executorField.get(this.shardManager);
+
+            if (!shutdown.get() && !executor.isTerminated()) {
+                return BotStatus.ACTIVE;
+            } else if (shutdown.get() && !executor.isTerminated()) {
+                return BotStatus.SHUTDOWN_REQUESTED;
+            } else {
+                return BotStatus.SHUTDOWN;
+            }
+
+        } catch (NoSuchFieldException | IllegalAccessException | ClassCastException e) {
             e.printStackTrace();
-        } catch(Exception ignored) {}
-        System.exit(1);
+            return BotStatus.ERROR;
+        }
+    }
+
+    public void shutdownShardManager() {
+
+        if (this.shardManager == null) {
+            return;
+        }
+
+        this.shardManager.shutdown();
+        MusicBot.LOGGER.info("Shut down ShardManager");
+    }
+
+    public void startShardManager(int shardsTotal) {
+
+        if (this.shardManager != null) {
+            return;
+        }
+
+        if (shardsTotal < 1) {
+            return;
+        }
+
+        this.shardManager = DefaultShardManagerBuilder.createDefault(this.config.optString("token", ""))
+                .setShardsTotal(shardsTotal)
+                .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.DIRECT_MESSAGES, GatewayIntent.GUILD_INVITES, GatewayIntent.GUILD_EMOJIS_AND_STICKERS)
+                .build();
+        this.shardManager.setPresence(OnlineStatus.IDLE, Activity.playing("Starting up..."));
+        this.shardManager.addEventListener(new EventsBasic(this));
+        this.shardManager.addEventListener(new EventsCommands(this));
+        this.shardManager.addEventListener(new EventsButtons(this));
+
+        MusicBot.LOGGER.info("Started ShardManager");
+    }
+
+    public void startShardManager() {
+        this.startShardManager(this.config.optInt("shardsCount", 1));
     }
 
     // SHARD MANAGER
-    public static void startShard(int shardId) {
-        if(shardId >= 0) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    shardManager.start(shardId);
-                    Console.messageShardManager("Started new shard with id " + shardId);
-                }
-            }).start();
+
+    public void startShard(int shardId) {
+
+        if (this.getBotStatus() != BotStatus.ACTIVE) {
+            return;
+        }
+
+        if (this.shardManager.getShardById(shardId) != null) {
+            return;
+        }
+
+        this.shardManager.start(shardId);
+        this.shardManagerInfo("Started shard " + shardId);
+    }
+
+    public void stopShard(int shardId) {
+
+        if (this.getBotStatus() != BotStatus.ACTIVE) {
+            return;
+        }
+
+        if (this.shardManager.getShardById(shardId) == null) {
+            return;
+        }
+
+        this.shardManager.shutdown(shardId);
+        this.shardManagerInfo("Stopped shard " + shardId);
+    }
+
+    public void restartShard(int shardId) {
+
+        if (this.getBotStatus() != BotStatus.ACTIVE) {
+            return;
+        }
+
+        if (this.shardManager.getShardById(shardId) == null) {
+            return;
+        }
+
+        this.shardManager.restart(shardId);
+        this.shardManagerInfo("Restarted shard " + shardId);
+    }
+
+    public void startShards() {
+
+        if (this.getBotStatus() != BotStatus.ACTIVE) {
+            return;
+        }
+
+        for(int i = 0; i < this.shardManager.getShardsTotal(); i++) {
+            this.startShard(i);
         }
     }
 
-    public static void stopShard(int shardId) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                for(JDA jda : shardManager.getShards()) {
-                    if(jda.getShardInfo().getShardId() == shardId) {
-                        shardManager.shutdown(shardId);
-                        Console.messageShardManager("Stopped and removed shard with id " + shardId);
-                    }
-                }
-            }
-        }).start();
+    public void stopShards() {
+
+        if (this.getBotStatus() != BotStatus.ACTIVE) {
+            return;
+        }
+
+        for(int i = 0; i < this.shardManager.getShardsTotal(); i++) {
+            this.stopShard(i);
+        }
     }
 
-    public static void restartShard(int shardId) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                for(JDA jda : shardManager.getShards()) {
-                    if(jda.getShardInfo().getShardId() == shardId) {
-                        shardManager.restart(shardId);
-                        Console.messageShardManager("Restarted shard with id " + shardId);
-                    }
-                }
-            }
-        }).start();
+    public void restartShards() {
+
+        if (this.getBotStatus() != BotStatus.ACTIVE) {
+            return;
+        }
+
+        for(int i = 0; i < this.shardManager.getShardsTotal(); i++) {
+            this.restartShard(i);
+        }
     }
 
-    public static void startShards() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                List<Integer> activeIds = new ArrayList<>();
-                for(JDA jda : shardManager.getShards()) {
-                    activeIds.add(jda.getShardInfo().getShardId());
-                }
-                Collections.sort(activeIds);
-                for(int i = 0; i < shardManager.getShardsTotal(); i++) {
-                    if(!activeIds.contains(i)) {
-                        shardManager.start(i);
-                    }
-                }
-                Console.messageShardManager("Started all shards");
-            }
-        }).start();
-    }
-
-    public static void stopShards() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                for(JDA jda : MusicBot.shardManager.getShards()) {
-                    shardManager.shutdown(jda.getShardInfo().getShardId());
-                }
-                Console.messageShardManager("Stopped and remove all shards");
-            }
-        }).start();
-    }
-
-    public static void restartShards() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                startShards();
-                Console.messageShardManager("Restarted all shards");
-            }
-        }).start();
-    }
-
-    public static void setShardAutoMode(boolean mode) {
-        shardAutoMode = mode;
-    }
-
-    public static boolean getShardAutoMode() {
-        return shardAutoMode;
-    }
-
-    public static void reloadShards() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                if(shardManager.getShardsRunning() < shardManager.getShardsTotal()) {
-                    if(getShardAutoMode()) {
-                        Console.messageShardManager("Only " + shardManager.getShardsRunning() + " of " + shardManager.getShardsTotal() + " are online. Auto restarting...");
-                        startShards();
-                    } else {
-                        Console.messageShardManager("[WARN] Only " + shardManager.getShardsRunning() + " of " + shardManager.getShardsTotal() + " are online");
-                    }
-                }
-
-                if(completeOnline()) {
-                    shardManager.setPresence(OnlineStatus.ONLINE, Activity.playing("/play, /help"));
+    public void reloadShards() {
+        new Thread(() -> {
+            if(shardManager.getShardsRunning() < shardManager.getShardsTotal()) {
+                if(!this.config.optBoolean("disableShardCheck", false)) {
+                    this.shardManagerInfo("Only " + shardManager.getShardsRunning() + " of " + shardManager.getShardsTotal() + " are online. Auto restarting...");
+                    startShards();
                 } else {
-                    shardManager.setPresence(OnlineStatus.IDLE, Activity.playing("Limited functionality"));
+                    this.shardManagerWarning("Only " + shardManager.getShardsRunning() + " of " + shardManager.getShardsTotal() + " are online");
                 }
+            }
+
+            if(completeOnline()) {
+                shardManager.setPresence(OnlineStatus.ONLINE, Activity.playing("/play, /help"));
+            } else {
+                shardManager.setPresence(OnlineStatus.IDLE, Activity.playing("Limited functionality"));
             }
         }).start();
     }
 
-    public static boolean completeOnline() {
+    public boolean completeOnline() {
+
+        if (this.getBotStatus() != BotStatus.ACTIVE) {
+            return false;
+        }
+
         boolean status = true;
         for(JDA jda : shardManager.getStatuses().keySet()) {
             if(jda.getStatus() != JDA.Status.CONNECTED) {
@@ -281,10 +449,30 @@ public class MusicBot {
         return (shardManager.getShardsRunning() == shardManager.getShardsTotal()) && status;
     }
 
-    // UPSERT COMMANDS
-    public static void upsertCommands(boolean reloadall) {
-        shardManager.retrieveApplicationInfo().getJDA().retrieveCommands().queue(commands -> {
-            JDA jda = shardManager.retrieveApplicationInfo().getJDA();
+    // GLOBAL SLASH COMMANDS
+
+    public void deleteCommands() {
+
+        this.shardManager.retrieveApplicationInfo().getJDA().retrieveCommands().queue(commands -> {
+
+            for (Command command : commands) {
+                command.delete().queue();
+            }
+
+            this.shardManagerInfo("Deleted global bot commands");
+        });
+
+    }
+
+    public void upsertCommands() {
+
+        if (this.getBotStatus() != BotStatus.ACTIVE || this.shardManager.retrieveApplicationInfo().getJDA() == null || this.shardManager.retrieveApplicationInfo().getJDA().getStatus() != JDA.Status.CONNECTED) {
+            this.shardManagerWarning("Cannot run upsert commands because bot is not online");
+            return;
+        }
+
+        this.shardManager.retrieveApplicationInfo().getJDA().retrieveCommands().queue(commands -> {
+            JDA jda = this.shardManager.retrieveApplicationInfo().getJDA();
 
             List<String> cmdNameList = new ArrayList<>();
 
@@ -292,164 +480,166 @@ public class MusicBot {
                 cmdNameList.add(cmd.getName());
             }
 
-            if(!cmdNameList.contains("cmd") || reloadall) {
+            if(!cmdNameList.contains("cmd")) {
                 CommandData cmdCommand = new CommandDataImpl("cmd", "cmd")
                         .addOptions(new OptionData(OptionType.STRING, "cmd", "cmd").setRequired(true));
                 jda.upsertCommand(cmdCommand).queue();
-                Console.timestampMessage("Registered command cmd");
-            }
-            if(!cmdNameList.contains("invite") || reloadall) {
-                CommandData inviteCommand = new CommandDataImpl("invite", "Invite MusicBot to your server");
-                jda.upsertCommand(inviteCommand).queue();
-                Console.timestampMessage("Registered command invite");
-            }
-            if(!cmdNameList.contains("help") || reloadall) {
-                CommandData commandData = new CommandDataImpl("help", "Get help and information about MusicBot");
-                jda.upsertCommand(commandData).queue();
-                Console.timestampMessage("Registered command help");
-            }
-            if(!cmdNameList.contains("nowplaying") || reloadall) {
-                CommandData nowplayingCommand = new CommandDataImpl("nowplaying", "Shows information about the song which is currently playing");
-                jda.upsertCommand(nowplayingCommand).queue();
-                Console.timestampMessage("Registered command nowplaying");
-            }
-            if(!cmdNameList.contains("queue") || reloadall) {
-                CommandData queueCommand = new CommandDataImpl("queue", "Shows the current queue")
-                        .addOptions(new OptionData(OptionType.INTEGER, "index", "Search for queue indexes"));
-                jda.upsertCommand(queueCommand).queue();
-                Console.timestampMessage("Registered command queue");
-            }
-            if(!cmdNameList.contains("play") || reloadall) {
-                CommandData playCommand = new CommandDataImpl("play", "Play a song")
-                        .addOptions(new OptionData(OptionType.STRING, "song", "The song link / song name / playlist link you want to play"));
-                jda.upsertCommand(playCommand).queue();
-                Console.timestampMessage("Registered command play");
-            }
-            if(!cmdNameList.contains("add") || reloadall) {
-                CommandData addCommand = new CommandDataImpl("add", "Add a song to queue without starting to play")
-                        .addOptions(new OptionData(OptionType.STRING, "song", "The song link / song name / playlist link you want to add").setRequired(true));
-                jda.upsertCommand(addCommand).queue();
-                Console.timestampMessage("Registered command add");
-            }
-            if(!cmdNameList.contains("pause") || reloadall) {
-                CommandData pauseCommand = new CommandDataImpl("pause", "Stop playing music");
-                jda.upsertCommand(pauseCommand).queue();
-                Console.timestampMessage("Registered command pause");
-            }
-            if(!cmdNameList.contains("remove") || reloadall) {
-                CommandData removeCommand = new CommandDataImpl("remove", "Remove a specific song from the queue")
-                        .addOptions(new OptionData(OptionType.INTEGER, "index", "The index of the song you want to remove").setRequired(true));
-                jda.upsertCommand(removeCommand).queue();
-                Console.timestampMessage("Registered command remove");
-            }
-            if(!cmdNameList.contains("clear") || reloadall) {
-                CommandData clearCommand = new CommandDataImpl("clear", "Clear the queue");
-                jda.upsertCommand(clearCommand).queue();
-                Console.timestampMessage("Registered command clear");
-            }
-            if(!cmdNameList.contains("search") || reloadall) {
-                CommandData searchCommand = new CommandDataImpl("search", "YTSearchHandler youtube")
-                        .addOptions(new OptionData(OptionType.STRING, "query", "The text you want to search for").setRequired(true));
-                jda.upsertCommand(searchCommand).queue();
-                Console.timestampMessage("Registered command search");
-            }
-            if(!cmdNameList.contains("shuffle") || reloadall) {
-                CommandData shuffleCommand = new CommandDataImpl("shuffle", "Shuffle the queue");
-                jda.upsertCommand(shuffleCommand).queue();
-                Console.timestampMessage("Registered command shuffle");
-            }
-            if(!cmdNameList.contains("skip") || reloadall) {
-                CommandData skipCommand = new CommandDataImpl("skip", "Skip a song")
-                        .addOptions(new OptionData(OptionType.INTEGER, "position", "Skip to a specific queue position"));
-                jda.upsertCommand(skipCommand).queue();
-                Console.timestampMessage("Registered command skip");
-            }
-            if(!cmdNameList.contains("removeuser") || reloadall) {
-                CommandData removeUserCommand = new CommandDataImpl("removeuser", "Removes all songs by a specific member")
-                        .addOptions(new OptionData(OptionType.USER, "member", "The member you want to remove the music from").setRequired(true));
-                jda.upsertCommand(removeUserCommand).queue();
-                Console.timestampMessage("Registered command removeuser");
-            }
-            if(!cmdNameList.contains("forceskip") || reloadall) {
-                CommandData forceskipCommand = new CommandDataImpl("forceskip", "Force skip a song")
-                        .addOptions(new OptionData(OptionType.INTEGER, "position", "Skip to a specific queue position"));
-                jda.upsertCommand(forceskipCommand).queue();
-                Console.timestampMessage("Registered command forceskip");
-            }
-            if(!cmdNameList.contains("movetrack") || reloadall) {
-                CommandData movetrackCommand = new CommandDataImpl("movetrack", "Move a specific track in queue")
-                        .addOptions(new OptionData(OptionType.INTEGER, "from", "The track you want to move").setRequired(true))
-                        .addOptions(new OptionData(OptionType.INTEGER, "to", "The queue position you want to move the track to").setRequired(true));
-                jda.upsertCommand(movetrackCommand).queue();
-                Console.timestampMessage("Registered command movetrack");
-            }
-            if(!cmdNameList.contains("playnow") || reloadall) {
-                CommandData playnowCommand = new CommandDataImpl("playnow", "Stop the current song and play the specified song immediately")
-                        .addOptions(new OptionData(OptionType.STRING, "song", "The song you want to play").setRequired(true));
-                jda.upsertCommand(playnowCommand).queue();
-                Console.timestampMessage("Registered command playnow");
-            }
-            if(!cmdNameList.contains("stop") || reloadall) {
-                CommandData stopCommand = new CommandDataImpl("stop", "Stop playing music");
-                jda.upsertCommand(stopCommand).queue();
-                Console.timestampMessage("Registered command stop");
-            }
-            if(!cmdNameList.contains("volume") || reloadall) {
-                CommandData volumeCommand = new CommandDataImpl("volume", "Change the volume")
-                        .addOptions(new OptionData(OptionType.INTEGER, "volume", "Change the volume to this value"));
-                jda.upsertCommand(volumeCommand).queue();
-                Console.timestampMessage("Registered command volume");
-            }
-            if(!cmdNameList.contains("leave") || reloadall) {
-                CommandData leaveCommand = new CommandDataImpl("leave", "Leave the voice channel");
-                jda.upsertCommand(leaveCommand).queue();
-                Console.timestampMessage("Registered command leave");
-            }
-            if(!cmdNameList.contains("mbsettings") || reloadall) {
-                SubcommandData mbsettingsInfoCommand = new SubcommandData("info", "See an overview of all settings");
-                SubcommandData mbsettingsDJRoleCommand = new SubcommandData("djrole", "Add/remove/clear dj roles")
-                        .addOptions(new OptionData(OptionType.STRING, "action", "add/remove").setRequired(true).addChoice("add", "add").addChoice("remove", "remove").addChoice("clear", "clear"))
-                        .addOptions(new OptionData(OptionType.ROLE, "role", "Only required if you have chosen add/remove"));
-                SubcommandData mbsettingsEphemeralCommand = new SubcommandData("ephemeral", "Enable/disable private (ephemeral) reply")
-                        .addOptions(new OptionData(OptionType.BOOLEAN, "state", "Set to true to enable private (ephemeral) replies").setRequired(true));
-                SubcommandData mbsettingsBlacklistCommand = new SubcommandData("blacklist", "Manage the blacklist")
-                        .addOptions(new OptionData(OptionType.STRING, "action", "Add/remove/clear/list").setRequired(true).addChoice("add", "add").addChoice("remove", "remove").addChoice("clear", "clear").addChoice("list", "list"))
-                        .addOptions(new OptionData(OptionType.STRING, "link", "The source you want to blacklist"));
-                SubcommandData mbsettingsKeywordBlacklistCommand = new SubcommandData("keywordblacklist", "Manage the keyword blacklist")
-                        .addOptions(new OptionData(OptionType.STRING, "action", "keyword").setRequired(true).addChoice("add", "add").addChoice("remove", "remove").addChoice("clear", "clear").addChoice("list", "list"))
-                        .addOptions(new OptionData(OptionType.STRING, "keyword", "The keyword you want to blacklist"));
-                SubcommandData mbsettingsArtistBlacklistCommand = new SubcommandData("artistblacklist", "Manage the artist blacklist")
-                        .addOptions(new OptionData(OptionType.STRING, "action", "artist").setRequired(true).addChoice("add", "add").addChoice("remove", "remove").addChoice("clear", "clear").addChoice("list", "list"))
-                        .addOptions(new OptionData(OptionType.STRING, "keyword", "The artist name you want to blacklist"));
-                CommandData mbsettingsCommand = new CommandDataImpl("mbsettings", "Music bot settings command for administrators")
-                        .addSubcommands(mbsettingsInfoCommand)
-                        .addSubcommands(mbsettingsDJRoleCommand)
-                        .addSubcommands(mbsettingsEphemeralCommand)
-                        .addSubcommands(mbsettingsBlacklistCommand)
-                        .addSubcommands(mbsettingsKeywordBlacklistCommand)
-                        .addSubcommands(mbsettingsArtistBlacklistCommand);
-                jda.upsertCommand(mbsettingsCommand).queue();
-                Console.timestampMessage("Registered command mbsettings");
             }
 
-            Console.messageShardManager("Command setup (Mode: " + reloadall + ")");
+            if(!cmdNameList.contains("help")) {
+                CommandData commandData = new CommandDataImpl("help", "Get help and information about MusicBot");
+                jda.upsertCommand(commandData).queue();
+            }
+
+            MusicBot.LOGGER.info("Command setup completed");
         });
     }
 
     // GETTER METHODS
-    public static ShardManager getShardManager() {
+
+    public Console getConsole() {
+        return this.console;
+    }
+
+    public JSONObject getConfig() {
+        return this.config;
+    }
+
+    public DatabaseManager getDatabaseManager() {
+        return this.databaseManager;
+    }
+
+    public ShardManager getShardManager() {
         return shardManager;
     }
 
-    public static boolean getPublicMode() {
-        return publicMode;
+    public GMS getGMS() {
+        return this.gms;
     }
 
-    public static String getBowOwner() {
-        return bowOwner;
+    public MusicManager getMusicManager() {
+        return this.musicManager;
     }
 
-    public static Console getConsole() {
-        return console;
+    // OPERATIONAL STATUS
+
+    public boolean isOperational() {
+        return true;
+    }
+
+    // LOGS
+
+    private void shardManagerInfo(String message) {
+        MusicBot.LOGGER.info(message);
+    }
+
+    private void shardManagerWarning(String message) {
+        MusicBot.LOGGER.warn(message);
+    }
+
+    // STATIC
+
+    public static void main(String[] args) {
+        System.out.println("MusicBot by jandie1505 (https://github.com/jandie1505/MusicBot)");
+
+        int waitTime = 3;
+        Map<String, String> startArguments = new HashMap<>();
+        try {
+            for (String arg : args) {
+                if (arg.startsWith("-")) {
+                    arg = arg.replace("-", "");
+                    try {
+                        String[] argument = arg.split("=");
+                        startArguments.put(argument[0], argument[1]);
+                    } catch (Exception e) {
+                        System.out.println("Incorrect start argument: " + arg);
+                        waitTime = 10;
+                    }
+                } else {
+                    System.out.println("Wrong start argument format: " + arg);
+                    waitTime = 10;
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error with start arguments. Starting with default arguments...");
+            waitTime = 30;
+        }
+
+        boolean showLauncherStackTrace = false;
+        showLauncherStackTrace = Boolean.parseBoolean(startArguments.get("showLauncherStackTrace"));
+        if(showLauncherStackTrace) {
+            System.out.println("showLauncherStackTrace option enabled");
+        }
+
+        boolean defaultConfigValues = false;
+        defaultConfigValues = Boolean.parseBoolean(startArguments.get("defaultConfigValues"));
+        if (defaultConfigValues) {
+            System.out.println("defaultConfigValues option enabled");
+        }
+
+        String overrideToken = null;
+        overrideToken = startArguments.get("overrideToken");
+        if(overrideToken != null) {
+            System.out.println("Bot token specified via overrideToken option");
+        }
+
+        int overrideShardsCount = -1;
+        try {
+            overrideShardsCount = Integer.parseInt(startArguments.get("overrideShardsCount"));
+        } catch (IllegalArgumentException ignored) {
+            // NOT REQUIRED
+        }
+
+        boolean disableShardsCheck = false;
+        disableShardsCheck = Boolean.parseBoolean(startArguments.get("disableShardsCheck"));
+        if(disableShardsCheck) {
+            System.out.println("" +
+                    "-------------------- WARNING --------------------\n" +
+                    "Start option disableShardsCheck is enabled.\n" +
+                    "This prevents the bot from automatically restarting stopped shards.\n" +
+                    "If not all shards are online, important checks like the guild cleanup are disabled.\n" +
+                    "Don't use the disableShardCheck option for a long time.\n" +
+                    "-------------------------------------------------");
+
+            waitTime = 10;
+        }
+
+        boolean disableAutostart = Boolean.parseBoolean(startArguments.get("disableAutostart"));
+
+        System.out.println("Starting bot in " + waitTime + " seconds...");
+        try {
+            TimeUnit.SECONDS.sleep(waitTime);
+        } catch (Exception ignored) {}
+
+        try {
+            new MusicBot(overrideToken, overrideShardsCount, disableShardsCheck, defaultConfigValues, disableAutostart);
+        } catch (LoginException e) {
+            System.err.println("Failed to start the bot: Please check your token (LoginException)");
+            if(showLauncherStackTrace) {
+                e.printStackTrace();
+            }
+            System.exit(-1);
+        } catch (SQLException e) {
+            System.err.println("Failed to start the bot: Database error (SQLException)");
+            if(showLauncherStackTrace) {
+                e.printStackTrace();
+            }
+            System.exit(-2);
+        } catch (IOException e) {
+            System.err.println("Failed to start the bot: Config/Database file error (IOException)");
+            if(showLauncherStackTrace) {
+                e.printStackTrace();
+            }
+            System.exit(-3);
+        } catch (ClassNotFoundException e) {
+            System.err.println("Failed to start the bot: ClassNotFoundException (This error can occur if the database driver was not found)");
+            if(showLauncherStackTrace) {
+                e.printStackTrace();
+            }
+            System.exit(-4);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(-5);
+        }
     }
 }
