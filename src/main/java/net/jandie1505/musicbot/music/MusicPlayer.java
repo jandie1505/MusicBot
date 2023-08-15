@@ -238,9 +238,16 @@ public class MusicPlayer {
     }
 
     public void setVolume(int volume) {
-        if(System.getProperty("os.arch").equalsIgnoreCase("amd64")) {
-            player.setVolume(volume);
+
+        if (volume < 0) {
+            return;
         }
+
+        if (!System.getProperty("os.arch").equalsIgnoreCase("amd64")) {
+            return;
+        }
+
+        player.setVolume(volume);
     }
 
     public int getVolume() {

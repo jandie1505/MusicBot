@@ -10,15 +10,19 @@ import net.dv8tion.jda.api.interactions.components.ItemComponent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.jandie1505.musicbot.MusicBot;
+import net.jandie1505.musicbot.music.MusicPlayer;
 
 import java.awt.*;
 import java.util.concurrent.TimeUnit;
 
 public class Messages {
     public static MessageCreateBuilder nowplayingMessage(MusicBot musicBot, Guild g, boolean showbuttons) {
-        if(musicBot.getMusicManager().getPlayingTrack(g) != null) {
+
+        MusicPlayer player = musicBot.getMusicManager().getMusicPlayer(g.getIdLong());
+
+        if(player.getPlayingTrack() != null) {
             MessageCreateBuilder messageBuilder = new MessageCreateBuilder();
-            AudioTrack audioTrack = musicBot.getMusicManager().getPlayingTrack(g);
+            AudioTrack audioTrack = player.getPlayingTrack();
             String description = "";
             if(musicBot.getMusicManager().isPaused(g)) {
                 description = ":pause_button:  Player is currently paused";
@@ -61,7 +65,7 @@ public class Messages {
 
             EmbedBuilder embedBuilder = new EmbedBuilder()
                     .setTitle(audioTrack.getInfo().title, audioTrack.getInfo().uri)
-                    .setDescription(playIcon + " " + progressbar + " `" + formatTime(audioTrack.getPosition()) + "/" + formatTime(audioTrack.getDuration()) + "` \nAuthor: " + audioTrack.getInfo().author + "\nChannel: " + channelString);
+                    .setDescription(playIcon + " " + progressbar + " `" + formatTime(audioTrack.getPosition()) + "/" + formatTime(audioTrack.getDuration()) + "` \nAuthor: " + audioTrack.getInfo().author + "\nChannel: " + channelString + "\nVolume: " + player.getVolume());
             messageBuilder.setEmbeds(embedBuilder.build());
 
             return messageBuilder;
@@ -75,7 +79,7 @@ public class Messages {
             }
             EmbedBuilder noMusicPlaying = new EmbedBuilder()
                     .setTitle("No music playing")
-                    .setDescription(":stop_button: ▬▬▬▬▬▬▬▬▬▬ `--:--:--/--:--:--` \nAuthor: ---\nChannel: " + channelString);
+                    .setDescription(":stop_button: ▬▬▬▬▬▬▬▬▬▬ `--:--:--/--:--:--` \nAuthor: ---\nChannel: " + channelString + "\nVolume: " + player.getVolume());
             messageBuilder.setEmbeds(noMusicPlaying.build());
 
             messageBuilder.setComponents(ActionRow.of(
@@ -84,6 +88,7 @@ public class Messages {
 
             return messageBuilder;
         }
+
     }
 
     public static MessageCreateBuilder getQueueMessage(MusicBot musicBot, Guild g, int indexOption) {

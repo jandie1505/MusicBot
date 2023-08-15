@@ -14,6 +14,7 @@ import net.jandie1505.musicbot.utilities.YTSearchHandler;
 
 import java.awt.*;
 import java.util.List;
+import java.util.Random;
 
 public class EventsCommands extends ListenerAdapter {
     private final MusicBot musicBot;
@@ -42,6 +43,9 @@ public class EventsCommands extends ListenerAdapter {
             case "clear" -> clearCommand(interaction);
             case "playnow" -> playnowCommand(interaction);
             case "movetrack" -> movetrackCommand(interaction);
+            case "shuffle" -> shuffleCommand(interaction);
+            case "search" -> searchCommand(interaction);
+            case "volume" -> volumeCommand(interaction);
             default -> {}
         }
 
@@ -736,4 +740,204 @@ public class EventsCommands extends ListenerAdapter {
         ).queue();
 
     }
+
+    private void shuffleCommand(SlashCommandInteraction interaction) {
+
+        // Null checks
+
+        if (interaction.getGuild() == null || interaction.getMember() == null) {
+            return;
+        }
+
+        // Permission check
+
+        if (!this.musicBot.getGMS().memberHasUserPermissions(interaction.getMember())) {
+            return;
+        }
+
+        // Defer reply
+
+        interaction.deferReply(this.musicBot.getDatabaseManager().getGuild(interaction.getGuild().getIdLong()).isEphemeralState()).queue();
+
+        // Get music player
+
+        MusicPlayer musicPlayer = this.musicBot.getMusicManager().getMusicPlayer(interaction.getGuild().getIdLong());
+
+        // Shuffle queue
+
+        musicPlayer.shuffle();
+
+        // Reply
+
+        interaction.getHook().sendMessageEmbeds(
+                new EmbedBuilder()
+                        .setDescription(":twisted_rightwards_arrows:  Queue shuffled")
+                        .setColor(Color.GREEN)
+                        .build()
+        ).queue();
+
+    }
+
+    public void searchCommand(SlashCommandInteraction interaction) {
+
+        // Null checks
+
+        if (interaction.getGuild() == null || interaction.getMember() == null) {
+            return;
+        }
+
+        // Permission check
+
+        if (!this.musicBot.getGMS().memberHasDJPermissions(interaction.getMember())) {
+            return;
+        }
+
+        // Option
+
+        if (interaction.getOption("query") == null) {
+            return;
+        }
+
+        // Defer reply
+
+        interaction.deferReply(this.musicBot.getDatabaseManager().getGuild(interaction.getGuild().getIdLong()).isEphemeralState()).queue();
+
+        // Search
+
+        List<AudioTrack> response = YTSearchHandler.search(interaction.getOption("query").getAsString());
+
+        // Empty search
+
+        if (response.isEmpty()) {
+            interaction.getHook().sendMessageEmbeds(Messages.failMessage("No search results")).queue();
+            return;
+        }
+
+        // List
+
+        String list = "";
+
+        for (int i = 0; i < response.size(); i++) {
+            AudioTrack track = response.get(i);
+
+            list = list + "`" + i + ".` `" + Messages.formatTime(track.getDuration()) + "` " + track.getInfo().title + " [" + track.getInfo().author + "]\n";
+        }
+
+        list = list + "`Showing " + response.size() + " search results`";
+
+        // Reply
+
+        interaction.getHook().sendMessageEmbeds(
+                new EmbedBuilder()
+                        .addField("Search results:", list, false)
+                        .build()
+        ).queue();
+
+    }
+
+    public void volumeCommand(SlashCommandInteraction interaction) {
+
+        // Null checks
+
+        if (interaction.getGuild() == null || interaction.getMember() == null) {
+            return;
+        }
+
+        // Permission check
+
+        if (!this.musicBot.getGMS().memberHasDJPermissions(interaction.getMember())) {
+            return;
+        }
+
+        // OS architecture check
+
+        if (!System.getProperty("os.arch").equalsIgnoreCase("amd64")) {
+            interaction.replyEmbeds(Messages.failMessage("Unsupported platform")).queue();
+            return;
+        }
+
+        // Option
+
+        if (interaction.getOption("volume") == null) {
+            return;
+        }
+
+        int volume = interaction.getOption("volume").getAsInt();
+
+        // Defer reply
+
+        interaction.deferReply(this.musicBot.getDatabaseManager().getGuild(interaction.getGuild().getIdLong()).isEphemeralState()).queue();
+
+        // Get music player
+
+        MusicPlayer musicPlayer = this.musicBot.getMusicManager().getMusicPlayer(interaction.getGuild().getIdLong());
+
+        // check volume
+
+        if (volume < 0) {
+            interaction.getHook().sendMessageEmbeds(Messages.warningMessage("Active noise cancelling is not supported")).queue();
+            return;
+        }
+        
+        if (volume > 200) {
+            
+            if (new Random().nextInt(10) < 2) {
+                interaction.getHook().sendMessage("The volume has been capped at 200 to avoid this:\nhttps://tenor.com/view/explosion-mushroom-cloud-atomic-bomb-bomb-boom-gif-4464831").queue();
+            } else {
+
+                interaction.getHook().sendMessageEmbeds(
+                        new EmbedBuilder()
+                                .setDescription("The volume has been capped at 200 so you don't end up like this guy: :exploding_head:")
+                                .setColor(Color.RED)
+                                .build()
+                ).queue();
+                
+            }
+            
+            return;
+        }
+
+        // set volume
+
+        musicPlayer.setVolume(volume);
+        
+        // Reply
+
+        String replyString = "";
+        
+        if (volume == 200) {
+
+            if (new Random().nextInt(10) < 2) {
+
+                interaction.getHook().sendMessage(
+                        "Volume set to 200\n" +
+                           "https://tenor.com/view/nuclear-catastrophic-disastrous-melt-down-gif-13918708"
+                ).queue();
+
+                return;
+            } else {
+                replyString = ":exploding_head:  Volume set to 200";
+            }
+
+        } else if (volume >= 150) {
+            replyString = ":loud_sound::boom:  Volume set to " + volume;
+        } else if (volume >= 100) {
+            replyString = ":loud_sound:  Volume set to " + volume;
+        } else if (volume >= 50) {
+            replyString = ":sound:  Volume set to " + volume;
+        } else if (volume == 0) {
+            replyString = ":mute:  Volume muted";
+        } else {
+            replyString = ":speaker:  Volume set to " + volume;
+        }
+
+        interaction.getHook().sendMessageEmbeds(
+                new EmbedBuilder()
+                        .setDescription(replyString)
+                        .setColor(Color.GREEN)
+                        .build()
+        ).queue();
+
+    }
+
 }
