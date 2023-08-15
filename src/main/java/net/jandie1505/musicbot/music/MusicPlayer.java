@@ -1,19 +1,18 @@
 package net.jandie1505.musicbot.music;
 
-import com.sedmelluq.discord.lavaplayer.player.*;
+import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventListener;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -24,7 +23,6 @@ public class MusicPlayer {
     private final AudioPlayerSendHandler playerSendHandler;
     private final TrackScheduler trackScheduler;
     private final List<AudioTrack> queue;
-    private SkipvoteManager skipvoteManager;
 
     public MusicPlayer(MusicManager musicManager) {
         this.musicManager = musicManager;
@@ -307,25 +305,6 @@ public class MusicPlayer {
         }
 
         return response[0];
-    }
-
-    // SKIPVOTES
-    public void createSkipvoteManager() {
-        if(skipvoteManager == null) {
-            this.skipvoteManager = new SkipvoteManager(this, 300);
-        }
-    }
-
-    public void destroySkipvoteManager() {
-        this.skipvoteManager = null;
-    }
-
-    public SkipvoteManager getSkipvoteManager() {
-        return skipvoteManager;
-    }
-
-    public boolean hasSkipvoteManaer() {
-        return Objects.nonNull(skipvoteManager);
     }
 
     // GETTER
