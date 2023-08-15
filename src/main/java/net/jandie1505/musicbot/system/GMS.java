@@ -176,10 +176,33 @@ public class GMS {
                                         new OptionData(OptionType.INTEGER, "from", "The index of the track you want to move").setRequired(true),
                                         new OptionData(OptionType.INTEGER, "to", "The new index of the track you want to set").setRequired(true)
                                 )
-                ).queue();
+                ).queue(null, this.missingAccess(g));
+            }
+
+            if (!registeredCommands.contains("shuffle")) {
+                g.upsertCommand(new CommandDataImpl("shuffle", "Randomizes the queue order")).queue(null, this.missingAccess(g));
+            }
+
+            if (!registeredCommands.contains("search")) {
+                g.upsertCommand(
+                        new CommandDataImpl("search", "Search for music")
+                                .addOptions(
+                                        new OptionData(OptionType.INTEGER, "query", "What you want to search").setRequired(true)
+                                )
+                ).queue(null, this.missingAccess(g));
+            }
+
+            if (!registeredCommands.contains("volume")) {
+                g.upsertCommand(
+                        new CommandDataImpl("volume", "Set the volume")
+                                .addOptions(
+                                        new OptionData(OptionType.INTEGER, "volume", "The volume between 0 and 200").setRequired(true)
+                                )
+                ).queue(null, this.missingAccess(g));
             }
 
             this.logDebug("Commands on guild " + g.getIdLong() + " were set up");
+
         }, this.missingAccess(g));
     }
 
