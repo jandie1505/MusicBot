@@ -18,7 +18,6 @@ import net.jandie1505.musicbot.database.DatabaseManager;
 import net.jandie1505.musicbot.eventlisteners.EventsBasic;
 import net.jandie1505.musicbot.eventlisteners.EventsButtons;
 import net.jandie1505.musicbot.eventlisteners.EventsCommands;
-import net.jandie1505.musicbot.eventlisteners.EventsCommandsOld;
 import net.jandie1505.musicbot.music.MusicManager;
 import net.jandie1505.musicbot.system.GMS;
 import net.jandie1505.musicbot.utilities.BotStatus;
@@ -311,7 +310,6 @@ public class MusicBot {
         this.shardManager.setPresence(OnlineStatus.IDLE, Activity.playing("Starting up..."));
         this.shardManager.addEventListener(new EventsBasic(this));
         this.shardManager.addEventListener(new EventsCommands(this));
-        this.shardManager.addEventListener(new EventsCommandsOld(this));
         this.shardManager.addEventListener(new EventsButtons(this));
 
         MusicBot.LOGGER.info("Started ShardManager");

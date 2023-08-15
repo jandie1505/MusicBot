@@ -2,11 +2,13 @@ package net.jandie1505.musicbot.music;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.jandie1505.musicbot.MusicBot;
+import net.jandie1505.musicbot.database.GuildData;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class MusicManager {
 
@@ -72,10 +74,6 @@ public class MusicManager {
         return getMusicPlayer(g.getIdLong()).getQueue();
     }
 
-    public void shuffle(Guild g) {
-        getMusicPlayer(g.getIdLong()).shuffle();
-    }
-
     // PLAYER
 
     public void setPause(Guild g, boolean pause) {
@@ -96,52 +94,6 @@ public class MusicManager {
 
     public void next(Guild g) {
         getMusicPlayer(g.getIdLong()).nextTrack();
-    }
-
-    public void setVolume(Guild g, int volume) {
-        getMusicPlayer(g.getIdLong()).setVolume(volume);
-    }
-
-    public int getVolume(Guild g) {
-        return getMusicPlayer(g.getIdLong()).getVolume();
-    }
-
-    // SKIPVOTES
-    public void addSkipvote(Guild g, Member m) {
-        if (!getMusicPlayer(g.getIdLong()).hasSkipvoteManaer()) {
-            getMusicPlayer(g.getIdLong()).createSkipvoteManager();
-        }
-        getMusicPlayer(g.getIdLong()).getSkipvoteManager().addSkipvote(m);
-    }
-
-    public void removeSkipvote(Guild g, Member m) {
-        if(getMusicPlayer(g.getIdLong()).hasSkipvoteManaer()) {
-            getMusicPlayer(g.getIdLong()).getSkipvoteManager().removeSkipvote(m);
-        }
-    }
-
-    public List<Member> getSkipvotes(Guild g) {
-        List<Member> returnList = new ArrayList<>();
-
-        if(getMusicPlayer(g.getIdLong()).hasSkipvoteManaer()) {
-            returnList.addAll(getMusicPlayer(g.getIdLong()).getSkipvoteManager().getSkipvotes());
-        }
-
-        return returnList;
-    }
-
-    public int getVoteCount(Guild g) {
-        if(getMusicPlayer(g.getIdLong()).hasSkipvoteManaer()) {
-            return getMusicPlayer(g.getIdLong()).getSkipvoteManager().getVoteCount();
-        }
-        return 0;
-    }
-
-    public int getRequiredVotes(Guild g) {
-        if(getMusicPlayer(g.getIdLong()).hasSkipvoteManaer()) {
-            return getMusicPlayer(g.getIdLong()).getSkipvoteManager().getRequiredVotes();
-        }
-        return 0;
     }
 
     // PLAYER MANAGEMENT
@@ -174,6 +126,12 @@ public class MusicManager {
 
             musicPlayer = new MusicPlayer(this);
             this.musicPlayers.put(guildId, musicPlayer);
+
+            GuildData guildData = this.musicBot.getDatabaseManager().getGuild(guildId);
+
+            if (guildData.getDefaultVolume() >= 0 && guildData.getDefaultVolume() <= 200 && guildData.getDefaultVolume() != 100) {
+                musicPlayer.setVolume(guildData.getDefaultVolume());
+            }
 
         }
 

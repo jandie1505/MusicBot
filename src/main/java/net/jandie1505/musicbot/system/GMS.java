@@ -189,7 +189,7 @@ public class GMS {
                 g.upsertCommand(
                         new CommandDataImpl("search", "Search for music")
                                 .addOptions(
-                                        new OptionData(OptionType.INTEGER, "query", "What you want to search").setRequired(true)
+                                        new OptionData(OptionType.STRING, "query", "What you want to search").setRequired(true)
                                 )
                 ).queue(null, this.missingAccess(g));
             }
