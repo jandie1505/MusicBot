@@ -1070,7 +1070,13 @@ public class EventsCommands extends ListenerAdapter {
                     return;
                 }
 
-                Role role = interaction.getGuild().getRoleById(interaction.getOption("value").getAsString());
+                Role role = null;
+
+                try {
+                    role = interaction.getGuild().getRoleById(interaction.getOption("value").getAsString());
+                } catch (IllegalArgumentException ignored) {
+                    // ignored
+                }
 
                 if (role == null) {
 
