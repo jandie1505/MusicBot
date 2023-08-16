@@ -275,7 +275,7 @@ public class DatabaseCommand implements CommandExecutor {
                             switch (args[3]) {
                                 case "guildId" -> blacklistEntry.setGuildId(Long.parseLong(args[4]));
                                 case "type" -> blacklistEntry.setType(Integer.parseInt(args[4]));
-                                case "content" -> blacklistEntry.setContent(args[4]);
+                                case "content" -> blacklistEntry.setContent(args[4].replaceAll("%20", " "));
                                 default -> {
                                     return "Unknown value";
                                 }
