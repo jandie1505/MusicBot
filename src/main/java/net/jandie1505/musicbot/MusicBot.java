@@ -125,12 +125,12 @@ public class MusicBot {
 
         this.databaseManager = new DatabaseManager(this);
 
-        this.executorService.schedule(() -> {
+        this.executorService.scheduleWithFixedDelay(() -> {
 
             this.databaseManager.cleanupGuilds();
             this.databaseManager.cleanupMusicBlacklist();
 
-        }, 1, TimeUnit.MINUTES);
+        }, 1, 1, TimeUnit.MINUTES);
 
         MusicBot.LOGGER.debug("DatabaseManager initialization completed");
 
@@ -140,7 +140,7 @@ public class MusicBot {
             this.startShardManager();
         }
 
-        this.executorService.schedule(() -> {
+        this.executorService.scheduleWithFixedDelay(() -> {
 
             if (this.shardManager == null) {
                 return;
@@ -158,9 +158,9 @@ public class MusicBot {
             this.startShards();
             MusicBot.LOGGER.warn("Not all shards are online. Restarting...");
 
-        }, 1, TimeUnit.MINUTES);
+        }, 1, 1, TimeUnit.MINUTES);
 
-        this.executorService.schedule(() -> {
+        this.executorService.scheduleWithFixedDelay(() -> {
 
             if (this.shardManager == null) {
                 return;
@@ -176,20 +176,32 @@ public class MusicBot {
 
             }
 
-        }, 5, TimeUnit.MINUTES);
+        }, 1, 5, TimeUnit.MINUTES);
 
         // GMS
 
         this.gms = new GMS(this);
 
-        this.executorService.schedule(this.gms::setupGuilds, 30, TimeUnit.MINUTES);
+        this.executorService.scheduleWithFixedDelay(this.gms::setupGuilds, 1, 30, TimeUnit.MINUTES);
 
         // MUSIC MANAGER
 
         this.musicManager = new MusicManager(this);
 
-        this.executorService.schedule(this.musicManager::reloadPlayers, 1, TimeUnit.MINUTES);
-        this.executorService.schedule(this.musicManager::reloadChannelConnections, 5, TimeUnit.MINUTES);
+        this.executorService.scheduleWithFixedDelay(this.musicManager::reloadPlayers, 1, 1, TimeUnit.MINUTES);
+        this.executorService.scheduleWithFixedDelay(this.musicManager::reloadChannelConnections, 1, 5, TimeUnit.MINUTES);
+
+        // Wait
+
+        try {
+            TimeUnit.SECONDS.sleep(1);
+        } catch (InterruptedException ignored) {
+            // ignored
+        }
+
+        this.upsertCommands();
+
+        LOGGER.info("Startup completed");
 
     }
 
