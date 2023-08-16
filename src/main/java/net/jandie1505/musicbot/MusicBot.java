@@ -92,6 +92,13 @@ public class MusicBot {
 
         this.config = new JSONObject();
 
+        this.config.put("token", "");
+        this.config.put("publicMode", false);
+        this.config.put("shardsCount", 1);
+        this.config.put("botOwner", "");
+        this.config.put("spotifyClientId", "");
+        this.config.put("spotifyClientSecret", "");
+
         if(!ignoreConfigFile) {
 
             File configFile = new File(System.getProperty("user.dir"), "config.json");
