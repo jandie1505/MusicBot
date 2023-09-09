@@ -296,7 +296,7 @@ public class GMS {
 
     public boolean memberHasDJPermissions(Member m) {
 
-        if (memberHasUserPermissions(m)) {
+        if (memberHasAdminPermissions(m)) {
             return true;
         }
 
