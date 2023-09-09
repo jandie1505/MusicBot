@@ -280,7 +280,7 @@ public class EventsCommands extends ListenerAdapter {
                 List<AudioTrack> tracks = SpotifySearchHandler.search(source, this.musicBot.getConfig().optString("spotifyClientId", ""), this.musicBot.getConfig().optString("spotifyClientSecret", ""));
 
                 for (AudioTrack track : tracks) {
-                    musicPlayer.enqueue(source, startafterload);
+                    musicPlayer.enqueue(track.getInfo().uri, startafterload);
                 }
 
                 if (!tracks.isEmpty()) {
