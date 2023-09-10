@@ -168,7 +168,12 @@ public class GMS {
             }
 
             if (!registeredCommands.contains("playnow")) {
-                g.upsertCommand(new CommandDataImpl("playnow", "Play a current track now instead of adding it to the queue")).queue(null, this.missingAccess(g));
+                g.upsertCommand(
+                        new CommandDataImpl("playnow", "Play a current track now instead of adding it to the queue")
+                                .addOptions(
+                                        new OptionData(OptionType.STRING, "song", "The song that should be played").setRequired(true)
+                                )
+                ).queue(null, this.missingAccess(g));
             }
 
             if (!registeredCommands.contains("movetrack")) {
