@@ -115,7 +115,12 @@ public class GMS {
             }
 
             if (!registeredCommands.contains("queue")) {
-                g.upsertCommand(new CommandDataImpl("queue", "Shows the current queue")).queue(null, this.missingAccess(g));
+                g.upsertCommand(
+                        new CommandDataImpl("queue", "Shows the current queue")
+                                .addOptions(
+                                        new OptionData(OptionType.INTEGER, "index", "The index you want to start from")
+                                )
+                ).queue(null, this.missingAccess(g));
             }
 
             if (!registeredCommands.contains("play")) {
