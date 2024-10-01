@@ -33,7 +33,8 @@ public class MusicPlayer {
         this.queue = Collections.synchronizedList(new ArrayList<>());
 
         YoutubeAudioSourceManager source = new YoutubeAudioSourceManager();
-        source.useOauth2(this.musicManager.getMusicBot().getConfig().optString("youTubeSourceOAuthToken", ""), true);
+        String oauthToken = this.musicManager.getMusicBot().getConfig().optString("youTubeSourceOAuthToken");
+        if (oauthToken != null && !oauthToken.isEmpty()) source.useOauth2(oauthToken, true);
         this.playerManager.registerSourceManager(source);
         this.player.addListener(this.trackScheduler);
     }
