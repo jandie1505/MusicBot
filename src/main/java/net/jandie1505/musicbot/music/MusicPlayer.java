@@ -6,9 +6,12 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventListener;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
+import com.sedmelluq.discord.lavaplayer.track.AudioItem;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import dev.lavalink.youtube.YoutubeAudioSourceManager;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,85 +44,75 @@ public class MusicPlayer {
 
     // QUEUE
 
-    public void enqueue(String source, boolean startafterload) {
+    private void load(String source, AudioLoadResult result) {
         this.playerManager.loadItem(source, new AudioLoadResultHandler() {
-
             @Override
-            public void trackLoaded(AudioTrack audioTrack) {
-
-                queue.add(audioTrack);
-
-                if(startafterload) {
-                    nextTrack();
-                }
-
+            public void trackLoaded(AudioTrack track) {
+                result.runAfterLoad(track);
             }
 
             @Override
-            public void playlistLoaded(AudioPlaylist audioPlaylist) {
-
-                queue.addAll(audioPlaylist.getTracks());
-
-                if(startafterload) {
-                    nextTrack();
-                }
-
+            public void playlistLoaded(AudioPlaylist playlist) {
+                result.runAfterLoad(playlist);
             }
 
-            @Override public void noMatches() {
-
+            @Override
+            public void noMatches() {
+                result.runAfterLoad(null);
             }
 
             @Override
             public void loadFailed(FriendlyException e) {
+                result.runAfterLoad(null);
+            }
+        });
 
+    }
+
+    public void enqueue(String source, @Nullable TrackInfoResult info) {
+
+        this.load(source, item -> {
+
+            if (item instanceof AudioTrack track) {
+                MusicPlayer.this.queue.add(track);
+                if (info != null) info.trackInfo(List.of(track.getInfo()));
+            } else if (item instanceof AudioPlaylist playlist) {
+                MusicPlayer.this.queue.addAll(playlist.getTracks());
+                if (info != null) info.trackInfo(playlist.getTracks().stream().map(AudioTrack::getInfo).toList());
+            } else {
+                if (info != null) info.trackInfo(null);
             }
 
         });
+
     }
 
-    public MusicEqueuedResponse enqueueWithResponse(String source, boolean startafterload) {
+    public void enqueue(String source, boolean startAfterLoad) {
+        this.enqueue(source, info -> {
+            if (startAfterLoad) MusicPlayer.this.nextTrack();
+        });
+    }
+
+    @Deprecated(forRemoval = true)
+    public MusicEqueuedResponse enqueueWithResponse(String source, boolean startAfterLoad) {
         CountDownLatch latch = new CountDownLatch(1);
         final MusicEqueuedResponse[] response = {null};
 
-        this.playerManager.loadItem(source, new AudioLoadResultHandler() {
+        this.enqueue(source, item -> {
 
-            @Override
-            public void trackLoaded(AudioTrack audioTrack) {
+            if (item != null && !item.isEmpty()) {
 
-                queue.add(audioTrack);
-
-                if(startafterload) {
-                    nextTrack();
+                if (item.size() == 1) {
+                    response[0] = new MusicEqueuedResponse(item.get(0).title);
+                } else {
+                    response[0] = new MusicEqueuedResponse(item.size());
                 }
 
-                response[0] = new MusicEqueuedResponse(audioTrack.getInfo().title);
-                latch.countDown();
+                if (startAfterLoad) MusicPlayer.this.nextTrack();
 
             }
 
-            @Override
-            public void playlistLoaded(AudioPlaylist audioPlaylist) {
-
-                queue.addAll(audioPlaylist.getTracks());
-
-                if(startafterload) {
-                    nextTrack();
-                }
-
-                response[0] = new MusicEqueuedResponse(audioPlaylist.getTracks().size());
-                latch.countDown();
-
-            }
-
-            @Override public void noMatches() {
-                latch.countDown();
-            }
-
-            @Override
-            public void loadFailed(FriendlyException e) {
-                latch.countDown();
-            }
+            latch.countDown();
 
         });
 
@@ -260,45 +253,31 @@ public class MusicPlayer {
     }
 
     public void playnow(String source) {
-        playerManager.loadItem(source, new AudioLoadResultHandler() {
-            @Override
-            public void trackLoaded(AudioTrack audioTrack) {
-                play(audioTrack);
+
+        this.load(source, item -> {
+
+            if (item instanceof AudioTrack track) {
+                MusicPlayer.this.play(track);
             }
 
-            @Override
-            public void playlistLoaded(AudioPlaylist audioPlaylist) {}
-
-            @Override public void noMatches() {}
-
-            @Override
-            public void loadFailed(FriendlyException e) {}
         });
+
     }
 
+    @Deprecated(forRemoval = true)
     public MusicEqueuedResponse playnowWithResponse(String source) {
         CountDownLatch latch = new CountDownLatch(1);
         final MusicEqueuedResponse[] response = {null};
 
-        playerManager.loadItem(source, new AudioLoadResultHandler() {
-            @Override
-            public void trackLoaded(AudioTrack audioTrack) {
+        this.load(source, item -> {
 
-                play(audioTrack);
-
-                response[0] = new MusicEqueuedResponse(audioTrack.getInfo().title);
-                latch.countDown();
-
+            if (item instanceof AudioTrack track) {
+                MusicPlayer.this.play(track);
+                response[0] = new MusicEqueuedResponse(track.getInfo().title);
             }
 
-            @Override
-            public void playlistLoaded(AudioPlaylist audioPlaylist) {}
+            latch.countDown();
 
-            @Override
-            public void noMatches() {}
-
-            @Override
-            public void loadFailed(FriendlyException e) {}
         });
 
         try {
@@ -324,5 +303,15 @@ public class MusicPlayer {
         player.stopTrack();
         playerManager.shutdown();
         player.destroy();
+    }
+
+    // ----- INNER CLASSES -----
+
+    public interface AudioLoadResult {
+        void runAfterLoad(@Nullable AudioItem item);
+    }
+
+    public interface TrackInfoResult {
+        void trackInfo(@Nullable List<AudioTrackInfo> info);
     }
 }
