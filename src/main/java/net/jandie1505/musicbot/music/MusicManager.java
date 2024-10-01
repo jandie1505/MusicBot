@@ -30,6 +30,7 @@ public class MusicManager {
 
             audioChannel.getGuild().getAudioManager().setSendingHandler(this.getMusicPlayer(audioChannel.getGuild().getIdLong()).getAudioSendHandler());
             audioChannel.getGuild().getAudioManager().openAudioConnection(audioChannel);
+            audioChannel.getGuild().getAudioManager().setSelfDeafened(true);
 
             return true;
 

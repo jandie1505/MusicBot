@@ -98,6 +98,7 @@ public class MusicBot {
         this.config.put("botOwner", "");
         this.config.put("spotifyClientId", "");
         this.config.put("spotifyClientSecret", "");
+        this.config.put("youTubeSourceOAuthToken", "");
 
         if(!ignoreConfigFile) {
 
