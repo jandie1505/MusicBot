@@ -2,7 +2,6 @@ package net.jandie1505.musicbot.console;
 
 import net.jandie1505.musicbot.MusicBot;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;

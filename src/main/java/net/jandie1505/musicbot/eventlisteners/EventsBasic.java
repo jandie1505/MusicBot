@@ -7,7 +7,6 @@ import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.events.session.ShutdownEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.jandie1505.musicbot.MusicBot;
-import net.jandie1505.musicbot.console.Console;
 
 public class EventsBasic extends ListenerAdapter {
 

@@ -2,17 +2,12 @@ package net.jandie1505.musicbot.database;
 
 import net.dv8tion.jda.api.entities.Guild;
 import net.jandie1505.musicbot.MusicBot;
-import net.jandie1505.musicbot.console.Console;
-import org.json.JSONArray;
-import org.sqlite.SQLiteErrorCode;
 
 import java.io.File;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 public class DatabaseManager {
 

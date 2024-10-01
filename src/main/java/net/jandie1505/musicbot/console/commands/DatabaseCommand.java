@@ -4,8 +4,6 @@ import net.jandie1505.musicbot.MusicBot;
 import net.jandie1505.musicbot.console.CommandExecutor;
 import net.jandie1505.musicbot.database.BlacklistEntry;
 import net.jandie1505.musicbot.database.GuildData;
-import org.json.JSONArray;
-import org.json.JSONException;
 
 import java.util.List;
 

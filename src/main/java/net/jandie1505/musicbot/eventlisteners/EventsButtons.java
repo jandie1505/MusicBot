@@ -1,6 +1,5 @@
 package net.jandie1505.musicbot.eventlisteners;
 
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.utils.messages.MessageEditData;
