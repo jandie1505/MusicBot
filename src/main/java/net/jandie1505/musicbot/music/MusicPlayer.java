@@ -11,6 +11,9 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import dev.lavalink.youtube.YoutubeAudioSourceManager;
+import dev.lavalink.youtube.clients.*;
+import dev.lavalink.youtube.clients.skeleton.Client;
+import net.jandie1505.musicbot.MusicBot;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -35,7 +38,18 @@ public class MusicPlayer {
         this.trackScheduler = new TrackScheduler(this);
         this.queue = Collections.synchronizedList(new ArrayList<>());
 
-        YoutubeAudioSourceManager source = new YoutubeAudioSourceManager();
+        YoutubeAudioSourceManager source = new YoutubeAudioSourceManager(
+                new Music(),
+                new Web(),
+                new MWeb(),
+                new WebEmbedded(),
+                new Android(),
+                new AndroidMusic(),
+                new AndroidVr(),
+                new Ios(),
+                new Tv(),
+                new TvHtml5Embedded()
+        );
         String oauthToken = this.musicManager.getMusicBot().getConfig().optString("youTubeSourceOAuthToken");
         if (oauthToken != null && !oauthToken.isEmpty()) source.useOauth2(oauthToken, true);
         this.playerManager.registerSourceManager(source);
@@ -63,6 +77,7 @@ public class MusicPlayer {
 
             @Override
             public void loadFailed(FriendlyException e) {
+                MusicBot.LOGGER.error("FriendlyException while loading track", e);
                 result.runAfterLoad(null);
             }
         });
