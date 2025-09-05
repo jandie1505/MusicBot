@@ -832,7 +832,7 @@ public class EventsCommands extends ListenerAdapter {
                 break;
             }
 
-            list = list + "`" + i + ".` `" + Messages.formatTime(track.getDuration()) + "` " + track.getInfo().title + " [" + track.getInfo().author + "]\n";
+            list = list + "`" + (i + 1) + ".` `" + Messages.formatTime(track.getDuration()) + "` [" + track.getInfo().title + " [" + track.getInfo().author + "]](" + track.getInfo().uri + ")\n";
         }
 
         list = list + "`Found " + response.size() + " search results`";
