@@ -43,7 +43,7 @@ public class MusicPlayer {
                 new Web(),
                 new MWeb(),
                 new WebEmbedded(),
-                new Android(),
+                //new Android(),
                 new AndroidMusic(),
                 new AndroidVr(),
                 new Ios(),
