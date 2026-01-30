@@ -18,7 +18,10 @@ public class EventsButtons extends ListenerAdapter {
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {
 
-        if(event.getButton().getId().equalsIgnoreCase("nowplaying_button_play")) {
+        String buttonId = event.getButton().getCustomId();
+        if (buttonId == null) return;
+
+        if(buttonId.equalsIgnoreCase("nowplaying_button_play")) {
 
             if (!this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
                 return;
@@ -40,7 +43,7 @@ public class EventsButtons extends ListenerAdapter {
 
             event.editMessage(MessageEditData.fromCreateData(Messages.nowplayingMessage(this.musicBot, event.getGuild(), this.musicBot.getGMS().memberHasDJPermissions(event.getMember())).build())).queue();
 
-        } else if(event.getButton().getId().equalsIgnoreCase("nowplaying_button_pause")) {
+        } else if(buttonId.equalsIgnoreCase("nowplaying_button_pause")) {
 
             if (!this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
                 return;
@@ -56,7 +59,7 @@ public class EventsButtons extends ListenerAdapter {
 
             event.editMessage(MessageEditData.fromCreateData(Messages.nowplayingMessage(this.musicBot, event.getGuild(), this.musicBot.getGMS().memberHasDJPermissions(event.getMember())).build())).queue();
 
-        } else if(event.getButton().getId().equalsIgnoreCase("nowplaying_button_refresh")) {
+        } else if(buttonId.equalsIgnoreCase("nowplaying_button_refresh")) {
 
             if (event.getGuild() == null) {
                 return;
@@ -64,7 +67,7 @@ public class EventsButtons extends ListenerAdapter {
 
             event.editMessage(MessageEditData.fromCreateData(Messages.nowplayingMessage(this.musicBot, event.getGuild(), this.musicBot.getGMS().memberHasDJPermissions(event.getMember())).build())).queue();
 
-        } else if(event.getButton().getId().equalsIgnoreCase("nowplaying_button_skip")) {
+        } else if(buttonId.equalsIgnoreCase("nowplaying_button_skip")) {
 
             if (!this.musicBot.getGMS().memberHasDJPermissions(event.getMember())) {
                 return;

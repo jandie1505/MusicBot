@@ -347,7 +347,7 @@ public class MusicBot {
 
             this.shardManager = DefaultShardManagerBuilder.createDefault(this.config.optString("token", ""))
                     .setShardsTotal(shardsTotal)
-                    .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.DIRECT_MESSAGES, GatewayIntent.GUILD_INVITES, GatewayIntent.GUILD_EMOJIS_AND_STICKERS)
+                    .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.DIRECT_MESSAGES, GatewayIntent.GUILD_INVITES, GatewayIntent.GUILD_EXPRESSIONS)
                     .build();
             this.shardManager.setPresence(OnlineStatus.IDLE, Activity.playing("Starting up..."));
             this.shardManager.addEventListener(new EventsBasic(this));
