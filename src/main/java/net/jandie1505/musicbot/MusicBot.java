@@ -48,6 +48,7 @@ public class MusicBot {
     public static final Terminal TERMINAL;
     public static final LineReader LINE_READER;
     public static final Logger LOGGER;
+    public static final File DATA_DIRECTORY = new File(System.getProperty("user.dir"), "data");
     private static MusicBot instance;
 
     static {
@@ -102,8 +103,11 @@ public class MusicBot {
 
         if(!ignoreConfigFile) {
 
-            File configFile = new File(System.getProperty("user.dir"), "config.json");
+            DATA_DIRECTORY.mkdirs();
 
+            File configFile = new File(DATA_DIRECTORY, "config.json");
+            System.out.println(configFile);
+            System.out.println(configFile.getAbsolutePath());
             if(!configFile.exists()) {
                 configFile.createNewFile();
                 this.saveConfig(configFile);

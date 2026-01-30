@@ -30,7 +30,8 @@ public class DatabaseManager {
     }
 
     private void connect() throws SQLException, IOException {
-        databaseFile = new File(".", "database.sqlite");
+        MusicBot.DATA_DIRECTORY.mkdirs();
+        databaseFile = new File(MusicBot.DATA_DIRECTORY, "database.sqlite");
         if(!databaseFile.exists()) {
             databaseFile.createNewFile();
         }
