@@ -75,6 +75,8 @@ public class MusicBot {
     private ShardManager shardManager;
 
     public MusicBot(String token, int shardsCount, boolean disableShardsCheck, boolean ignoreConfigFile, boolean disableAutoStart) throws LoginException, SQLException, IOException, ClassNotFoundException {
+        if (instance != null) throw new IllegalStateException("Already initialized.");
+        instance = this;
 
         // CONSOLE
 
