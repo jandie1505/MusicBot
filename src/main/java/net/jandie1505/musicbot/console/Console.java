@@ -1,6 +1,8 @@
 package net.jandie1505.musicbot.console;
 
 import net.jandie1505.musicbot.MusicBot;
+import org.jline.reader.EndOfFileException;
+import org.jline.reader.UserInterruptException;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -24,20 +26,28 @@ public class Console implements Runnable {
 
         while(thread == Thread.currentThread() && !thread.isInterrupted() && musicBot.isOperational()) {
 
-            String commandString = MusicBot.LINE_READER.readLine("MusicBot ==> ");
-
             try {
+                String commandString = MusicBot.LINE_READER.readLine("MusicBot ==> ");
 
-                String reply = this.runCommand(commandString);
+                try {
 
-                MusicBot.LOGGER.debug("Issued console command " + commandString + " with response " + reply);
-                MusicBot.LINE_READER.printAbove(reply);
+                    String reply = this.runCommand(commandString);
 
-            } catch(Exception e) {
+                    MusicBot.LOGGER.debug("Issued console command " + commandString + " with response " + reply);
+                    MusicBot.LINE_READER.printAbove(reply);
 
-                MusicBot.LOGGER.debug("Issued console command " + commandString + " threw an exception", e);
-                MusicBot.LINE_READER.printAbove("Error while executing command " + commandString + " [" + e.toString() + "]");
+                } catch(Exception e) {
 
+                    MusicBot.LOGGER.debug("Issued console command " + commandString + " threw an exception", e);
+                    MusicBot.LINE_READER.printAbove("Error while executing command " + commandString + " [" + e.toString() + "]");
+
+                }
+            } catch (UserInterruptException e) {
+                MusicBot.LOGGER.info("Received keyboard interrupt: Shutting down.");
+                this.musicBot.shutdown();
+            } catch (EndOfFileException e) {
+                MusicBot.LOGGER.warn("Console has been closed because of EOF.", e);
+                break;
             }
 
         }
